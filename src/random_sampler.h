@@ -12,7 +12,6 @@
 #include <random>
 #include <gsl/gsl_qrng.h>
 
-#include "RangeTree2.h"
 #include "utils.h"
 
 using std::vector;

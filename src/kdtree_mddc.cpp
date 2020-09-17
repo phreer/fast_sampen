@@ -15,7 +15,7 @@ using std::string;
     arg.filename,arg.input_type,arg.r,arg.data_length,(fast_direct),(direct),\
     arg.output_level)
 
-char *usage =\
+char usage[] =\
 "Usage: kdtree_mddc -input <INPUT> -input-type {simple, multirecord}\\\n"\
 "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"\
 "                   -n <N> [-output-level {1,2,3}]\n\n"\

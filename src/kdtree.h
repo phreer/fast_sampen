@@ -211,7 +211,7 @@ class KDCountingTree2K
 {
 public:
     KDCountingTree2K(const vector<KDPoint<T, K> > &points, OutputLevel output_level)
-        : _root(nullptr), _points(points), _leaves(0), _index2leaf(points.size()), 
+        : _leaves(0), _root(nullptr), _points(points), _index2leaf(points.size()),
         _q1(points.size()), _q2(points.size()), _output_level(output_level)
     {
         clock_t t = clock();
@@ -346,7 +346,7 @@ class KDTree2K
 {
 public:
     KDTree2K(const vector<KDPoint<T, K + 1> > &points, OutputLevel output_level)
-        : _root(nullptr), _points(points), _leaves(0), _index2leaf(points.size()), 
+        : _root(nullptr), _leaves(0), _points(points), _index2leaf(points.size()),
         _q1(points.size()), _q2(points.size()), _output_level(output_level)
     {
         clock_t t = clock();
@@ -668,7 +668,7 @@ KDCountingTree2KNode(unsigned depth, KDCountingTree2KNode *father,
                      vector<KDCountingTree2KNode *> &leaves,
                      typename vector<KDPoint<T, K> >::iterator first,
                      typename vector<KDPoint<T, K> >::iterator last)
-    : _depth(depth), _count(last - first), _father(father), _weighted_count(0)
+    : _depth(depth), _count(last - first), _weighted_count(0), _father(father)
 {
     _range = GetRange<T, K, K>(first, last);
     if (_count == 1)
@@ -678,7 +678,7 @@ KDCountingTree2KNode(unsigned depth, KDCountingTree2KNode *father,
         return;
     }
 
-    unsigned splitters[1 << K + 1];
+    unsigned splitters[1 << (K + 1)];
     splitters[0] = 0;
     splitters[1 << K] = _count;
 
@@ -799,7 +799,7 @@ KDTreeNode2K(unsigned depth, KDTreeNode2K * father,
              typename vector<KDPoint<T, K + 1>>::iterator first, 
              typename vector<KDPoint<T, K + 1>>::iterator last, 
              unsigned leaf_left)
-    : _depth(depth), _count(last - first), _father(father), 
+    : _father(father), _depth(depth), _count(last - first),
     _weighted_count(0), _leaf_left(leaf_left)
 {
     assert(_count > 0);
@@ -813,7 +813,7 @@ KDTreeNode2K(unsigned depth, KDTreeNode2K * father,
         return;
     }
 
-    unsigned splitters[1 << K + 1];
+    unsigned splitters[1 << (K + 1)];
     splitters[0] = 0;
     splitters[1 << K] = _count;
 

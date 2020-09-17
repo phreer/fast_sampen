@@ -130,8 +130,8 @@ public:
     SampleEntropyCalculatorS(unsigned sample_size, unsigned sample_num, 
                              uniform_int_generator::random_type rtype, 
                              bool random_, OutputLevel output_level) 
-        : _sample_size(sample_size), _sample_num(sample_num), _rtype(rtype), 
-        _random(random_), SampleEntropyCalculator<T, K>(output_level) {} 
+        : SampleEntropyCalculator<T, K>(output_level), _sample_size(sample_size),
+        _sample_num(sample_num), _rtype(rtype), _random(random_) {}
     double ComputeSampleEntropy(typename vector<T>::const_iterator first, 
                                 typename vector<T>::const_iterator last, T r) 
     {
@@ -184,10 +184,10 @@ public:
         double entropy = ComputeSampen(A, B, n - K, K, this->_output_level); 
         return entropy; 
     }
-private: 
+private:
+    unsigned _sample_size;
     unsigned _sample_num; 
-    unsigned _sample_size; 
-    uniform_int_generator::random_type _rtype; 
+    uniform_int_generator::random_type _rtype;
     bool _random; 
 };
 
