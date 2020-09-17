@@ -12,29 +12,41 @@ using std::endl;
 using std::string;
 
 #define SAMPLE_ENTROPY(T,m,fast_direct,direct) SampleEntropy<(T),(m)>(\
-    arg.filename, arg.r,\ arg.data_length,(fast_direct),(direct),\
+    arg.filename,arg.input_type,arg.r,arg.data_length,(fast_direct),(direct),\
     arg.output_level)
 
 char *usage =\
-"Usage: kdtree_mddc -filename <FILENAME> -r <THRESHOLD> -m <TEMPLATE_LENGTH\n"\
-"\t-n <N> [-output-level {1,2,3}]\n\n"\
-"-filename <FILENAME>    The file name of the input file\n"\
-"-r <R>                  The threshold argument in sample entropy\n"\
-"-m <M>                  The template length argument of sample entropy\n"\
+"Usage: kdtree_mddc -input <INPUT> -input-type {simple, multirecord}\\\n"\
+"                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"\
+"                   -n <N> [-output-level {1,2,3}]\n\n"\
+"-input <INPUT>          The file name of the input file\n"\
+"-input-type <TYPE>      The format of the input file. Should be either simple\n"\
+"                        or multirecord. If set to simple, then each line of the\n"\
+"                        input file contains exactly one column; if set to\n"\
+"                        multirecord, then each line contains <NUM_RECORD> + 1\n"\
+"                        columns, of which the first indicates the line number and\n"\
+"                        and the remaining columns are instances of the records.\n"\
+"                        The defualt value is simple.\n"\
+"-r <R>                  The threshold argument in sample entropy.\n"\
+"-m <M>                  The template length argument of sample entropy. Note\n"\
+"                        that this program only supports 2 <= m <= 10.\n"
 "-n <N>                  If the length of the signal specified by <FILENAME> is\n"
 "                        greater than <N>, then it would be truncated to be of\n"
 "                        length <N>. If <N> is 0, then the the original length\n"
 "                        is employed. The default value is 0.\n";
 
 template<typename T>
-void PrintSampenSetting(unsigned n, T r, unsigned K, std::string filename, double var);
+void PrintSampenSetting(unsigned line_offset, unsigned n, T r, unsigned K, 
+                        std::string filename, double var);
 
 void ParseArgument(int argc, char *argv[]);
 
 struct Argument
 {
     unsigned template_length;
+    unsigned line_offset;
     string filename;
+    string input_type;
     string type;
     unsigned data_length;
     double r;
@@ -42,8 +54,9 @@ struct Argument
 } arg;
 
 template<typename T, unsigned K>
-void SampleEntropy(const string &filename, double r, unsigned data_length, 
-                   bool fast_direct, bool direct, OutputLevel output_level);
+void SampleEntropy(const string &filename, const string &input_type, double r, 
+                   unsigned line_offset, unsigned n, bool fast_direct, 
+                   bool direct, OutputLevel output_level);
 
 int main(int argc, char *argv[])
 {
@@ -51,6 +64,9 @@ int main(int argc, char *argv[])
     //std::string filename = R"(C:\Users\95774\Desktop\ex8\data\Health\Filt-time-1514.01.rr.txt)";
     //std::string filename = R"(C:\Users\95774\Desktop\ex8\data\AF\fa002.rr.txt)";
     //vector<double> data({ 6, 3, 7, 2, 1, 9, 4, 6, 3, 7, 2, 1, 5, 0 });
+#ifdef DEBUG
+    std::cout << "This is a debug version. " << std::endl;
+#endif
     ParseArgument(argc, argv);
     if (arg.template_length < 2 || arg.template_length > 10)
     {
@@ -69,43 +85,54 @@ int main(int argc, char *argv[])
         switch (arg.template_length)
         {
         case 2:
-            SampleEntropy<Type, 2>(arg.filename, arg.r, arg.data_length, 
+            SampleEntropy<Type, 2>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
                                    fast_direct, direct, arg.output_level); 
             break;
         case 3:
-            SampleEntropy<Type, 3>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 3>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 4:
-            SampleEntropy<Type, 4>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 4>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 5:
-            SampleEntropy<Type, 5>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 5>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 6:
-            SampleEntropy<Type, 6>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 6>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 7:
-            SampleEntropy<Type, 7>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 7>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 8:
-            SampleEntropy<Type, 8>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 8>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 9:
-            SampleEntropy<Type, 9>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 9>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 10: 
-            SampleEntropy<Type, 10>(arg.filename, arg.r, arg.data_length, 
-                                    fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 10>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         default:
-            break;
+            cerr << "Invalid argument: -input-type " << arg.template_length << ". \n";
+            cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
+            exit(-1);
         }
     } 
     else if (arg.type == "int")
@@ -113,50 +140,61 @@ int main(int argc, char *argv[])
         using Type = int;
         switch (arg.template_length)
         {
-
         case 2:
-            SampleEntropy<Type, 2>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 2>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 3:
-            SampleEntropy<Type, 3>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 3>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 4:
-            SampleEntropy<Type, 4>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 4>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 5:
-            SampleEntropy<Type, 5>(arg.filename, arg.r, arg.data_length,
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 5>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 6:
-            SampleEntropy<Type, 6>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 6>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 7:
-            SampleEntropy<Type, 7>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 7>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 8:
-            SampleEntropy<Type, 8>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 8>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         case 9:
-            SampleEntropy<Type, 9>(arg.filename, arg.r, arg.data_length, 
-                                   fast_direct, direct, arg.output_level);
+            SampleEntropy<Type, 9>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
-        case 10:
-            SampleEntropy<Type, 10>(arg.filename, arg.r, arg.data_length, 
-                                    fast_direct, direct, arg.output_level);
+        case 10: 
+            SampleEntropy<Type, 10>(arg.filename, arg.input_type, arg.r, 
+                                   arg.line_offset, arg.data_length, 
+                                   fast_direct, direct, arg.output_level); 
             break;
         default:
-            break;
+            cerr << "Invalid argument: -input-type " << arg.template_length << ". \n";
+            cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
+            exit(-1);
         }
     }
     else
     {
-        cerr << "Invalid argument -type " << arg.type << ".\n";
+        cerr << "Invalid argument: -type " << arg.type << ".\n";
+        cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
         exit(-1);
     }
 
@@ -164,10 +202,12 @@ int main(int argc, char *argv[])
 }
 
 template<typename T>
-void PrintSampenSetting(unsigned n, T r, unsigned m, std::string filename, double var)
+void PrintSampenSetting(unsigned line_offset, unsigned n, T r, unsigned m, 
+                        std::string filename, double var)
 {
     std::cout << "Sample Entropy Computation Setting: " << std::endl;
     std::cout << "\tfilename: " << filename << std::endl;
+    std::cout << "\tline_offset: " << line_offset << std::endl;
     std::cout << "\tdata length: " << n << std::endl;
     std::cout << "\ttemplate length: " << m << std::endl;
     std::cout << "\tthreshold: " << r << std::endl;
@@ -177,11 +217,20 @@ void PrintSampenSetting(unsigned n, T r, unsigned m, std::string filename, doubl
 void ParseArgument(int argc, char *argv[])
 {
     ArgumentParser parser(argc, argv);
-    arg.filename = parser.getArg("-filename");
+    arg.filename = parser.getArg("-input");
     if (arg.filename.size() == 0)
     {
-        cerr << "Specify a filename with -filename <FILENAME>." << endl;
+        cerr << "Specify a filename with -input <INPUT>." << endl;
         cerr << usage;
+        exit(-1);
+    }
+
+    arg.input_type = parser.getArg("-input-type");
+    if (arg.input_type.size() == 0) arg.input_type = "simple";
+    if (arg.input_type != "simple" && arg.input_type != "multirecord") 
+    {
+        cerr << "Invalid argument: input-type, should be either simple or "; 
+        cerr << "multirecord. \n";
         exit(-1);
     }
 
@@ -211,15 +260,19 @@ void ParseArgument(int argc, char *argv[])
     string data_length = parser.getArg("-n");
     if (data_length.size() == 0) arg.data_length = 0;
     else arg.data_length = static_cast<unsigned>(std::stoi(data_length));
+
+    string line_offset = parser.getArg("--line-offset");
+    if (line_offset.size() == 0) arg.line_offset = 0;
+    else arg.line_offset = static_cast<unsigned>(std::stoi(line_offset));
     
-    string output_level = parser.getArg("-output_level");
+    string output_level = parser.getArg("--output-level");
     if (output_level.size() == 0) arg.output_level = Info;
     else if (output_level == "1") arg.output_level = Silent;
     else if (output_level == "2") arg.output_level = Info;
     else if (output_level == "3") arg.output_level = Debug;
     else
     {
-        cerr << "Invalid argument -output_level " << output_level;
+        cerr << "Invalid argument -output-level " << output_level;
         cerr << ", must be one of the following: 1, 2, 3. \n";
         cerr << usage;
         exit(-1);
@@ -228,27 +281,16 @@ void ParseArgument(int argc, char *argv[])
 
 
 template<typename T, unsigned K>
-void SampleEntropy(const string &filename, double r, unsigned n,
-                   bool fast_direct, bool direct, OutputLevel output_level)
+void SampleEntropy(const string &filename, const string &input_type, double r, 
+                   unsigned line_offset, unsigned n, bool fast_direct, 
+                   bool direct, OutputLevel output_level)
 {
-    vector<T> data = ReadData<T>(arg.filename);
-    if (n)
-    {
-        if (n > data.size())
-        {
-            cerr << "The specified data length " << n;
-            cerr << " exceeds the max length of input file " << data.size() << ". \n";
-            exit(-1);
-        } else
-        {
-            data.resize(n);
-        }
-    }
-
+    vector<T> data = ReadData<T>(arg.filename, input_type, n, line_offset);
     n = data.size();
     if (n <= K)
     {
-        std::cerr << "Data length n " << n << " is too short (K = " << K << "). \n";
+        std::cerr << "Data length n " << n << " is too short (K = " << K; 
+        std::cerr << "). \n";
         exit(-1);
     }
 
@@ -257,11 +299,11 @@ void SampleEntropy(const string &filename, double r, unsigned n,
 
     if (r_scaled < 0)
     {
-        cerr << "Invalid r[scaled]: " << r_scaled << ".\n";
+        cerr << "Invalid r [scaled]: " << r_scaled << ".\n";
         exit(-1);
     }
 
-    if (output_level) PrintSampenSetting(n, r_scaled, K, arg.filename, var);
+    PrintSampenSetting(line_offset, n, r_scaled, K, arg.filename, var);
 
     // Compute sample entropy. 
     double sampen = 0;

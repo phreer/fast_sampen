@@ -91,7 +91,9 @@ vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r)
 }
 
 template<typename T, unsigned K>
-inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(typename vector<T>::const_iterator first, typename vector<T>::const_iterator last, T r)
+inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(
+    typename vector<T>::const_iterator first, 
+    typename vector<T>::const_iterator last, T r)
 {
     long long a = 0;
     long long b = 0;
@@ -110,6 +112,9 @@ inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(typename
             }
         }
     }
+    double norm = (n - K + 1) * (n - K); 
+    std::cout << "A (norm): " << a / norm << ", B (norm): " << b / norm 
+        << std::endl;
     return ComputeSampen(
         static_cast<double>(a),
         static_cast<double>(b),
@@ -117,7 +122,9 @@ inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(typename
 }
 
 template<typename T, unsigned K>
-inline double SampleEntropyCalculatorFastDirect<T, K>::ComputeSampleEntropy(typename vector<T>::const_iterator first, typename vector<T>::const_iterator last, T r)
+inline double SampleEntropyCalculatorFastDirect<T, K>::ComputeSampleEntropy(
+    typename vector<T>::const_iterator first, 
+    typename vector<T>::const_iterator last, T r)
 {
     const unsigned n = first - last;
     if (n <= K)
@@ -129,6 +136,9 @@ inline double SampleEntropyCalculatorFastDirect<T, K>::ComputeSampleEntropy(type
 
     vector<T> data(first, last);
     vector<long long> ab = _ComputeABFastDirect<T, K>(data.data(), data.size(), r);
+    double norm = (n - K + 1) * (n - K); 
+    std::cout << "A (norm): " << ab[0] / norm << ", B (norm): " << ab[1] / norm 
+        << std::endl;
     double result = ComputeSampen(
         static_cast<double>(ab[0]),
         static_cast<double>(ab[1]),

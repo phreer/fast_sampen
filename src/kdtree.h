@@ -261,6 +261,7 @@ public:
         if (d) _leaves[position]->UpdateCount(d);
     }
 
+
     void Close(unsigned position)
     {
         assert(position < count() && "position >= count()");
@@ -780,6 +781,8 @@ CountRange(const Range<T, K> &range, long long &num_nodes,
                 }
                 break;
             }
+            case NOT_INTER: 
+            default: break; 
             }
         }
         std::swap(q1, q2);
@@ -929,6 +932,8 @@ CountRange(const Range<T, K + 1>& range,
                 }
                 break;
             }
+            case NOT_INTER: 
+            default: break; 
             }
         }
         std::swap(q1, q2);

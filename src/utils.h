@@ -13,14 +13,17 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <numeric>
 #include <algorithm>
+#include <limits>
 #include <assert.h>
 
 #include "kdpoint.h"
 
-#ifdef _DEBUG
+#ifdef ENABLE_DEBUG_MACRO
 #define DEBUG
+#include <iostream> 
 #endif
 
 
@@ -67,7 +70,7 @@ double ComputeSampen(double A, double B, unsigned N, unsigned m, OutputLevel out
  * @return Read data. 
  */
 template<typename T>
-vector<T> ReadData(std::string filename);
+vector<T> ReadData(std::string filename, std::string input_type = "simple", unsigned n = 0);
 
 template<typename T>
 double ComputeVarience(const vector<T> &data);
@@ -88,7 +91,7 @@ void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
 
 
 template<typename T, unsigned K>
-vector<KDPoint<T, K> > GetKDPoints(const vector<T> &data);
+vector<KDPoint<T, K> > GetKDPoints(const vector<T> &data, int count = 1);
 
 template<typename T, unsigned K>
 void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
@@ -123,7 +126,8 @@ Bounds GetRankBounds(const vector<KDPoint<T, K> > &points, T r);
 * @brief Given a point (in grid), get the bound.
 */
 template<unsigned K>
-Range<unsigned, K> GetHyperCube(const KDPoint<unsigned, K> &point, const Bounds &bounds);
+Range<unsigned, K> GetHyperCube(
+        const KDPoint<unsigned, K> &point, const Bounds &bounds);
 
 
 class ArgumentParser
@@ -132,6 +136,8 @@ public:
     ArgumentParser(int argc, char *argv[]) : arg_list(argv, argv + argc) {}
     string getArg(const string &arg);
     bool isOption(const string &opt);
+    long getArgLong(const string &arg, long default_); 
+    double getArgDouble(const string &arg, double default_); 
 private:
     vector<string> arg_list;
 };
@@ -141,24 +147,51 @@ private:
 //////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-vector<T> ReadData(std::string filename)
+vector<T> ReadData(std::string filename, std::string input_type, unsigned n, 
+                   unsigned line_offset)
 {
     ifstream ifs(filename);
     vector<T> result;
     if (!ifs.is_open())
     {
-        cerr << "Cannot open file! (filename: " << filename << ")" << std::endl;
-    } else
+        std::cerr << "Cannot open file! (filename: " << filename << ")\n";
+        exit(-1);
+    } 
+    if (n == 0) n = std::numeric_limits<unsigned>::max();
+    unsigned count = 0;
+    T x = 0;
+    if (input_type == "simple")
     {
-        T x = 0;
-        while (ifs >> x) result.push_back(x);
-        ifs.close();
+        while (count < n + line_offset && ifs >> x) 
+        {
+            if (count >= line_offset) result.push_back(x);
+            ++count;
+        }
+    } else if (input_type == "multirecord") 
+    {
+        std::string line;
+        while(count < n + line_offset && std::getline(ifs, line))
+        {
+            std::istringstream iss(line);
+            if (!(iss >> x >> x)) 
+            {
+                std::cerr << "Input file foramt error. \n";
+                exit(-1); 
+            }
+            if (count >= line_offset) result.push_back(x);
+            ++count;
+        }
+    } else 
+    {
+        cerr << "Invalid argument n. \n"; 
+        cerr << "File: " << __FILE__ << ", Line:: " << __LINE__ << std::endl;
     }
+    ifs.close();
     return result;
 }
 
 template<typename T, unsigned K>
-vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data)
+vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data, int count)
 {
     const size_t n = data.size();
     
@@ -173,7 +206,7 @@ vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data)
         auto begin_i = data.cbegin();
         for (size_t i = 0; i < n - K + 1; i++)
         {
-            points[i] = KDPoint<T, K>(begin_i + i, begin_i + i + K, 1);
+            points[i] = KDPoint<T, K>(begin_i + i, begin_i + i + K, count);
         }
         return points;
     }
@@ -182,9 +215,9 @@ vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data)
 template<typename T>
 T ComputeSum(const vector<T> &data)
 {
-    unsigned n0 = 1 << 12;
+    unsigned n0 = 1 << 4;
     unsigned p = data.size() / n0;
-    T sum = std::accumulate(data.cbegin() + p * n0, data.cend(), 0);
+    T sum = std::accumulate(data.cbegin() + p * n0, data.cend(), (T) 0);
     if (p == 0) return sum;
     else
     {
@@ -192,7 +225,7 @@ T ComputeSum(const vector<T> &data)
         for (unsigned i = 0; i < p; i++)
         {
             temp_sum[i] = std::accumulate(
-                data.cbegin() + i * n0, data.cbegin() + (i + 1) * n0, 0);
+                data.cbegin() + i * n0, data.cbegin() + (i + 1) * n0, (T) 0);
         }
         temp_sum.push_back(sum);
         return ComputeSum(temp_sum);
@@ -202,15 +235,19 @@ T ComputeSum(const vector<T> &data)
 template<typename T>
 double ComputeVarience(const vector<T> &data)
 {
-    vector<double> data_(data.cbegin(), data.cend());
-    double avg = ComputeSum(data_) / data.size();
-    std::for_each(data_.begin(), data_.end(), [avg](double &x)
+    vector<long double> data_(data.cbegin(), data.cend());
+    long double avg = ComputeSum(data_) / data.size();
+    std::for_each(data_.begin(), data_.end(), [avg](long double &x)
     {
         x -= avg; x *= x;
     });
-    double sum = ComputeSum(data_);
+    long double sum = ComputeSum(data_);
+    #ifdef DEBUG
+    std::cout << "avg: " << avg << std::endl;
+    std::cout << "variance * size: " << sum << std::endl;
+    #endif
     sum /= data.size();
-    return sum;
+    return (double) sum;
 }
 
 template<typename T, unsigned K>
@@ -235,16 +272,17 @@ void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
     unsigned k = 0, i = 0;;
     while (i < n)
     {
-        int count = 0;
         int count_auxiliary = 0;
+        int count = 0;
         while (k < n && points[k] == points[i])
         {
             // Auxiliary points. 
             if (rank2index[k] >= n - K + 1) count_auxiliary++;
+            count += points[k].count(); 
             points[k].set_count(0);
             k++;
         }
-        points[k - 1].set_count(k - i - count_auxiliary);
+        points[k - 1].set_count(count - count_auxiliary);
         i = k;
     }
 }

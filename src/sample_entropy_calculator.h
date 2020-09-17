@@ -2,6 +2,7 @@
 #define __SAMPLE_ENTROPY_CALCULATOR__
 
 #include <vector>
+#include <type_traits>
 
 #include "utils.h"
 
@@ -9,7 +10,8 @@ namespace kdtree_mddc
 {
 using std::vector;
 
-template<typename T, unsigned K>
+template<typename T, unsigned K, 
+         typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 class SampleEntropyCalculator
 {
 public:

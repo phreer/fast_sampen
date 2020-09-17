@@ -17,7 +17,8 @@ namespace kdtree_mddc
 {
 using namespace std;
 
-double ComputeSampen(double A, double B, unsigned N, unsigned m, OutputLevel output_level)
+double ComputeSampen(double A, double B, unsigned N, unsigned m, 
+                     OutputLevel output_level)
 {
     if (output_level) std::cout << "A: " << A << ", B: " << B << std::endl;
     if (A > 0 && B > 0)
@@ -54,4 +55,39 @@ bool ArgumentParser::isOption(const string &opt)
     return find(arg_list.cbegin(), arg_list.cend(), opt) != arg_list.cend();
 }
 
+long ArgumentParser::getArgLong(const string &arg, long default_) 
+{
+    long result = default_;
+    std::string arg_v = getArg(arg); 
+    if (arg_v.size() == 0) return result;
+    try
+    {
+        result = std::stol(arg_v);
+    }
+    catch (const std::invalid_argument& e)
+    {
+        std::cerr << "Invalid argument: " << arg << " " << arg_v;
+        std::cerr << "\n" << e.what() << '\n';
+        exit(-1); 
+    }
+    return result;
+}
+
+double ArgumentParser::getArgDouble(const string &arg, double default_) 
+{
+    double result = default_; 
+    std::string arg_v = getArg(arg); 
+    if (arg_v.size() == 0) return result; 
+    try 
+    {
+        result = std::stod(arg_v); 
+    }
+    catch (const std::invalid_argument &e) 
+    {
+        std::cerr << "Invalid argument: " << arg << " " << arg_v; 
+        std::cerr << "\n" << e.what() << "\n"; 
+        exit(-1); 
+    }
+    return result; 
+}
 } // namespace kdtree_mddc
