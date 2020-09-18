@@ -108,7 +108,8 @@ void CloseAuxiliaryPoints(vector<KDPoint<T, K> > &points,
 */
 template<typename T, unsigned K>
 vector<KDPoint<unsigned, K - 1> > Map2Grid(
-    const vector<KDPoint<T, K> > &points, const vector<unsigned> &rank2index);
+    const vector<KDPoint<T, K> > &points, const vector<unsigned> &rank2index,
+    bool skip_nocount = true);
 
 /**
 * @brief Get the bounds of indices such that within the bound the values
@@ -289,7 +290,8 @@ void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
 
 template<typename T, unsigned K>
 vector<KDPoint<unsigned, K - 1> > Map2Grid(
-    const vector<KDPoint<T, K> > &points, const vector<unsigned> &rank2index)
+    const vector<KDPoint<T, K> > &points, const vector<unsigned> &rank2index,
+    bool skip_nocount)
 {
     const unsigned n = points.size();
 
@@ -303,17 +305,34 @@ vector<KDPoint<unsigned, K - 1> > Map2Grid(
     {
         rank2next[i] = index2rank[(rank2index[i] + 1) % n];
     }
-    for (unsigned i = 0; i < n; i++)
+    if (skip_nocount)
     {
-        if (points[i].count() == 0) continue;
-        result[i].set_count(points[i].count());
-        unsigned grid = i;
-        for (unsigned j = 0; j < K - 1; j++)
+        for (unsigned i = 0; i < n; i++)
         {
-            grid = rank2next[grid];
-            result[i][j] = grid;
+            if (points[i].count() == 0) continue;
+            result[i].set_count(points[i].count());
+            unsigned grid = i;
+            for (unsigned j = 0; j < K - 1; j++)
+            {
+                grid = rank2next[grid];
+                result[i][j] = grid;
+            }
         }
     }
+    else
+    {
+        for (unsigned i = 0; i < n; i++)
+        {
+            result[i].set_count(points[i].count());
+            unsigned grid = i;
+            for (unsigned j = 0; j < K - 1; j++)
+            {
+                grid = rank2next[grid];
+                result[i][j] = grid;
+            }
+        }
+    }
+
     return result;
 }
 

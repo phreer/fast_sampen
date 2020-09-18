@@ -331,7 +331,7 @@ long long MatchedPairsCalculatorSample<T, K>::ComputeA(
 
     const Bounds bounds = GetRankBounds(sorted_points, r); 
     vector<KDPoint<unsigned, K - 1> > points_grid = Map2Grid(
-        sorted_points, rank2index); 
+        sorted_points, rank2index, false);
 
     vector<vector<unsigned> > sample_groups(n); 
     for (unsigned i = 0; i < sample_num * sample_size; ++i) 
