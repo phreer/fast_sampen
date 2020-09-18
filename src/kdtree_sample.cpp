@@ -45,8 +45,8 @@ char usage[] =\
 "                        reversehalton, niederreiter_2 or grid. Default: sobol.\n"
 "-u                      If this option is enabled, the Monte Carlo based\n"
 "                        using uniform distribution is conducted.\n"
-"--output-level <LEVEL>  The amount of information printed. Should be one of"
-"                        {0,1,2}. Level 0 is most silent while level 2 is for"
+"--output-level <LEVEL>  The amount of information printed. Should be one of\n"
+"                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
 "                        debugging.\n";
 
 vector<string> quasi_types = {"uniform", "sobol", "halton", "reverse_halton", 

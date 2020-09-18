@@ -20,6 +20,7 @@ public:
     int value() const { return _value; }
     void set_value(int value) { _value = value; }
     void set_count(int count) { _count = count; }
+    void increase_count(int count) { _count += count; }
     unsigned dim() const { return K; }
     bool Within(const KDPoint<T, K> &p, T r, unsigned m = K)
     {
