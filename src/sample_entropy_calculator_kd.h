@@ -129,7 +129,7 @@ class SampleEntropyCalculatorS : public SampleEntropyCalculator<T, K>
 {
 public:
     SampleEntropyCalculatorS(unsigned sample_size, unsigned sample_num, 
-                             uniform_int_generator::random_type rtype, 
+                             RandomType rtype, 
                              bool random_, OutputLevel output_level) 
         : SampleEntropyCalculator<T, K>(output_level), _sample_size(sample_size),
         _sample_num(sample_num), _rtype(rtype), _random(random_) {}
@@ -143,7 +143,7 @@ public:
             std::cerr << ", K = " << K << ")" << std::endl; 
             return -1; 
         }
-        uniform_int_generator uig(0, n - 2, _rtype, _random); 
+        RandomIndicesSampler uig(0, n - 2, _rtype, _random); 
         MatchedPairsCalculatorSample<T, K> b_cal(this->_output_level);
         MatchedPairsCalculatorSample<T, K + 1> a_cal(this->_output_level);
         vector<double> ABs(2 * _sample_num); 
@@ -177,7 +177,7 @@ public:
 private:
     unsigned _sample_size;
     unsigned _sample_num; 
-    uniform_int_generator::random_type _rtype;
+    RandomType _rtype;
     bool _random; 
 };
 
@@ -197,7 +197,8 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     // TODO: !! For debug here. 
     for (size_t i = 0; i < K - 1; i++) data_.push_back(minimum);
     // Construct Points and merge repeated points. 
-    const vector<KDPoint<T, K> > points = GetKDPoints<T, K>(data_, 1);
+    const vector<KDPoint<T, K> > points = GetKDPoints<T, K>(
+        data_.cbegin(), data_.cend(), 1);
 
     vector<KDPoint<T, K> > sorted_points(points);
     // The mapping p, from rank to original index 
@@ -316,7 +317,8 @@ long long MatchedPairsCalculatorSample<T, K>::ComputeA(
     // TODO: !! For debug here. 
     for (size_t i = 0; i < K - 1; i++) data_.push_back(minimum); 
     // Construct Points and merge repeated points. 
-    vector<KDPoint<T, K> > points = GetKDPoints<T, K>(data_, 0); 
+    vector<KDPoint<T, K> > points = GetKDPoints<T, K>(data_.cbegin(),
+                                                      data_.cend(), 0); 
     vector<KDPoint<T, K> > sorted_points(points.cbegin(), points.cend());
     // The mapping p, from rank to original index 
     vector<unsigned> rank2index(n); 

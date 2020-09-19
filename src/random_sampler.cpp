@@ -30,19 +30,10 @@ int randomfunc(int j)
     return rand() % j;
 }
 
-vector<unsigned> random_permutation(unsigned n)
+void RandomIndicesSampler::init_state() 
 {
-    vector<unsigned> result(n);
-    for (unsigned i = 0; i < n; i++)
-    result[i] = i;
-    std::random_shuffle(result.begin(), result.end(), randomfunc);
-    return result;
-}
-
-void uniform_int_generator::init_state() 
-{
-    if (rangel > ranger) 
-    throw std::invalid_argument("rangel is larger than ranger.");
+    if (_rangel > _ranger) 
+    throw std::invalid_argument("_rangel is larger than _ranger.");
 
     if (real_random) 
     {
@@ -53,32 +44,32 @@ void uniform_int_generator::init_state()
     {
         eng.seed(0); 
     }
-    if (rtype == UNIFORM) 
+    if (_rtype == UNIFORM) 
     {
-        uid = std::uniform_int_distribution<int>(rangel, ranger);
+        uid = std::uniform_int_distribution<int>(_rangel, _ranger);
     }
-    else if (rtype == SOBOL) 
+    else if (_rtype == SOBOL) 
     {
         qrng = gsl_qrng_alloc(gsl_qrng_sobol, 1);
     }
-    else if (rtype == HALTON)
+    else if (_rtype == HALTON)
     {
         qrng = gsl_qrng_alloc(gsl_qrng_halton, 1);
     }
-    else if (rtype == REVERSE_HALTON)
+    else if (_rtype == REVERSE_HALTON)
     {
         qrng = gsl_qrng_alloc(gsl_qrng_reversehalton, 1);
     }
-    else if (rtype == NIEDERREITER_2)
+    else if (_rtype == NIEDERREITER_2)
     {
         qrng = gsl_qrng_alloc(gsl_qrng_niederreiter_2, 1);
     }
 }
 
 
-int uniform_int_generator::get() 
+int RandomIndicesSampler::get() 
 {
-    switch (rtype)
+    switch (_rtype)
     {
     case UNIFORM:
         sample = uid(eng);
@@ -89,11 +80,29 @@ int uniform_int_generator::get()
     case NIEDERREITER_2:
         double v;
         gsl_qrng_get(qrng, &v);
-        sample = static_cast<int>(v * (ranger - rangel) + rangel);
+        sample = static_cast<int>(v * (_ranger - _rangel) + _rangel);
         break;
     case GRID:
         throw std::runtime_error("SHUFFULE not implemented.");
         break;
     }
     return sample;
+}
+
+vector<vector<unsigned> > GetSampleIndices(RandomType rtype, 
+                                           unsigned count, 
+                                           unsigned sample_size, 
+                                           unsigned sample_num, 
+                                           bool random_) 
+{
+    vector<vector<unsigned> > results(sample_num, vector<unsigned>(sample_size)); 
+    RandomIndicesSampler sampler(0, count - 1, rtype, random_); 
+    for (unsigned i = 0; i < results.size(); ++i) 
+    {
+        for (unsigned j = 0; j < sample_size; ++j) 
+        {
+            results[i][j] = static_cast<unsigned>(sampler.get()); 
+        }
+    }
+    return results; 
 }

@@ -16,33 +16,34 @@
 
 using std::vector;
 
-class uniform_int_generator
+enum RandomType {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, GRID};
+
+class RandomIndicesSampler
 {
 public:
-    enum random_type {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, GRID};
     /*
      * @param _rangel: minimun value
      * @param _ranger: maximum value 
      */
-    uniform_int_generator(
-        int _rangel, int _ranger, random_type _rtype, bool _random = false): 
-            rangel(_rangel), ranger(_ranger), rtype(_rtype), 
-            real_random(_random)
+    RandomIndicesSampler(
+        int rangel, int ranger, RandomType rtype, bool random_ = false):
+            _rangel(rangel), _ranger(ranger), _rtype(rtype), 
+            real_random(random_)
     {
         init_state();
     }
-    ~uniform_int_generator() 
+    ~RandomIndicesSampler() 
     {
-        if (rtype == SOBOL || rtype == HALTON || rtype == REVERSE_HALTON 
-            || rtype == NIEDERREITER_2) 
+        if (_rtype == SOBOL || _rtype == HALTON || _rtype == REVERSE_HALTON 
+            || _rtype == NIEDERREITER_2) 
         {
             gsl_qrng_free(qrng); 
         }
     }
     int get();
 private:
-    int rangel, ranger;
-    const uniform_int_generator::random_type rtype;
+    int _rangel, _ranger;
+    RandomType _rtype;
     std::uniform_int_distribution<int> uid;
     std::default_random_engine eng;
     gsl_qrng *qrng;
@@ -52,4 +53,9 @@ private:
     void init_state();
 };
 
+vector<vector<unsigned> > GetSampleIndices(RandomType rtype, 
+                                           unsigned count, 
+                                           unsigned sample_size, 
+                                           unsigned sample_num, 
+                                           bool random_ = false); 
 #endif // __RANDOM_SAMPLER_H__

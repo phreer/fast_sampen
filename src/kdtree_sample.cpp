@@ -24,7 +24,7 @@ char usage[] =\
 "                        multirecord, then each line contains <NUM_RECORD> + 1\n"
 "                        columns, of which the first indicates the line number\n"
 "                        and the remaining columns are instances of the records.\n"
-"                        The defualt value is simple.\n"
+"                        The default value is simple.\n"
 "--input-type <TYPE>     The data type of the input data, either int or float.\n"
 "                        Default: double.\n"
 "-r <R>                  The threshold argument in sample entropy.\n"
@@ -73,7 +73,7 @@ struct Argument
     bool direct = false; 
     bool random_; 
     bool q, u;
-    uniform_int_generator::random_type rtype; 
+    RandomType rtype; 
     void PrintArguments() const;
 } arg;
 
@@ -262,15 +262,15 @@ void ParseArgument(int argc, char *argv[])
         {
             std::string rtype = parser.getArg("--quasi-type"); 
             if (rtype.size() == 0 || rtype == "sobol")
-                arg.rtype = uniform_int_generator::SOBOL; 
+                arg.rtype = SOBOL; 
             else if (rtype == "halton") 
-                arg.rtype = uniform_int_generator::HALTON; 
+                arg.rtype = HALTON; 
             else if (rtype == "reverse_halton") 
-                arg.rtype = uniform_int_generator::REVERSE_HALTON; 
+                arg.rtype = REVERSE_HALTON; 
             else if (rtype == "niederreiter_2") 
-                arg.rtype = uniform_int_generator::NIEDERREITER_2; 
+                arg.rtype = NIEDERREITER_2; 
             else if (rtype == "grid") 
-                arg.rtype = uniform_int_generator::GRID; 
+                arg.rtype = GRID; 
             else 
             {
                 cerr << "Invalid argument --quasi-random " << rtype << ". "; 
@@ -343,13 +343,27 @@ void SampleEntropy()
     if (arg.u) 
     {
         SampleEntropyCalculatorS<T, K> secs(
-            arg.sample_size, arg.sample_num, uniform_int_generator::UNIFORM, 
+            arg.sample_size, arg.sample_num, UNIFORM,
             arg.random_, arg.output_level); 
         t = clock(); 
         double sampen_estimate = secs.ComputeSampleEntropy(
             data.cbegin(), data.cend(), r_scaled); 
         t = clock() - t;
         cout << "kd tree (Uniform): Sampen(" << n << ", " << K << ", " 
+            << arg.r << "): " << sampen_estimate << std::endl
+            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
+            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
+            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
+            << " seconds\n";
+
+        SampleEntropyCalculatorDirectSample<T, K> secds(
+            arg.sample_size, arg.sample_num, UNIFORM, 
+            arg.random_, arg.output_level); 
+        t = clock(); 
+        sampen_estimate = secds.ComputeSampleEntropy(
+            data.cbegin(), data.cend(), r_scaled); 
+        t = clock() - t;
+        cout << "Direct (Uniform): Sampen(" << n << ", " << K << ", " 
             << arg.r << "): " << sampen_estimate << std::endl
             << "Error: " << sampen_estimate - sampen << ", error (relative): " 
             << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
@@ -367,6 +381,20 @@ void SampleEntropy()
             data.cbegin(), data.cend(), r_scaled); 
         t = clock() - t;
         cout << "kd tree (QMC): Sampen(" << n << ", " << K << ", " 
+            << arg.r << "): " << sampen_estimate << std::endl
+            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
+            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
+            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
+            << " seconds\n";
+
+        SampleEntropyCalculatorS<T, K> secds(arg.sample_size, arg.sample_num, 
+                                             arg.rtype, arg.random_, 
+                                             arg.output_level); 
+        t = clock(); 
+        sampen_estimate = secds.ComputeSampleEntropy(
+            data.cbegin(), data.cend(), r_scaled); 
+        t = clock() - t;
+        cout << "Direct (QMC): Sampen(" << n << ", " << K << ", " 
             << arg.r << "): " << sampen_estimate << std::endl
             << "Error: " << sampen_estimate - sampen << ", error (relative): " 
             << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 

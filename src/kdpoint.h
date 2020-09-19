@@ -22,7 +22,7 @@ public:
     void set_count(int count) { _count = count; }
     void increase_count(int count) { _count += count; }
     unsigned dim() const { return K; }
-    bool Within(const KDPoint<T, K> &p, T r, unsigned m = K)
+    bool Within(const KDPoint<T, K> &p, T r, unsigned m = K) const
     {
         for (unsigned i = 0; i < m; i++)
         {

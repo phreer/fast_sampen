@@ -3,8 +3,11 @@
 
 #include <string.h>
 #include <vector>
+#include <numeric> 
 
 #include "sample_entropy_calculator.h"
+#include "random_sampler.h"
+
 namespace kdtree_mddc
 {
 
@@ -32,6 +35,23 @@ public:
                                 typename vector<T>::const_iterator last, T r);
 };
 
+template<typename T, unsigned K>
+class SampleEntropyCalculatorDirectSample : public SampleEntropyCalculator<T, K>
+{
+public:
+    SampleEntropyCalculatorDirectSample(unsigned sample_size, unsigned sample_num,
+                                        RandomType rtype, bool random_,
+                                        OutputLevel output_level)
+        : SampleEntropyCalculator<T, K>(output_level), _sample_size(sample_size),
+        _sample_num(sample_num), _rtype(rtype), _random(random_) {}
+    double ComputeSampleEntropy(typename vector<T>::const_iterator first,
+                                typename vector<T>::const_iterator last, T r);
+private:
+    unsigned _sample_size;
+    unsigned _sample_num;
+    RandomType _rtype; 
+    bool _random; 
+};
 /*
 * Calculates an estimate of sample entropy but does NOT calculate
 * the variance of the estimate
@@ -91,15 +111,11 @@ vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r)
 }
 
 template<typename T, unsigned K>
-inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(
-    typename vector<T>::const_iterator first, 
-    typename vector<T>::const_iterator last, T r)
+vector<long long> ComputeABDirect(const vector<KDPoint<T, K + 1> >&points, T r)
 {
-    long long a = 0;
-    long long b = 0;
-
-    vector<KDPoint<T, K + 1> > points = GetKDPoints<T, K + 1>(vector<T>(first, last));
     const unsigned n = points.size();
+    vector<long long> results(2); 
+    long long a = 0LL, b = 0LL; 
     for (unsigned i = 0; i < n; ++i)
     {
         for (unsigned j = i + 1; j < n; ++j)
@@ -108,10 +124,24 @@ inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(
             {
                 ++b;
                 T diff = points[j][K] - points[i][K];
-                if (-r <= diff && diff <= r) a++;
+                if (-r <= diff && diff <= r) ++a;
             }
         }
     }
+    results[0] = a; 
+    results[1] = b;
+    return results;
+}
+
+template<typename T, unsigned K>
+inline double SampleEntropyCalculatorDirect<T, K>::ComputeSampleEntropy(
+    typename vector<T>::const_iterator first, 
+    typename vector<T>::const_iterator last, T r)
+{
+    const unsigned n = last - first;
+    vector<KDPoint<T, K + 1> > points = GetKDPoints<T, K + 1>(first, last);
+    vector<long long> ab = ComputeABDirect<T, K>(points, r);
+    long long a = ab[0], b = ab[1]; 
     double norm = (n - K + 1) * (n - K); 
     std::cout << "A (norm): " << a / norm << ", B (norm): " << b / norm 
         << std::endl;
@@ -146,6 +176,32 @@ inline double SampleEntropyCalculatorFastDirect<T, K>::ComputeSampleEntropy(
     return result;
 }
 
+
+template<typename T, unsigned K>
+double SampleEntropyCalculatorDirectSample<T, K>::ComputeSampleEntropy(
+    typename vector<T>::const_iterator first,
+    typename vector<T>::const_iterator last, T r)
+{
+    vector<long long> results(2 * _sample_num);
+    const unsigned n = last - first;
+    long long a = 0LL, b = 0LL;
+    vector<vector<unsigned> > indices = GetSampleIndices(
+        _rtype, n, _sample_size, _sample_num, _random);
+    for (unsigned i = 0; i < _sample_num; ++i) 
+    {
+        vector<KDPoint<T, K + 1> > points = GetKDPointsSample<T, K + 1>(
+            first, last, indices[i], 1); 
+        vector<long long> ab = ComputeABDirect<T, K>(points, r);
+        results[2 * i] = ab[0]; 
+        results[2 * i + 1] = ab[1]; 
+        a += ab[0]; 
+        b += ab[1]; 
+    }
+    double entropy = ComputeSampen(static_cast<double>(a), 
+                                   static_cast<double>(b), n - K, K, 
+                                   this->_output_level); 
+    return entropy; 
+}
 } // namespace kdtree_mddc
 
 

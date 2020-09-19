@@ -91,7 +91,16 @@ void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
 
 
 template<typename T, unsigned K>
-vector<KDPoint<T, K> > GetKDPoints(const vector<T> &data, int count = 1);
+vector<KDPoint<T, K> >GetKDPoints(typename vector<T>::const_iterator first, 
+                                  typename vector<T>::const_iterator last, 
+                                  int count = 1); 
+
+template<typename T, unsigned K>
+vector<KDPoint<T, K> >GetKDPointsSample(
+    typename vector<T>::const_iterator first, 
+    typename vector<T>::const_iterator last, 
+    const vector<unsigned> &indices, 
+    int count); 
 
 template<typename T, unsigned K>
 void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
@@ -192,9 +201,11 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
 }
 
 template<typename T, unsigned K>
-vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data, int count)
+vector<KDPoint<T, K> >GetKDPoints(typename vector<T>::const_iterator first, 
+                                  typename vector<T>::const_iterator last, 
+                                  int count)
 {
-    const size_t n = data.size();
+    const size_t n = last - first; 
     
     if (n <= K)
     {
@@ -204,10 +215,36 @@ vector<KDPoint<T, K> >GetKDPoints(const vector<T> &data, int count)
     } else
     {
         vector<KDPoint<T, K> > points(n - K + 1);
-        auto begin_i = data.cbegin();
         for (size_t i = 0; i < n - K + 1; i++)
         {
-            points[i] = KDPoint<T, K>(begin_i + i, begin_i + i + K, count);
+            points[i] = KDPoint<T, K>(first + i, first + i + K, count);
+        }
+        return points;
+    }
+}
+template<typename T, unsigned K>
+vector<KDPoint<T, K> >GetKDPointsSample(
+    typename vector<T>::const_iterator first, 
+    typename vector<T>::const_iterator last, 
+    const vector<unsigned> &indices, 
+    int count)
+{
+    const size_t n = last - first; 
+    
+    if (n < K)
+    {
+        std::cerr << "GetKDPoints(): Data length is too short (n = " << n;
+        std::cerr << ", K = " << K << ")" << std::endl;
+        exit(-1); 
+    } else
+    {
+        unsigned sample_num = indices.size(); 
+        vector<KDPoint<T, K> > points(sample_num);
+        for (size_t i = 0; i < sample_num; i++)
+        {
+            unsigned index = indices[i]; 
+            assert(index < n - K + 1 && "Sample index exceeds the number of points"); 
+            points[i] = KDPoint<T, K>(first + index, first + index + K, count);
         }
         return points;
     }

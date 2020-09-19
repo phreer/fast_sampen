@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <math.h>
 
 #include "utils.h"
 
