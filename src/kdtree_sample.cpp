@@ -387,9 +387,9 @@ void SampleEntropy()
             << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
             << " seconds\n";
 
-        SampleEntropyCalculatorS<T, K> secds(arg.sample_size, arg.sample_num, 
-                                             arg.rtype, arg.random_, 
-                                             arg.output_level); 
+        SampleEntropyCalculatorDirectSample<T, K> secds(arg.sample_size, arg.sample_num,
+                                                        arg.rtype, arg.random_,
+                                                        arg.output_level);
         t = clock(); 
         sampen_estimate = secds.ComputeSampleEntropy(
             data.cbegin(), data.cend(), r_scaled); 

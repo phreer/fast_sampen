@@ -186,7 +186,7 @@ double SampleEntropyCalculatorDirectSample<T, K>::ComputeSampleEntropy(
     const unsigned n = last - first;
     long long a = 0LL, b = 0LL;
     vector<vector<unsigned> > indices = GetSampleIndices(
-        _rtype, n, _sample_size, _sample_num, _random);
+        _rtype, n - K, _sample_size, _sample_num, _random);
     for (unsigned i = 0; i < _sample_num; ++i) 
     {
         vector<KDPoint<T, K + 1> > points = GetKDPointsSample<T, K + 1>(

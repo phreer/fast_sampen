@@ -1,13 +1,12 @@
 #!/bin/bash 
 
-./build/bin/kdtree_sample \
-    --input data.PhysioNet/chfdb/chf01.txt \
+./build/bin/Release/kdtree_sample \
+    --input data/chf01.txt \
     --input-format multirecord \
     --input-type double \
-    -n 300000 -r 0.3 -m 5 \
+    -n 800000 -r 0.1 -m 3 \
     -q -u \
-    --random \
     --quasi-type halton \
-    --sample-size 2000 \
+    --sample-size 5000 \
     --sample-num 50 \
     --output-level 0
