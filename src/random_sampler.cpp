@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
-#include <list>
 
 #include <math.h>
 #include <stdlib.h>
@@ -12,7 +11,6 @@
 #include "random_sampler.h"
 
 using std::vector;
-using std::list;
 
 unsigned powu(unsigned x, unsigned u) 
 {

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <string.h> 
 
 namespace kdtree_mddc
 {

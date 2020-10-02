@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-./build/bin/Release/kdtree_sample \
-    --input data/chf01.txt \
+./build/bin/kdtree_sample \
+    --input data.PhysioNet/chfdb/chf01.txt \
     --input-format multirecord \
     --input-type double \
     -n 800000 -r 0.1 -m 3 \

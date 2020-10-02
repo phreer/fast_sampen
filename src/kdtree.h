@@ -678,15 +678,15 @@ KDCountingTree2KNode(unsigned depth, KDCountingTree2KNode *father,
         return;
     }
 
-    unsigned splitters[1 << (K + 1)];
+    unsigned splitters[1u << (K + 1)];
     splitters[0] = 0;
-    splitters[1 << K] = _count;
+    splitters[1u << K] = _count;
 
     unsigned median, splitter1, splitter2;
     for (unsigned i = 0; i < K; i++)
     {
-        const unsigned spacing = 1 << (K - i);
-        for (unsigned j = 0; j < (1 << i); j++)
+        const unsigned spacing = 1u << (K - i);
+        for (unsigned j = 0; j < (1u << i); j++)
         {
             splitter1 = splitters[j * spacing];
             splitter2 = splitters[(j + 1) * spacing];
@@ -702,7 +702,7 @@ KDCountingTree2KNode(unsigned depth, KDCountingTree2KNode *father,
     }
 
     unsigned k = 0;
-    for (unsigned i = 0; i < (1 << K); i++)
+    for (unsigned i = 0; i < (1u << K); i++)
     {
         splitter1 = splitters[i];
         splitter2 = splitters[i + 1];
@@ -813,15 +813,15 @@ KDTreeNode2K(unsigned depth, KDTreeNode2K * father,
         return;
     }
 
-    unsigned splitters[1 << (K + 1)];
+    unsigned splitters[1u << (K + 1)];
     splitters[0] = 0;
-    splitters[1 << K] = _count;
+    splitters[1u << K] = _count;
 
     unsigned median, splitter1, splitter2;
     for (unsigned i = 0; i < K; i++)
     {
-        const unsigned spacing = 1 << (K - i);
-        for (unsigned j = 0; j < (1 << i); j++)
+        const unsigned spacing = 1u << (K - i);
+        for (unsigned j = 0; j < (1u << i); j++)
         {
             splitter1 = splitters[j * spacing];
             splitter2 = splitters[(j + 1) * spacing];
@@ -837,7 +837,7 @@ KDTreeNode2K(unsigned depth, KDTreeNode2K * father,
     }
 
     unsigned k = 0;
-    for (unsigned i = 0; i < (1 << K); i++)
+    for (unsigned i = 0; i < (1u << K); i++)
     {
         splitter1 = splitters[i];
         splitter2 = splitters[i + 1];

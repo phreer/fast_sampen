@@ -2,6 +2,7 @@
 #include <string>
 #include <time.h>
 
+#include "random_sampler.h"
 #include "sample_entropy_calculator_direct.h"
 #include "sample_entropy_calculator_kd.h"
 #include "utils.h"
@@ -49,8 +50,6 @@ char usage[] =\
 "                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
 "                        debugging.\n";
 
-vector<string> quasi_types = {"uniform", "sobol", "halton", "reverse_halton", 
-                              "niederreiter_2", "grid"}; 
 template<typename T>
 void PrintSampenSetting(unsigned line_offset, unsigned n, T r, unsigned K, 
                         std::string filename, double var);
@@ -83,7 +82,7 @@ void SampleEntropy();
 int main(int argc, char *argv[])
 {
 #ifdef DEBUG
-    std::cout << "This is a debug version. " << std::endl;
+    cout << "This is a debug version. " << std::endl;
 #endif
     ParseArgument(argc, argv);
 
@@ -177,13 +176,13 @@ void Argument::PrintArguments() const
 {
     std::cout << "Sample Entropy Computation Setting: " << std::endl;
     std::cout << "\tfilename: " << arg.filename << std::endl;
-    std::cout << "\tinput-type: " << arg.input_type << std::endl; 
-    std::cout << "\tline_offset: " << arg.line_offset << std::endl;
+    std::cout << "\tinput type: " << arg.input_type << std::endl; 
+    std::cout << "\tline offset: " << arg.line_offset << std::endl;
     std::cout << "\tdata length: " << arg.data_length << std::endl;
     std::cout << "\ttemplate length: " << arg.template_length << std::endl;
     std::cout << "\tthreshold: " << arg.r << std::endl;
     std::cout << "\trandom: " << arg.random_ << std::endl; 
-    std::cout << "\tquasi-type: " << quasi_types[arg.rtype] << std::endl;
+    std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
     std::cout << "\tsample num: " << arg.sample_num << std::endl; 
     std::cout << "\tsample size: " << arg.sample_size << std::endl; 
 }
@@ -324,106 +323,73 @@ void SampleEntropy()
         exit(-1);
     }
 
+    cout.precision(4); 
+    cout << std::scientific; 
+    cout << "========================================"; 
+    cout << "========================================\n"; 
     arg.PrintArguments(); 
-    std::cout << "\tVariance: " << var << std::endl; 
+    std::cout << "\tvariance: " << var << std::endl; 
     std::cout << "\tr (scaled): " << r_scaled << std::endl; 
 
     // Compute sample entropy. 
-    double sampen = 0;
-    clock_t t;
-
-    SampleEntropyCalculatorMao<T, K> sec(arg.output_level);
-    t = clock();
-    sampen = sec.ComputeSampleEntropy(data.cbegin(), data.cend(), r_scaled);
-    t = clock() - t;
-    cout << "kd tree (Mao): SampEn(" << n << ", " << K;
-    cout << ", " << arg.r << "): " << sampen;
-    cout << ", time: " << static_cast<double>(t) / CLOCKS_PER_SEC << " seconds\n";
+    SampleEntropyCalculatorMao<T, K> sec(data.cbegin(), data.cend(), 
+                                         r_scaled, arg.output_level);
+    sec.ComputeSampleEntropy(); 
+    cout << sec.get_result_str(); 
 
     if (arg.u) 
     {
-        SampleEntropyCalculatorS<T, K> secs(
-            arg.sample_size, arg.sample_num, UNIFORM,
+        SampleEntropyCalculatorSamplingKDTree<T, K> secs(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
             arg.random_, arg.output_level); 
-        t = clock(); 
-        double sampen_estimate = secs.ComputeSampleEntropy(
-            data.cbegin(), data.cend(), r_scaled); 
-        t = clock() - t;
-        cout << "kd tree (Uniform): Sampen(" << n << ", " << K << ", " 
-            << arg.r << "): " << sampen_estimate << std::endl
-            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
-            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
-            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        secs.ComputeSampleEntropy(); 
+        cout << secs.get_result_str(); 
 
-        SampleEntropyCalculatorDirectSample<T, K> secds(
-            arg.sample_size, arg.sample_num, UNIFORM, 
+        SampleEntropyCalculatorSamplingDirect<T, K> secds(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
             arg.random_, arg.output_level); 
-        t = clock(); 
-        sampen_estimate = secds.ComputeSampleEntropy(
-            data.cbegin(), data.cend(), r_scaled); 
-        t = clock() - t;
-        cout << "Direct (Uniform): Sampen(" << n << ", " << K << ", " 
-            << arg.r << "): " << sampen_estimate << std::endl
-            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
-            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
-            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        secds.ComputeSampleEntropy(); 
+        cout << secds.get_result_str(); 
     }
 
     if (arg.q) 
     {
-        SampleEntropyCalculatorS<T, K> secs(arg.sample_size, arg.sample_num, 
-                                            arg.rtype, arg.random_, 
-                                            arg.output_level); 
-        t = clock(); 
-        double sampen_estimate = secs.ComputeSampleEntropy(
-            data.cbegin(), data.cend(), r_scaled); 
-        t = clock() - t;
-        cout << "kd tree (QMC): Sampen(" << n << ", " << K << ", " 
-            << arg.r << "): " << sampen_estimate << std::endl
-            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
-            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
-            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        SampleEntropyCalculatorSamplingKDTree<T, K> secs(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+            arg.random_, arg.output_level); 
+        secs.ComputeSampleEntropy(); 
+        cout << secs.get_result_str(); 
 
-        SampleEntropyCalculatorDirectSample<T, K> secds(arg.sample_size, arg.sample_num,
-                                                        arg.rtype, arg.random_,
-                                                        arg.output_level);
-        t = clock(); 
-        sampen_estimate = secds.ComputeSampleEntropy(
-            data.cbegin(), data.cend(), r_scaled); 
-        t = clock() - t;
-        cout << "Direct (QMC): Sampen(" << n << ", " << K << ", " 
-            << arg.r << "): " << sampen_estimate << std::endl
-            << "Error: " << sampen_estimate - sampen << ", error (relative): " 
-            << (sampen_estimate - sampen) / (sampen + 1e-8) << std::endl 
-            << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        SampleEntropyCalculatorSamplingDirect<T, K> secds(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+            arg.random_, arg.output_level);
+        secds.ComputeSampleEntropy(); 
+        cout << secds.get_result_str(); 
     }
 
     if (arg.fast_direct)
     {
-        SampleEntropyCalculatorFastDirect<T, K> secfd(arg.output_level);
-        t = clock();
-        double sampen = secfd.ComputeSampleEntropy(
-            data.cbegin(), data.cend(), r_scaled);
-        t = clock() - t;
-        cout << "kd tree (Fast Direct): Sampen(" << n << ", " << K << ", " 
-            << arg.r << "): " << sampen <<std::endl; 
-        cout << "Time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        SampleEntropyCalculatorFastDirect<T, K> secfd(
+            data.cbegin(), data.cend(), r_scaled, arg.output_level);
+        secfd.ComputeSampleEntropy();
+        cout << secfd.get_result_str(); 
     }
 
     if (arg.direct)
     {
-        SampleEntropyCalculatorDirect<T, K> secd(arg.output_level);
-        t = clock();
-        sampen = secd.ComputeSampleEntropy(data.cbegin(), data.cend(), r_scaled);
-        t = clock() - t;
-        cout << "kd tree (Direct): Sampen(" << n << ", " << K;
-        cout << ", " << arg.r << "): " << sampen;
-        cout << ", time: " << static_cast<double>(t) / CLOCKS_PER_SEC 
-            << " seconds\n";
+        SampleEntropyCalculatorDirect<T, K> secd(
+            data.cbegin(), data.cend(), r_scaled, arg.output_level);
+        secd.ComputeSampleEntropy();
+        cout << secd.get_result_str(); 
     }
+    cout << "========================================"; 
+    cout << "========================================\n"; 
 }

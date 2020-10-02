@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <random>
+#include <string> 
 #include <gsl/gsl_qrng.h>
 
 #include "utils.h"
@@ -17,6 +18,8 @@
 using std::vector;
 
 enum RandomType {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, GRID};
+static vector<std::string> random_type_names = 
+    {"uniform", "sobol", "halton", "reverse_halton", "NIEDERREITER_2", "GRID"}; 
 
 class RandomIndicesSampler
 {

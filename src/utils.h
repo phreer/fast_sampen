@@ -17,6 +17,7 @@
 #include <numeric>
 #include <algorithm>
 #include <limits>
+#include <chrono> 
 #include <assert.h>
 
 #include "kdpoint.h"
@@ -61,7 +62,8 @@ struct Range
 
 vector<unsigned> GetInverseMap(const vector<unsigned> &map);
 
-double ComputeSampen(double A, double B, unsigned N, unsigned m, OutputLevel output_level);
+double ComputeSampen(
+    double A, double B, unsigned N, unsigned m, OutputLevel output_level);
 
 /**
  * @brief Read data from file. 
@@ -70,7 +72,8 @@ double ComputeSampen(double A, double B, unsigned N, unsigned m, OutputLevel out
  * @return Read data. 
  */
 template<typename T>
-vector<T> ReadData(std::string filename, std::string input_type = "simple", unsigned n = 0);
+vector<T> ReadData(
+    std::string filename, std::string input_type = "simple", unsigned n = 0);
 
 template<typename T>
 double ComputeVarience(const vector<T> &data);
@@ -151,6 +154,52 @@ public:
 private:
     vector<string> arg_list;
 };
+
+
+/**
+ * Timer class for evaluating the time eclapsed from a starting point. 
+ */
+class Timer 
+{
+public:
+    void SetStartingPointNow()
+    {
+        _starting_point = std::chrono::system_clock::now(); 
+        _runing = true; 
+    } 
+    void StopTimer() 
+    { 
+        if (_runing) 
+        {
+            _end_point = std::chrono::system_clock::now(); 
+            _runing = false; 
+        }
+    }
+    double EclapsedMilliseconds()
+    {
+        std::chrono::time_point<std::chrono::system_clock> end_point;
+        
+        if(_runing)
+        {
+            end_point = std::chrono::system_clock::now();
+        }
+        else
+        {
+            end_point = _end_point;
+        }
+        
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+            end_point - _starting_point).count();
+    }
+    double EclapsedSeconds() 
+    {
+        return EclapsedMilliseconds() / 1000.; 
+    } 
+private: 
+    std::chrono::time_point<std::chrono::system_clock> _starting_point; 
+    std::chrono::time_point<std::chrono::system_clock> _end_point; 
+    bool _runing = false; 
+}; 
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation 
@@ -239,12 +288,21 @@ vector<KDPoint<T, K> >GetKDPointsSample(
     } else
     {
         unsigned sample_num = indices.size(); 
+        vector<KDPoint<T, K> > orig_points = GetKDPoints<T, K>(
+            first, last, count); 
+        vector<unsigned> rank2index(orig_points.size());
+        for (size_t i = 0; i < orig_points.size(); i++) 
+            rank2index.at(i) = i;
+        std::sort(rank2index.begin(), rank2index.end(),
+                  [&orig_points](unsigned i1, unsigned i2) 
+                  { return (orig_points[i1] < orig_points[i2]); });
+        
         vector<KDPoint<T, K> > points(sample_num);
         for (size_t i = 0; i < sample_num; i++)
         {
             unsigned index = indices[i]; 
             assert(index < n - K + 1 && "Sample index exceeds the number of points"); 
-            points[i] = KDPoint<T, K>(first + index, first + index + K, count);
+            points[i] = orig_points[rank2index[index]]; 
         }
         return points;
     }

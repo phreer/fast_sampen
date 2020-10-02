@@ -28,52 +28,50 @@ private:
 };
 
 template<typename T, unsigned K> 
-class MatchedPairsCalculatorSample 
+class MatchedPairsCalculatorSampling 
 {
 public: 
-    MatchedPairsCalculatorSample(OutputLevel output_level) 
+    MatchedPairsCalculatorSampling(OutputLevel output_level) 
         : _output_level(output_level) {} 
-    long long ComputeA(typename vector<T>::const_iterator first, 
-                       typename vector<T>::const_iterator last, 
-                       unsigned sample_num, 
-                       const vector<unsigned> &indices, 
-                       T r); 
+    vector<long long> ComputeA(typename vector<T>::const_iterator first, 
+                               typename vector<T>::const_iterator last, 
+                               unsigned sample_num, 
+                               const vector<unsigned> &indices, 
+                               T r); 
 private: 
     OutputLevel _output_level; 
 }; 
 
 template<typename T, unsigned K>
-class SampleEntropyCalculatorMao : SampleEntropyCalculator<T, K>
+class SampleEntropyCalculatorMao : public SampleEntropyCalculator<T, K>
 {
 public:
-    SampleEntropyCalculatorMao(OutputLevel output_level) 
-        : SampleEntropyCalculator<T, K>(output_level) {}
-    double ComputeSampleEntropy(typename vector<T>::const_iterator first,
-                                typename vector<T>::const_iterator last, T r)
+    using SampleEntropyCalculator<T, K>::SampleEntropyCalculator; 
+protected: 
+    void _ComputeSampleEntropy() override 
     {
-        const unsigned n = last - first;
-        if (n <= K)
+        if (_n <= K)
         {
-            std::cerr << "Data length is too short (n = " << n;
+            std::cerr << "Data length is too short (n = " << _n;
             std::cerr << ", K = " << K << ")" << std::endl;
-            return -1;
+            exit(-1); 
         }
 
         MatchedPairsCalculatorMao<T, K> b_cal(this->_output_level);
         MatchedPairsCalculatorMao<T, K + 1> a_cal(this->_output_level);
-        double b = static_cast<double>(b_cal.ComputeA(first, last - 1, r));
-        double a = static_cast<double>(a_cal.ComputeA(first, last, r));
-
-        // Display 
-        double norm = (n - K + 1) * (n - K); 
-        double A_norm = static_cast<double>(a) / norm; 
-        double B_norm = static_cast<double>(b) / norm; 
-        std::cout << "A (norm): " << A_norm << ", B (norm): " 
-            << B_norm << std::endl; 
-
-        double result = ComputeSampen(a, b, n - K, K, this->_output_level);
-        return result;
+        _b = b_cal.ComputeA(_data.cbegin(), _data.cend() - 1, _r);
+        _a = a_cal.ComputeA(_data.cbegin(), _data.cend(), _r);
     }
+    std::string _Method() const override 
+    { return std::string("kd tree (Mao)"); }
+    using SampleEntropyCalculator<T, K>::_data; 
+    using SampleEntropyCalculator<T, K>::_r; 
+    using SampleEntropyCalculator<T, K>::_n; 
+    using SampleEntropyCalculator<T, K>::_computed; 
+    using SampleEntropyCalculator<T, K>::_a; 
+    using SampleEntropyCalculator<T, K>::_b; 
+    using SampleEntropyCalculator<T, K>::_output_level; 
+    using SampleEntropyCalculator<T, K>::_eclapsed_seconds; 
 };
 
 template<typename T, unsigned K>
@@ -96,58 +94,82 @@ template<typename T, unsigned K>
 class SampleEntropyCalculatorLiu : public SampleEntropyCalculator<T, K>
 {
 public:
-    SampleEntropyCalculatorLiu(OutputLevel output_level) 
-        : SampleEntropyCalculator<T, K>(output_level) {}
-    double ComputeSampleEntropy(typename vector<T>::const_iterator first,
-                                typename vector<T>::const_iterator last, T r)
+    using SampleEntropyCalculator<T, K>::SampleEntropyCalculator; 
+protected: 
+    void _ComputeSampleEntropy() override 
     {
-        const unsigned n = last - first;
-        if (n <= K)
+        if (_n <= K)
         {
-            std::cerr << "Data length is too short (n = " << n;
+            std::cerr << "Data length is too short (n = " << _n;
             std::cerr << ", K = " << K << ")" << std::endl;
-            return -1;
+            exit(-1); 
         }
         ABCalculatorLiu<T, K> abc(this->_output_level);
-        vector<long long> result = abc.ComputeAB(first, last, r);
-
-        // Display 
-        double norm = (n - K + 1) * (n - K); 
-        double A_norm = static_cast<double>(result[0]) / norm; 
-        double B_norm = static_cast<double>(result[1]) / norm; 
-        std::cout << "A (norm): " << A_norm << ", B (norm): " 
-            << B_norm << std::endl; 
-
-        double entropy = ComputeSampen(result[0], result[1], 
-                                       n - K, K, this->_output_level);
-        return entropy;
+        vector<long long> result = abc.ComputeAB(
+            _data.cbegin(), _data.cend(), _r);
+        _a = result[0]; 
+        _b = result[1]; 
     }
+    std::string _Method() const override 
+    { return std::string("kd tree (Liu)"); }
+
+    using SampleEntropyCalculator<T, K>::_data; 
+    using SampleEntropyCalculator<T, K>::_r; 
+    using SampleEntropyCalculator<T, K>::_n; 
+    using SampleEntropyCalculator<T, K>::_computed; 
+    using SampleEntropyCalculator<T, K>::_a; 
+    using SampleEntropyCalculator<T, K>::_b; 
+    using SampleEntropyCalculator<T, K>::_output_level; 
+    using SampleEntropyCalculator<T, K>::_eclapsed_seconds; 
 };
 
 template<typename T, unsigned K>
-class SampleEntropyCalculatorS : public SampleEntropyCalculator<T, K> 
+class SampleEntropyCalculatorSamplingKDTree : 
+    public SampleEntropyCalculatorSampling<T, K> 
 {
 public:
-    SampleEntropyCalculatorS(unsigned sample_size, unsigned sample_num, 
-                             RandomType rtype, 
-                             bool random_, OutputLevel output_level) 
-        : SampleEntropyCalculator<T, K>(output_level), _sample_size(sample_size),
-        _sample_num(sample_num), _rtype(rtype), _random(random_) {}
-    double ComputeSampleEntropy(typename vector<T>::const_iterator first, 
-                                typename vector<T>::const_iterator last, T r) 
+    SampleEntropyCalculatorSamplingKDTree(
+        typename vector<T>::const_iterator first, 
+        typename vector<T>::const_iterator last, 
+        T r, 
+        unsigned sample_size, 
+        unsigned sample_num, 
+        double real_entropy, 
+        double real_a_norm, 
+        double real_b_norm, 
+        RandomType rtype, 
+        bool random_, 
+        OutputLevel output_level) : 
+        SampleEntropyCalculatorSampling<T, K>(
+            first, last, r, sample_size, sample_num, real_entropy, 
+            real_a_norm, real_b_norm, output_level), 
+        _rtype(rtype), _random(random_) 
+    {}
+    std::string get_result_str() override 
     {
-        const unsigned n = last - first; 
-        if (n <= K) 
+        std::stringstream ss; 
+        ss << this->SampleEntropyCalculatorSampling<T, K>::get_result_str(); 
+        if (_output_level) 
         {
-            std::cerr << "Data length is too short (n = " << n; 
-            std::cerr << ", K = " << K << ")" << std::endl; 
-            return -1; 
+            ss.precision(4); 
+            ss << std::scientific; 
+            ss << "[INFO] " << "random_type: " 
+                << random_type_names[_rtype] << "\n" 
+                << "[INFO] " << "random: " << _random << "\n"; 
         }
-        RandomIndicesSampler uig(0, n - 2, _rtype, _random); 
-        MatchedPairsCalculatorSample<T, K> b_cal(this->_output_level);
-        MatchedPairsCalculatorSample<T, K + 1> a_cal(this->_output_level);
-        vector<double> ABs(2 * _sample_num); 
+        return ss.str(); 
+    }
 
+protected:
+    void _ComputeSampleEntropy() override 
+    {
+        if (_n <= K) 
+        {
+            std::cerr << "Data length is too short (n = " << _n; 
+            std::cerr << ", K = " << K << ")" << std::endl; 
+            exit(-1); 
+        }
+        RandomIndicesSampler uig(0, _n - 2, _rtype, _random); 
         vector<unsigned> indices(_sample_size * _sample_num); 
         for (unsigned i = 0; i < _sample_num; ++i) 
         {
@@ -157,26 +179,31 @@ public:
             }
         }
         
-        double A = static_cast<double>(
-            a_cal.ComputeA(first, last, _sample_num, indices, r)); 
-        double B = static_cast<double>(
-            b_cal.ComputeA(first, last, _sample_num, indices, r)); 
-
-        // Display 
-        double norm = _sample_size * (_sample_size - 1); 
-        double A_norm = static_cast<double>(A); 
-        A_norm = A_norm / _sample_num / norm;
-        double B_norm = static_cast<double>(B); 
-        B_norm = B_norm / _sample_num / norm; 
-        std::cout << "A (norm): " << A_norm << ", B (norm): " 
-            << B_norm << std::endl; 
-
-        double entropy = ComputeSampen(A, B, n - K, K, this->_output_level); 
-        return entropy; 
+        MatchedPairsCalculatorSampling<T, K> b_cal(this->_output_level);
+        MatchedPairsCalculatorSampling<T, K + 1> a_cal(this->_output_level);
+        _a_vec = a_cal.ComputeA(
+            _data.cbegin(), _data.cend(), _sample_num, indices, _r); 
+        _b_vec = b_cal.ComputeA(
+            _data.cbegin(), _data.cend(), _sample_num, indices, _r); 
     }
-private:
-    unsigned _sample_size;
-    unsigned _sample_num; 
+    std::string _Method() const override 
+    { 
+        return std::string("sampling kd tree (Mao, ") 
+            + random_type_names[_rtype] + std::string(")"); 
+    }
+
+    using SampleEntropyCalculatorSampling<T, K>::_data; 
+    using SampleEntropyCalculatorSampling<T, K>::_r; 
+    using SampleEntropyCalculatorSampling<T, K>::_n; 
+    using SampleEntropyCalculatorSampling<T, K>::_computed; 
+    using SampleEntropyCalculatorSampling<T, K>::_a; 
+    using SampleEntropyCalculatorSampling<T, K>::_b; 
+    using SampleEntropyCalculatorSampling<T, K>::_output_level; 
+    using SampleEntropyCalculatorSampling<T, K>::_eclapsed_seconds; 
+    using SampleEntropyCalculatorSampling<T, K>::_sample_size; 
+    using SampleEntropyCalculatorSampling<T, K>::_sample_num; 
+    using SampleEntropyCalculatorSampling<T, K>::_a_vec; 
+    using SampleEntropyCalculatorSampling<T, K>::_b_vec; 
     RandomType _rtype;
     bool _random; 
 };
@@ -303,7 +330,7 @@ vector<unsigned> MergeRepeatedIndices(
 }
 
 template<typename T, unsigned K>
-long long MatchedPairsCalculatorSample<T, K>::ComputeA(
+vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, 
     unsigned sample_num, 
@@ -462,8 +489,7 @@ long long MatchedPairsCalculatorSample<T, K>::ComputeA(
             std::cout << std::endl; 
         }
     }
-    long long result = std::accumulate(results.cbegin(), results.cend(), 0LL); 
-    return result;
+    return results;
 }
 
 
@@ -478,7 +504,8 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     T minimum = *std::min_element(first, last);
     for (size_t i = 0; i < K; i++) data_.push_back(minimum);
     // Construct Points and merge repeated points. 
-    const vector<KDPoint<T, K + 1> > points = GetKDPoints<T, K + 1>(data_);
+    const vector<KDPoint<T, K + 1> > points = GetKDPoints<T, K + 1>(
+        data_.cbegin(), data_.cend());
 
     vector<KDPoint<T, K + 1> > sorted_points(points);
     // The mapping p, from rank to original index 
