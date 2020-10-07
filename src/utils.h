@@ -99,10 +99,10 @@ vector<KDPoint<T, K> >GetKDPoints(typename vector<T>::const_iterator first,
                                   int count = 1); 
 
 template<typename T, unsigned K>
-vector<KDPoint<T, K> >GetKDPointsSample(
+vector<vector<KDPoint<T, K> > > GetKDPointsSample(
     typename vector<T>::const_iterator first, 
     typename vector<T>::const_iterator last, 
-    const vector<unsigned> &indices, 
+    const vector<vector<unsigned> > &indices, 
     int count); 
 
 template<typename T, unsigned K>
@@ -162,6 +162,10 @@ private:
 class Timer 
 {
 public:
+    Timer() 
+    {
+        SetStartingPointNow(); 
+    }
     void SetStartingPointNow()
     {
         _starting_point = std::chrono::system_clock::now(); 
@@ -272,10 +276,10 @@ vector<KDPoint<T, K> >GetKDPoints(typename vector<T>::const_iterator first,
     }
 }
 template<typename T, unsigned K>
-vector<KDPoint<T, K> >GetKDPointsSample(
+vector<vector<KDPoint<T, K> > > GetKDPointsSample(
     typename vector<T>::const_iterator first, 
     typename vector<T>::const_iterator last, 
-    const vector<unsigned> &indices, 
+    const vector<vector<unsigned> > &indices,
     int count)
 {
     const size_t n = last - first; 
@@ -287,22 +291,32 @@ vector<KDPoint<T, K> >GetKDPointsSample(
         exit(-1); 
     } else
     {
-        unsigned sample_num = indices.size(); 
+        const unsigned sample_num = indices.size(); 
+        vector<vector<KDPoint<T, K> > > points(sample_num);
         vector<KDPoint<T, K> > orig_points = GetKDPoints<T, K>(
             first, last, count); 
         vector<unsigned> rank2index(orig_points.size());
         for (size_t i = 0; i < orig_points.size(); i++) 
             rank2index.at(i) = i;
+
+        Timer timer; 
         std::sort(rank2index.begin(), rank2index.end(),
                   [&orig_points](unsigned i1, unsigned i2) 
                   { return (orig_points[i1] < orig_points[i2]); });
-        
-        vector<KDPoint<T, K> > points(sample_num);
-        for (size_t i = 0; i < sample_num; i++)
+        timer.StopTimer(); 
+        std::cout << "[INFO] Time consumed in presorting: " 
+            << timer.EclapsedSeconds() << "s\n";
+
+        for (unsigned i_index = 0; i_index < sample_num; ++i_index) 
         {
-            unsigned index = indices[i]; 
-            assert(index < n - K + 1 && "Sample index exceeds the number of points"); 
-            points[i] = orig_points[rank2index[index]]; 
+            const unsigned sample_size = indices[i_index].size(); 
+            points[i_index].resize(sample_size); 
+            for (unsigned i = 0; i < sample_size; i++)
+            {
+                unsigned index = indices[i_index][i]; 
+                assert(index < n - K + 1 && "Sample index exceeds the number of points"); 
+                points[i_index][i] = orig_points[rank2index[index]]; 
+            }
         }
         return points;
     }

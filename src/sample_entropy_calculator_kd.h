@@ -231,9 +231,18 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     // The mapping p, from rank to original index 
     vector<unsigned> rank2index(n);
     for (size_t i = 0; i < n; i++) rank2index.at(i) = i;
+
+    Timer timer; 
     std::sort(rank2index.begin(), rank2index.end(),
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); });
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in presorting: " 
+            << timer.EclapsedSeconds() << "s\n";
+    }
+
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
 
     MergeRepeatedPoints(sorted_points, rank2index);
@@ -346,13 +355,22 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     // Construct Points and merge repeated points. 
     vector<KDPoint<T, K> > points = GetKDPoints<T, K>(data_.cbegin(),
                                                       data_.cend(), 0); 
-    vector<KDPoint<T, K> > sorted_points(points.cbegin(), points.cend());
     // The mapping p, from rank to original index 
     vector<unsigned> rank2index(n); 
     for (size_t i = 0; i < n; i++) rank2index.at(i) = i; 
+
+    Timer timer; 
     std::sort(rank2index.begin(), rank2index.end(),
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); }); 
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in presorting: " 
+            << timer.EclapsedSeconds() << "s\n";
+    }
+
+    vector<KDPoint<T, K> > sorted_points(points.cbegin(), points.cend());
     for (size_t i = 0; i < n; i++) 
         sorted_points[i] = points[rank2index[i]];
 
@@ -511,10 +529,18 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     // The mapping p, from rank to original index 
     vector<unsigned> rank2index(n);
     for (size_t i = 0; i < n; i++) rank2index.at(i) = i;
+
+    Timer timer; 
     std::sort(rank2index.begin(), rank2index.end(),
               [&points](unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); });
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
+    timer.StopTimer(); 
+    if (_output_level)
+    {
+        std::cout << "[INFO] Time consumed in presorting: " 
+            << timer.EclapsedSeconds() << "s\n";
+    }
 
     //MergeRepeatedPoints(sorted_points, rank2index);
     CloseAuxiliaryPoints(sorted_points, rank2index);
