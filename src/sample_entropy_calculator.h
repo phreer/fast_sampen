@@ -157,7 +157,7 @@ public:
             << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n"; 
         if (this->_output_level) 
         {
-            ss << "[INFO] sample_size: " << _sample_size << "\n" 
+            ss << "[INFO] sample_size: " << _sample_size 
                 << "\tsample num: " << _sample_num << "\n"; 
             vector<long long> a_vec = get_a_vec(); 
             vector<long long> b_vec = get_b_vec(); 

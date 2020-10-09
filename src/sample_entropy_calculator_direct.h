@@ -214,15 +214,15 @@ void SampleEntropyCalculatorFastDirect<T, K>::_ComputeSampleEntropy()
 template<typename T, unsigned K>
 void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
 {
-    vector<vector<unsigned> > indices = GetSampleIndices(
+    const vector<vector<unsigned> > indices = GetSampleIndices(
         _rtype, _n - K, _sample_size, _sample_num, _random);
     _a_vec = vector<long long>(_sample_num); 
     _b_vec = vector<long long>(_sample_num); 
+    vector<vector<KDPoint<T, K + 1> > > points = GetKDPointsSample<T, K + 1>(
+        _data.cbegin(), _data.cend(), indices, 1); 
     for (unsigned i = 0; i < _sample_num; ++i) 
     {
-        vector<KDPoint<T, K + 1> > points = GetKDPointsSample<T, K + 1>(
-            _data.cbegin(), _data.cend(), indices[i], 1); 
-        vector<long long> ab = ComputeABDirect<T, K>(points, _r);
+        vector<long long> ab = ComputeABDirect<T, K>(points[i], _r);
         _a_vec[i] = ab[0], _b_vec[i] = ab[1]; 
         _a += ab[0]; 
         _b += ab[1]; 

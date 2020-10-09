@@ -3,3 +3,5 @@ build/
 data.PhysioNet/
 result/
 gmon.out
+XCode/
+.DS_Store

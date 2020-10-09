@@ -21,7 +21,8 @@ using namespace std;
 double ComputeSampen(double A, double B, unsigned N, unsigned m, 
                      OutputLevel output_level)
 {
-    if (output_level) std::cout << "A: " << A << ", B: " << B << std::endl;
+    if (output_level) 
+        std::cout << "[INFO] A: " << A << ", B: " << B << std::endl;
     if (A > 0 && B > 0)
     {
         return -log(A / B);
