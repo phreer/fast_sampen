@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
             SampleEntropy<Type, 10>(); 
             break;
         default:
-            cerr << "Invalid argument: -input-type " << arg.template_length << ". \n";
+            cerr << "Invalid argument: --input-type " << arg.template_length << ". \n";
             cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
             exit(-1);
         }
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
             SampleEntropy<Type, 10>(); 
             break;
         default:
-            cerr << "Invalid argument: -input-type " << arg.template_length << ". \n";
+            cerr << "Invalid argument: --input-type " << arg.input_type << ". \n";
             cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
             exit(-1);
         }

@@ -1,2 +1,5 @@
 build/
 .vscode/
+data.PhysioNet/
+result/
+gmon.out
