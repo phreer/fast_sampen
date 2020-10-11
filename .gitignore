@@ -2,3 +2,5 @@ build/
 .vscode/
 XCode/
 .DS_Store
+profile/
+data/
