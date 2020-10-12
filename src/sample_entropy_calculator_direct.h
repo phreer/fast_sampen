@@ -242,14 +242,30 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
         _rtype, _n - K, _sample_size, _sample_num, _random);
     _a_vec = vector<long long>(_sample_num); 
     _b_vec = vector<long long>(_sample_num); 
+    Timer timer; 
+    timer.SetStartingPointNow(); 
     vector<vector<KDPoint<T, K + 1> > > points = GetKDPointsSample<T, K + 1>(
         _data.cbegin(), _data.cend(), indices, 1); 
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in sampling: " 
+            << timer.ElapsedSeconds() << " seconds. \n"; 
+    }
+
+    timer.SetStartingPointNow(); 
     for (unsigned i = 0; i < _sample_num; ++i) 
     {
         vector<long long> ab = ComputeABDirect<T, K>(points[i], _r);
         _a_vec[i] = ab[0], _b_vec[i] = ab[1]; 
         _a += ab[0]; 
         _b += ab[1]; 
+    }
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in range counting: " 
+            << timer.ElapsedSeconds() << " seconds. \n"; 
     }
 }
 } // namespace kdtree_mddc

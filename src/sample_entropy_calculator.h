@@ -36,7 +36,7 @@ public:
             << _Method() << ": \n"
             << "\tentropy: " << get_entropy() << "\n" 
             << "\ta (norm): " << get_a_norm() 
-            << ", \tb (norm): " << get_b_norm() << "\n" 
+            << "\tb (norm): " << get_b_norm() << "\n" 
             << "\ttime: " << std::scientific << _elapsed_seconds << "\n"; 
         return ss.str(); 
     }
@@ -164,7 +164,7 @@ public:
             for (unsigned i = 0; i < _sample_num; ++i) 
             {
                 ss << "[INFO] " << "a: " << a_vec[i] 
-                    << ", \tb: " << b_vec[i] << "\n"; 
+                    << "\tb: " << b_vec[i] << "\n"; 
             }
         }
         return ss.str(); 

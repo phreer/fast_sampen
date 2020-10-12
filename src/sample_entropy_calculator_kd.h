@@ -742,15 +742,15 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "The number of nodes (K = " << K << "): ";
+        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "The number of leaf nodes (K = " << K << "): ";
+        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
         std::cout << n_count << std::endl;
-        std::cout << "The number of calls for CountRange(): ";
+        std::cout << "[INFO] The number of calls for CountRange(): ";
         std::cout << num_countrange_called << std::endl;
-        std::cout << "The number times to open node: ";
+        std::cout << "[INFO] The number times to open node: ";
         std::cout << num_opened << std::endl;
-        std::cout << "The number of nodes visited (K = " << K << "): ";
+        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
         std::cout << num_nodes << std::endl;
     }
 
@@ -900,15 +900,15 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "The number of nodes (K = " << K << "): ";
+        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "The number of leaf nodes (K = " << K << "): ";
+        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
         std::cout << n_count << std::endl;
-        std::cout << "The number of calls for CountRange(): ";
+        std::cout << "[INFO] The number of calls for CountRange(): ";
         std::cout << num_countrange_called << std::endl;
-        std::cout << "The number times to open node: ";
+        std::cout << "[INFO] The number times to open node: ";
         std::cout << num_opened << std::endl;
-        std::cout << "The number of nodes visited (K = " << K << "): ";
+        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
         std::cout << num_nodes << std::endl;
     }
 
