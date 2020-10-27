@@ -23,6 +23,14 @@ public:
                                   T r, OutputLevel output_level) : 
         SampleEntropyCalculator<T, K>(first, last, r, output_level) 
     {}
+    std::string get_result_str() override
+    {
+        std::stringstream ss;
+        ss << this->SampleEntropyCalculator<T, K>::get_result_str();
+        ss << "----------------------------------------"
+            << "----------------------------------------\n";
+        return ss.str();
+    }
 protected: 
     void _ComputeSampleEntropy() override; 
     std::string _Method() const override 
@@ -34,7 +42,7 @@ protected:
     using SampleEntropyCalculator<T, K>::_a; 
     using SampleEntropyCalculator<T, K>::_b; 
     using SampleEntropyCalculator<T, K>::_output_level; 
-    using SampleEntropyCalculator<T, K>::_eclapsed_seconds; 
+    using SampleEntropyCalculator<T, K>::_elapsed_seconds; 
 };
 
 
@@ -47,6 +55,14 @@ public:
                                       T r, OutputLevel output_level) : 
         SampleEntropyCalculator<T, K>(first, last, r, output_level) 
     {}
+    std::string get_result_str() override
+    {
+        std::stringstream ss;
+        ss << this->SampleEntropyCalculator<T, K>::get_result_str();
+        ss << "----------------------------------------"
+            << "----------------------------------------\n";
+        return ss.str();
+    }
 protected: 
     void _ComputeSampleEntropy() override;
     std::string _Method() const override 
@@ -58,7 +74,7 @@ protected:
     using SampleEntropyCalculator<T, K>::_a; 
     using SampleEntropyCalculator<T, K>::_b; 
     using SampleEntropyCalculator<T, K>::_output_level; 
-    using SampleEntropyCalculator<T, K>::_eclapsed_seconds; 
+    using SampleEntropyCalculator<T, K>::_elapsed_seconds; 
 };
 
 template<typename T, unsigned K>
@@ -77,6 +93,14 @@ public:
             real_a_norm, real_b_norm, output_level), 
         _rtype(rtype), _random(random_) 
     {}
+    std::string get_result_str() override
+    {
+        std::stringstream ss;
+        ss << this->SampleEntropyCalculatorSampling<T, K>::get_result_str();
+        ss << "----------------------------------------"
+            << "----------------------------------------\n";
+        return ss.str();
+    }
 protected:
     void _ComputeSampleEntropy() override;
     std::string _Method() const override 
@@ -92,7 +116,7 @@ protected:
     using SampleEntropyCalculatorSampling<T, K>::_a; 
     using SampleEntropyCalculatorSampling<T, K>::_b; 
     using SampleEntropyCalculatorSampling<T, K>::_output_level; 
-    using SampleEntropyCalculatorSampling<T, K>::_eclapsed_seconds; 
+    using SampleEntropyCalculatorSampling<T, K>::_elapsed_seconds; 
     using SampleEntropyCalculatorSampling<T, K>::_sample_size; 
     using SampleEntropyCalculatorSampling<T, K>::_sample_num; 
     using SampleEntropyCalculatorSampling<T, K>::_a_vec; 
@@ -218,14 +242,30 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
         _rtype, _n - K, _sample_size, _sample_num, _random);
     _a_vec = vector<long long>(_sample_num); 
     _b_vec = vector<long long>(_sample_num); 
+    Timer timer; 
+    timer.SetStartingPointNow(); 
     vector<vector<KDPoint<T, K + 1> > > points = GetKDPointsSample<T, K + 1>(
         _data.cbegin(), _data.cend(), indices, 1); 
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in sampling: " 
+            << timer.ElapsedSeconds() << " seconds. \n"; 
+    }
+
+    timer.SetStartingPointNow(); 
     for (unsigned i = 0; i < _sample_num; ++i) 
     {
         vector<long long> ab = ComputeABDirect<T, K>(points[i], _r);
         _a_vec[i] = ab[0], _b_vec[i] = ab[1]; 
         _a += ab[0]; 
         _b += ab[1]; 
+    }
+    timer.StopTimer(); 
+    if (_output_level) 
+    {
+        std::cout << "[INFO] Time consumed in range counting: " 
+            << timer.ElapsedSeconds() << " seconds. \n"; 
     }
 }
 } // namespace kdtree_mddc

@@ -63,7 +63,7 @@ struct Range
 vector<unsigned> GetInverseMap(const vector<unsigned> &map);
 
 double ComputeSampen(
-    double A, double B, unsigned N, unsigned m, OutputLevel output_level);
+    double A, double B, unsigned N, unsigned m);
 
 /**
  * @brief Read data from file. 
@@ -76,7 +76,7 @@ vector<T> ReadData(
     std::string filename, std::string input_type = "simple", unsigned n = 0);
 
 template<typename T>
-double ComputeVarience(const vector<T> &data);
+double ComputeVariance(const vector<T> &data);
 
 template<typename T>
 T ComputeSum(const vector<T> &data);
@@ -157,7 +157,7 @@ private:
 
 
 /**
- * Timer class for evaluating the time eclapsed from a starting point. 
+ * Timer class for evaluating the time elapsed from a starting point. 
  */
 class Timer 
 {
@@ -179,7 +179,7 @@ public:
             _runing = false; 
         }
     }
-    double EclapsedMilliseconds()
+    double ElapsedMilliseconds()
     {
         std::chrono::time_point<std::chrono::system_clock> end_point;
         
@@ -195,9 +195,9 @@ public:
         return std::chrono::duration_cast<std::chrono::milliseconds>(
             end_point - _starting_point).count();
     }
-    double EclapsedSeconds() 
+    double ElapsedSeconds() 
     {
-        return EclapsedMilliseconds() / 1000.; 
+        return ElapsedMilliseconds() / 1000.; 
     } 
 private: 
     std::chrono::time_point<std::chrono::system_clock> _starting_point; 
@@ -305,7 +305,7 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
                   { return (orig_points[i1] < orig_points[i2]); });
         timer.StopTimer(); 
         std::cout << "[INFO] Time consumed in presorting: " 
-            << timer.EclapsedSeconds() << "s\n";
+            << timer.ElapsedSeconds() << "s\n";
 
         for (unsigned i_index = 0; i_index < sample_num; ++i_index) 
         {
@@ -343,7 +343,7 @@ T ComputeSum(const vector<T> &data)
 }
 
 template<typename T>
-double ComputeVarience(const vector<T> &data)
+double ComputeVariance(const vector<T> &data)
 {
     vector<long double> data_(data.cbegin(), data.cend());
     long double avg = ComputeSum(data_) / data.size();

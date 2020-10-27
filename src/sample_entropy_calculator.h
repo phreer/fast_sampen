@@ -36,8 +36,8 @@ public:
             << _Method() << ": \n"
             << "\tentropy: " << get_entropy() << "\n" 
             << "\ta (norm): " << get_a_norm() 
-            << ", \tb (norm): " << get_b_norm() << "\n" 
-            << "\ttime: " << std::scientific << _eclapsed_seconds << "\n"; 
+            << "\tb (norm): " << get_b_norm() << "\n" 
+            << "\ttime: " << std::scientific << _elapsed_seconds << "\n"; 
         return ss.str(); 
     }
     double get_entropy() 
@@ -46,7 +46,7 @@ public:
         return ComputeSampen(
             static_cast<double>(get_a()), 
             static_cast<double>(get_b()), 
-            _n - K, K, this->_output_level);
+            _n - K, K);
     }
     virtual long long get_a() 
     { 
@@ -73,7 +73,7 @@ public:
         Timer timer; 
         timer.SetStartingPointNow(); 
         _ComputeSampleEntropy(); 
-        _eclapsed_seconds = timer.EclapsedSeconds(); 
+        _elapsed_seconds = timer.ElapsedSeconds(); 
         _computed = true; 
     }
 protected: 
@@ -85,7 +85,7 @@ protected:
     OutputLevel _output_level;
     long long _a, _b; 
     bool _computed = false; 
-    double _eclapsed_seconds; 
+    double _elapsed_seconds; 
 };
 
 template<typename T, unsigned K> 
@@ -158,13 +158,13 @@ public:
         if (this->_output_level) 
         {
             ss << "[INFO] sample_size: " << _sample_size 
-                << "\tsample num: " << _sample_num << "\n"; 
+                << "\tsample_num: " << _sample_num << "\n";
             vector<long long> a_vec = get_a_vec(); 
             vector<long long> b_vec = get_b_vec(); 
             for (unsigned i = 0; i < _sample_num; ++i) 
             {
                 ss << "[INFO] " << "a: " << a_vec[i] 
-                    << ", \tb: " << b_vec[i] << "\n"; 
+                    << "\tb: " << b_vec[i] << "\n"; 
             }
         }
         return ss.str(); 
@@ -177,7 +177,7 @@ protected:
     using SampleEntropyCalculator<T, K>::_a; 
     using SampleEntropyCalculator<T, K>::_b; 
     using SampleEntropyCalculator<T, K>::_output_level; 
-    using SampleEntropyCalculator<T, K>::_eclapsed_seconds; 
+    using SampleEntropyCalculator<T, K>::_elapsed_seconds; 
     const unsigned _sample_size; 
     const unsigned _sample_num; 
     const double _real_entropy; 

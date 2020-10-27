@@ -5,3 +5,5 @@ result/
 gmon.out
 XCode/
 .DS_Store
+profile/
+data/

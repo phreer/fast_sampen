@@ -314,7 +314,7 @@ void SampleEntropy()
         exit(-1);
     }
 
-    double var = ComputeVarience(data);
+    double var = ComputeVariance(data);
     T r_scaled = static_cast<T>(sqrt(var) * arg.r);
 
     if (r_scaled < 0)
@@ -354,6 +354,14 @@ void SampleEntropy()
             arg.random_, arg.output_level); 
         secds.ComputeSampleEntropy(); 
         cout << secds.get_result_str(); 
+
+        SampleEntropyCalculatorSamplingLiu<T, K> secsl(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
+            arg.random_, arg.output_level); 
+        secsl.ComputeSampleEntropy(); 
+        cout << secsl.get_result_str();
     }
 
     if (arg.q) 
@@ -373,6 +381,14 @@ void SampleEntropy()
             arg.random_, arg.output_level);
         secds.ComputeSampleEntropy(); 
         cout << secds.get_result_str(); 
+
+        SampleEntropyCalculatorSamplingLiu<T, K> secsl(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+            arg.random_, arg.output_level); 
+        secsl.ComputeSampleEntropy(); 
+        cout << secsl.get_result_str();
     }
 
     if (arg.fast_direct)
