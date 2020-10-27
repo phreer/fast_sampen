@@ -339,13 +339,14 @@ void SampleEntropy()
 
     if (arg.u) 
     {
-        SampleEntropyCalculatorSamplingKDTree<T, K> secs(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
-            arg.random_, arg.output_level); 
-        secs.ComputeSampleEntropy(); 
-        cout << secs.get_result_str(); 
+        // The sampling methods using kd tree contain bugs right now. 
+        // SampleEntropyCalculatorSamplingKDTree<T, K> secs(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
+        //     arg.random_, arg.output_level); 
+        // secs.ComputeSampleEntropy(); 
+        // cout << secs.get_result_str(); 
 
         SampleEntropyCalculatorSamplingDirect<T, K> secds(
             data.cbegin(), data.cend(), r_scaled, 
@@ -355,24 +356,24 @@ void SampleEntropy()
         secds.ComputeSampleEntropy(); 
         cout << secds.get_result_str(); 
 
-        SampleEntropyCalculatorSamplingLiu<T, K> secsl(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
-            arg.random_, arg.output_level); 
-        secsl.ComputeSampleEntropy(); 
-        cout << secsl.get_result_str();
+        // SampleEntropyCalculatorSamplingLiu<T, K> secsl(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
+        //     arg.random_, arg.output_level); 
+        // secsl.ComputeSampleEntropy(); 
+        // cout << secsl.get_result_str();
     }
 
     if (arg.q) 
     {
-        SampleEntropyCalculatorSamplingKDTree<T, K> secs(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
-            arg.random_, arg.output_level); 
-        secs.ComputeSampleEntropy(); 
-        cout << secs.get_result_str(); 
+        // SampleEntropyCalculatorSamplingKDTree<T, K> secs(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+        //     arg.random_, arg.output_level); 
+        // secs.ComputeSampleEntropy(); 
+        // cout << secs.get_result_str(); 
 
         SampleEntropyCalculatorSamplingDirect<T, K> secds(
             data.cbegin(), data.cend(), r_scaled, 
@@ -382,13 +383,13 @@ void SampleEntropy()
         secds.ComputeSampleEntropy(); 
         cout << secds.get_result_str(); 
 
-        SampleEntropyCalculatorSamplingLiu<T, K> secsl(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
-            arg.random_, arg.output_level); 
-        secsl.ComputeSampleEntropy(); 
-        cout << secsl.get_result_str();
+        // SampleEntropyCalculatorSamplingLiu<T, K> secsl(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+        //     arg.random_, arg.output_level); 
+        // secsl.ComputeSampleEntropy(); 
+        // cout << secsl.get_result_str();
     }
 
     if (arg.fast_direct)
