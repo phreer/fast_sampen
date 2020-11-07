@@ -377,7 +377,8 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     MergeRepeatedPoints(sorted_points, rank2index);
 
     const Bounds bounds = GetRankBounds(sorted_points, r);
-    const vector<KDPoint<unsigned, K - 1> > points_grid = Map2Grid(sorted_points, rank2index);
+    const vector<KDPoint<unsigned, K - 1> > points_grid = 
+        Map2Grid(sorted_points, rank2index);
 
     // Construct kd tree.
     vector<KDPoint<unsigned, K - 1> > points_count;
@@ -531,7 +532,8 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
         {
             for (unsigned j = 0; j < sample_groups[i].size(); ++j) 
             {
-                indices_count[sample_groups[i][j]].push_back(points_count.size()); 
+                indices_count[sample_groups[i][j]].
+                    push_back(points_count.size());
             }
             points_count.push_back(points_grid[i]);
             points_count_indices.push_back(i);

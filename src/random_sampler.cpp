@@ -40,27 +40,41 @@ void RandomIndicesSampler::init_state()
     }
     else 
     {
-        eng.seed(0); 
+        eng.seed(0);
     }
-    if (_rtype == UNIFORM) 
+
+    uid = std::uniform_int_distribution<int>(_rangel, _ranger);
+    const gsl_qrng_type *qtype = nullptr;
+    switch (_rtype)
     {
-        uid = std::uniform_int_distribution<int>(_rangel, _ranger);
+    case SOBOL:
+        qtype = gsl_qrng_sobol;
+        break;
+    case HALTON:
+        qtype = gsl_qrng_halton;
+        break;
+    case REVERSE_HALTON:
+        qtype = gsl_qrng_reversehalton;
+        break;
+    case NIEDERREITER_2:
+        qtype = gsl_qrng_niederreiter_2;
+        break;
+    default:
+        break;
     }
-    else if (_rtype == SOBOL) 
+    if (qtype)
     {
-        qrng = gsl_qrng_alloc(gsl_qrng_sobol, 1);
-    }
-    else if (_rtype == HALTON)
-    {
-        qrng = gsl_qrng_alloc(gsl_qrng_halton, 1);
-    }
-    else if (_rtype == REVERSE_HALTON)
-    {
-        qrng = gsl_qrng_alloc(gsl_qrng_reversehalton, 1);
-    }
-    else if (_rtype == NIEDERREITER_2)
-    {
-        qrng = gsl_qrng_alloc(gsl_qrng_niederreiter_2, 1);
+        qrng = gsl_qrng_alloc(qtype, 1);
+        if (real_random)
+        {
+            int n_drop = uid(eng);
+            if (n_drop < 0) n_drop = -n_drop;
+            double v;
+            for (int i = 0; i < n_drop; ++i)
+            {
+                gsl_qrng_get(qrng, &v);
+            }
+        }
     }
 }
 

@@ -20,6 +20,7 @@
 #include <chrono> 
 #include <assert.h>
 
+#include "time.h"
 #include "kdpoint.h"
 
 #ifdef ENABLE_DEBUG_MACRO
@@ -159,10 +160,10 @@ private:
 /**
  * Timer class for evaluating the time elapsed from a starting point. 
  */
-class Timer 
+class SysTimer 
 {
 public:
-    Timer() 
+    SysTimer() 
     {
         SetStartingPointNow(); 
     }
@@ -205,6 +206,44 @@ private:
     bool _runing = false; 
 }; 
 
+class Timer
+{
+public:
+    Timer()
+    {
+        SetStartingPointNow();
+    }
+    void SetStartingPointNow()
+    {
+        _starting_point = clock();
+        _runing = true;
+    }
+    void StopTimer()
+    {
+        if (_runing)
+        {
+            _end_point = clock();
+            _runing = false;
+        }
+    }
+    double ElapsedSeconds()
+    {
+        clock_t end_point;
+        if (_runing)
+        {
+            end_point = clock();
+        }
+        else
+        {
+            end_point = _end_point;
+        }
+        return static_cast<double>(end_point - _starting_point) / CLOCKS_PER_SEC;
+    }
+private:
+    clock_t _starting_point;
+    clock_t _end_point;
+    bool _runing = false;
+};
 //////////////////////////////////////////////////////////////////////////
 // Implementation 
 //////////////////////////////////////////////////////////////////////////
@@ -304,8 +343,6 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
                   [&orig_points](unsigned i1, unsigned i2) 
                   { return (orig_points[i1] < orig_points[i2]); });
         timer.StopTimer(); 
-        std::cout << "[INFO] Time consumed in presorting: " 
-            << timer.ElapsedSeconds() << "s\n";
 
         for (unsigned i_index = 0; i_index < sample_num; ++i_index) 
         {

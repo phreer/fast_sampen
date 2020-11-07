@@ -41,6 +41,8 @@ char usage[] =\
 "                        randomly.\n"
 "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
 "                        method is conducted.\n"
+"--variance              If this option is enabled, then the variance of the\n"
+"                        results of sampling methods will be computed.\n"
 "--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
 "                        can be one of the following: sobol, halton,\n"
 "                        reversehalton, niederreiter_2 or grid. Default: sobol.\n"
@@ -70,7 +72,7 @@ struct Argument
     OutputLevel output_level;
     bool fast_direct = true; 
     bool direct = false; 
-    bool random_; 
+    bool random_, variance;
     bool q, u;
     RandomType rtype; 
     void PrintArguments() const;
@@ -257,6 +259,10 @@ void ParseArgument(int argc, char *argv[])
     if (arg.q || arg.u) 
     {
         arg.random_ = parser.isOption("--random"); 
+        if (arg.random_)
+        {
+            arg.variance = parser.isOption("--variance");
+        }
         if (arg.q) 
         {
             std::string rtype = parser.getArg("--quasi-type"); 
@@ -347,15 +353,58 @@ void SampleEntropy()
         //     arg.random_, arg.output_level); 
         // secs.ComputeSampleEntropy(); 
         // cout << secs.get_result_str(); 
-
         SampleEntropyCalculatorSamplingDirect<T, K> secds(
             data.cbegin(), data.cend(), r_scaled, 
             arg.sample_size, arg.sample_num, 
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
             arg.random_, arg.output_level); 
-        secds.ComputeSampleEntropy(); 
-        cout << secds.get_result_str(); 
+        unsigned n_computation = 1;
+        if (arg.variance) n_computation = 50;
+        vector<double> errs_sampen(n_computation);
+        vector<double> errs_a(n_computation);
+        vector<double> errs_b(n_computation);
+        for (unsigned i = 0; i < n_computation; ++i)
+        {
+            secds.ComputeSampleEntropy(); 
+            if (n_computation == 1) cout << secds.get_result_str();
+            errs_sampen[i] = secds.get_err_entropy();
+            errs_a[i] = secds.get_err_a();
+            errs_b[i] = secds.get_err_b();
+        }
 
+        if (n_computation > 1)
+        {
+            double var_errs_sampen = ComputeVariance<double>(errs_sampen);
+            double mean_errs_sampen =
+                ComputeSum<double>(errs_sampen) / n_computation;
+            double var_errs_a = ComputeVariance<double>(errs_a);
+            double mean_errs_a = ComputeSum<double>(errs_a) / n_computation;
+            double var_errs_b = ComputeVariance<double>(errs_b);
+            double mean_errs_b = ComputeSum<double>(errs_b) / n_computation;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n"
+                << secds.get_method_name() << endl;
+            if (arg.output_level)
+            {
+                for (unsigned i = 0; i < n_computation; ++i)
+                {
+                    cout << "[INFO] errs_entropy[" << i << "]: "
+                        << errs_sampen[i] << endl
+                        << "[INFO] errs_a[" << i << "]: "
+                        << errs_a[i] << endl
+                        << "[INFO] errs_b[" << i << "]: "
+                        << errs_b[i] << endl;
+                }
+            }
+            cout << "\tmean_errs_sampen: " << mean_errs_sampen << endl;
+            cout << "\tstd_errs_sampen: " << sqrt(var_errs_sampen) << endl;
+            cout << "\tmean_errs_a: " << mean_errs_a << endl;
+            cout << "\tstd_errs_a: " << sqrt(var_errs_a) << endl;
+            cout << "\tmean_errs_b: " << mean_errs_b << endl;
+            cout << "\tstd_errs_b: " << sqrt(var_errs_b) << endl;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n";
+        }
         // SampleEntropyCalculatorSamplingLiu<T, K> secsl(
         //     data.cbegin(), data.cend(), r_scaled, 
         //     arg.sample_size, arg.sample_num, 
@@ -380,9 +429,54 @@ void SampleEntropy()
             arg.sample_size, arg.sample_num, 
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
             arg.random_, arg.output_level);
-        secds.ComputeSampleEntropy(); 
-        cout << secds.get_result_str(); 
 
+        unsigned n_computation = 1;
+        if (arg.variance) n_computation = 50;
+        vector<double> errs_sampen(n_computation);
+        vector<double> errs_a(n_computation);
+        vector<double> errs_b(n_computation);
+        for (unsigned i = 0; i < n_computation; ++i)
+        {
+            secds.ComputeSampleEntropy(); 
+            if (n_computation == 1) cout << secds.get_result_str();
+            errs_sampen[i] = secds.get_err_entropy();
+            errs_a[i] = secds.get_err_a();
+            errs_b[i] = secds.get_err_b();
+        }
+
+        if (n_computation > 1)
+        {
+            double var_errs_sampen = ComputeVariance<double>(errs_sampen);
+            double mean_errs_sampen =
+                ComputeSum<double>(errs_sampen) / n_computation;
+            double var_errs_a = ComputeVariance<double>(errs_a);
+            double mean_errs_a = ComputeSum<double>(errs_a) / n_computation;
+            double var_errs_b = ComputeVariance<double>(errs_b);
+            double mean_errs_b = ComputeSum<double>(errs_b) / n_computation;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n"
+                << secds.get_method_name() << endl;
+            if (arg.output_level)
+            {
+                for (unsigned i = 0; i < n_computation; ++i)
+                {
+                    cout << "[INFO] errs_entropy[" << i << "]: "
+                        << errs_sampen[i] << endl
+                        << "[INFO] errs_a[" << i << "]: "
+                        << errs_a[i] << endl
+                        << "[INFO] errs_b[" << i << "]: "
+                        << errs_b[i] << endl;
+                }
+            }
+            cout << "\tmean_errs_sampen: " << mean_errs_sampen << endl;
+            cout << "\tstd_errs_sampen: " << sqrt(var_errs_sampen) << endl;
+            cout << "\tmean_errs_a: " << mean_errs_a << endl;
+            cout << "\tstd_errs_a: " << sqrt(var_errs_a) << endl;
+            cout << "\tmean_errs_b: " << mean_errs_b << endl;
+            cout << "\tstd_errs_b: " << sqrt(var_errs_b) << endl;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n";
+        }
         // SampleEntropyCalculatorSamplingLiu<T, K> secsl(
         //     data.cbegin(), data.cend(), r_scaled, 
         //     arg.sample_size, arg.sample_num, 

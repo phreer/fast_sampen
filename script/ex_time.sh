@@ -27,18 +27,28 @@ DoExperimentTime()
     done 
 }
 
-input_files=(pink/pink_noise-2000000.txt\
+input_files=(chfdb/chf01.txt\
+             ltafdb/00.txt\
+             ltstdb/s20011.txt\
+             mghdb/mgh001.txt\
+             pink/pink_noise-2000000.txt\
              gaussian/gaussian_noise-2000000.txt\
-             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt)
+             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt
+             mit-bih-long-term-ecg-database-1.0.0/14046.txt)
 
-m=3
-r=0.1
-sample_size=4000
-sample_num=50
+if [ $# != 4 ]; then 
+    echo 'Usage: $0 M R SAMPLE_SIZE SAMPLE_NUM' >&2
+    exit -1
+fi
+r=$1
+m=$2
+sample_size=$3
+sample_num=$4
+l=100000
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/time_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
-    DoExperimentTime $input_file 3 0.1 100000 $output_file $sample_size $sample_num &
+    output_file=result/time-r${r}-m${m}-n0_${sample_size}-n1_${sample_num}-l_${l}-${database}_$(date +%Y-%m-%d).txt 
+    DoExperimentTime $input_file ${m} ${r} $l $output_file $sample_size $sample_num &
 done 

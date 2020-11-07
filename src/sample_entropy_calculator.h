@@ -76,6 +76,10 @@ public:
         _elapsed_seconds = timer.ElapsedSeconds(); 
         _computed = true; 
     }
+    std::string get_method_name()
+    {
+        return _Method();
+    }
 protected: 
     virtual void _ComputeSampleEntropy() = 0; 
     virtual std::string _Method() const = 0; 
@@ -139,6 +143,18 @@ public:
         double norm = static_cast<double>(
             _sample_num * _sample_size * (_sample_size - 1)); 
         return get_b() / norm; 
+    }
+    double get_err_entropy()
+    {
+        return get_entropy() - _real_entropy;
+    }
+    double get_err_a()
+    {
+        return get_a_norm() - _real_a_norm;
+    }
+    double get_err_b()
+    {
+        return get_b_norm() - _real_b_norm;
     }
     std::string get_result_str() override 
     {        
