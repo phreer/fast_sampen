@@ -51,6 +51,7 @@ private:
     std::default_random_engine eng;
     gsl_qrng *qrng;
     int sample;
+    int _shift;
     // Whether to set seed randomly.
     bool real_random;
     void init_state();

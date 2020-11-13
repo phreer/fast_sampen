@@ -67,13 +67,11 @@ void RandomIndicesSampler::init_state()
         qrng = gsl_qrng_alloc(qtype, 1);
         if (real_random)
         {
-            int n_drop = uid(eng);
-            if (n_drop < 0) n_drop = -n_drop;
-            double v;
-            for (int i = 0; i < n_drop; ++i)
-            {
-                gsl_qrng_get(qrng, &v);
-            }
+            _shift = uid(eng);
+        }
+        else
+        {
+            _shift = 0;
         }
     }
 }
@@ -81,6 +79,7 @@ void RandomIndicesSampler::init_state()
 
 int RandomIndicesSampler::get() 
 {
+    int l = _ranger - _rangel;
     switch (_rtype)
     {
     case UNIFORM:
@@ -92,7 +91,14 @@ int RandomIndicesSampler::get()
     case NIEDERREITER_2:
         double v;
         gsl_qrng_get(qrng, &v);
-        sample = static_cast<int>(v * (_ranger - _rangel) + _rangel);
+        if (real_random)
+        {
+            sample = (static_cast<int>(v * l) + _shift) % l + _rangel;
+        }
+        else
+        {
+            sample = static_cast<int>(v * l) + _rangel;
+        }
         break;
     case GRID:
         throw std::runtime_error("SHUFFULE not implemented.");
