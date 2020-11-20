@@ -39,10 +39,14 @@ m=3
 r=0.3
 n=300000
 sample_num=50
+subdir=new_randomization
+if [ ! -e result/$subdir ]; then
+    mkdir result/$subdir
+fi
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
+    output_file=result/${subdir}/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
     DoExperimentConvergenceSampleSize $input_file $m $r 100000 $output_file $n $sample_num &
 done 

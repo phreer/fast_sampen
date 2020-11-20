@@ -14,10 +14,11 @@ using std::string;
 using std::vector; 
 
 char usage[] =\
-"Usage: kdtree_mddc --input <INPUT> --input-type {simple, multirecord}\\\n"
+"Usage: %s --input <INPUT> --input-type {simple, multirecord}\\\n"
 "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
 "                   -n <N> [-output-level {1,2,3}]\\\n"
 "                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>\n\n"
+"Options and arguments:\n"
 "--input <INPUT>         The file name of the input file.\n"
 "--input-format <FORMAT> The format of the input file. Should be either simple\n"
 "                        or multirecord. If set to simple, then each line of the\n"
@@ -192,12 +193,14 @@ void Argument::PrintArguments() const
 void ParseArgument(int argc, char *argv[])
 {
     ArgumentParser parser(argc, argv);
+    char _usage[sizeof(usage) + 256];
+    sprintf(_usage, usage, argv[0]);
     long result_long; 
     arg.filename = parser.getArg("--input");
     if (arg.filename.size() == 0)
     {
         cerr << "Specify a filename with --input <INPUT>." << endl;
-        cerr << usage;
+        cerr << _usage;
         exit(-1);
     }
 
@@ -217,7 +220,7 @@ void ParseArgument(int argc, char *argv[])
     if (arg.r < 0)
     {
         cerr << "Specify a positive threshold with -r <R>. " << endl;
-        cerr << usage;
+        cerr << _usage;
         exit(-1);
     }
 
@@ -225,7 +228,7 @@ void ParseArgument(int argc, char *argv[])
     if (template_length.size() == 0)
     {
         cerr << "Specify template length with -m <M> (1 <= M <= 10." << endl;
-        cerr << usage;
+        cerr << _usage;
         exit(-1);
     } else
     {
@@ -249,7 +252,7 @@ void ParseArgument(int argc, char *argv[])
     {
         cerr << "Invalid argument --output-level " << output_level;
         cerr << ", must be one of the following: {1, 2, 3}. \n";
-        cerr << usage;
+        cerr << _usage;
         exit(-1);
     }
 
@@ -289,7 +292,7 @@ void ParseArgument(int argc, char *argv[])
         {
             cerr << "Specify a positive integer for sample size with ";
             cerr << "--sample-size <SAMPLE_SIZE>. \n";
-            cerr << usage;
+            cerr << _usage;
             exit(-1);
         }
         arg.sample_size = static_cast<unsigned>(result_long);
@@ -299,7 +302,7 @@ void ParseArgument(int argc, char *argv[])
         {
             cerr << "Specify a positive integer for sample num with ";
             cerr << "--sample-num <SAMPLE_SIZE>. \n";
-            cerr << usage;
+            cerr << _usage;
             exit(-1);
         }
         arg.sample_num = static_cast<unsigned>(result_long);
