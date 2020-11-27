@@ -39,10 +39,12 @@ m=3
 r=0.3
 n=300000
 sample_num=50
-subdir=new_randomization
+subdir=new_norm
 if [ ! -e result/$subdir ]; then
     mkdir result/$subdir
 fi
+comment="New normalization method (- 1/N)."
+echo comment > result/${subdir}/convergence.txt
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}

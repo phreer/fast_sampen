@@ -101,6 +101,14 @@ public:
             << "----------------------------------------\n";
         return ss.str();
     }
+    double get_a_norm() override
+    {
+        return SampleEntropyCalculatorSampling<T, K>::get_a_norm()- 1. / (_n - K);
+    }
+    double get_b_norm() override
+    {
+        return SampleEntropyCalculatorSampling<T, K>::get_b_norm()- 1. / (_n - K);
+    }
 protected:
     void _ComputeSampleEntropy() override;
     std::string _Method() const override 
