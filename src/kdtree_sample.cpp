@@ -18,7 +18,7 @@ char usage[] =\
 "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
 "                   -n <N> [-output-level {1,2,3}]\\\n"
 "                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>\n\n"
-"Options and arguments:\n"
+"Options:\n"
 "--input <INPUT>         The file name of the input file.\n"
 "--input-format <FORMAT> The format of the input file. Should be either simple\n"
 "                        or multirecord. If set to simple, then each line of the\n"
@@ -38,20 +38,23 @@ char usage[] =\
 "                        is employed. The default value is 0.\n"
 "--sample-size <N0>      The number of points to sample.\n"
 "--sample-num <N1>       The number of computations where the average is taken.\n"
+"--output-level <LEVEL>  The amount of information printed. Should be one of\n"
+"                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
+"                        debugging.\n"
+"--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
+"                        can be one of the following: sobol, halton,\n"
+"                        reversehalton, niederreiter_2 or grid. Default: sobol.\n\n"
+"Arguments:\n"
 "--random                If this option is enabled, the random seed will be set\n"
 "                        randomly.\n"
 "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
 "                        method is conducted.\n"
 "--variance              If this option is enabled, then the variance of the\n"
 "                        results of sampling methods will be computed.\n"
-"--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
-"                        can be one of the following: sobol, halton,\n"
-"                        reversehalton, niederreiter_2 or grid. Default: sobol.\n"
 "-u                      If this option is enabled, the Monte Carlo based\n"
-"                        using uniform distribution is conducted.\n"
-"--output-level <LEVEL>  The amount of information printed. Should be one of\n"
-"                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
-"                        debugging.\n";
+"                        method using uniform distribution will be conducted.\n"
+"--swr                   If this option is enabled, then the Monte Carlo based\n"
+"                        method without placement will be performed.\n";
 
 template<typename T>
 void PrintSampenSetting(unsigned line_offset, unsigned n, T r, unsigned K, 
@@ -74,7 +77,7 @@ struct Argument
     bool fast_direct = true; 
     bool direct = false; 
     bool random_, variance;
-    bool q, u;
+    bool q, u, swr;
     RandomType rtype; 
     void PrintArguments() const;
 } arg;
@@ -266,6 +269,10 @@ void ParseArgument(int argc, char *argv[])
         {
             arg.variance = parser.isOption("--variance");
         }
+        if (arg.u)
+        {
+            arg.swr = parser.isOption("--swr");
+        }
         if (arg.q) 
         {
             std::string rtype = parser.getArg("--quasi-type"); 
@@ -417,6 +424,76 @@ void SampleEntropy()
         // cout << secsl.get_result_str();
     }
 
+    if (arg.swr) 
+    {
+        // The sampling methods using kd tree contain bugs right now. 
+        // SampleEntropyCalculatorSamplingKDTree<T, K> secs(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
+        //     arg.random_, arg.output_level); 
+        // secs.ComputeSampleEntropy(); 
+        // cout << secs.get_result_str(); 
+        SampleEntropyCalculatorSamplingDirect<T, K> secds(
+            data.cbegin(), data.cend(), r_scaled, 
+            arg.sample_size, arg.sample_num, 
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR, 
+            arg.random_, arg.output_level); 
+        unsigned n_computation = 1;
+        if (arg.variance) n_computation = 50;
+        vector<double> errs_sampen(n_computation);
+        vector<double> errs_a(n_computation);
+        vector<double> errs_b(n_computation);
+        for (unsigned i = 0; i < n_computation; ++i)
+        {
+            secds.ComputeSampleEntropy(); 
+            if (n_computation == 1) cout << secds.get_result_str();
+            errs_sampen[i] = secds.get_err_entropy();
+            errs_a[i] = secds.get_err_a();
+            errs_b[i] = secds.get_err_b();
+        }
+
+        if (n_computation > 1)
+        {
+            double var_errs_sampen = ComputeVariance<double>(errs_sampen);
+            double mean_errs_sampen =
+                ComputeSum<double>(errs_sampen) / n_computation;
+            double var_errs_a = ComputeVariance<double>(errs_a);
+            double mean_errs_a = ComputeSum<double>(errs_a) / n_computation;
+            double var_errs_b = ComputeVariance<double>(errs_b);
+            double mean_errs_b = ComputeSum<double>(errs_b) / n_computation;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n"
+                << secds.get_method_name() << endl;
+            if (arg.output_level)
+            {
+                for (unsigned i = 0; i < n_computation; ++i)
+                {
+                    cout << "[INFO] errs_entropy[" << i << "]: "
+                        << errs_sampen[i] << endl
+                        << "[INFO] errs_a[" << i << "]: "
+                        << errs_a[i] << endl
+                        << "[INFO] errs_b[" << i << "]: "
+                        << errs_b[i] << endl;
+                }
+            }
+            cout << "\tmean_errs_sampen: " << mean_errs_sampen << endl;
+            cout << "\tstd_errs_sampen: " << sqrt(var_errs_sampen) << endl;
+            cout << "\tmean_errs_a: " << mean_errs_a << endl;
+            cout << "\tstd_errs_a: " << sqrt(var_errs_a) << endl;
+            cout << "\tmean_errs_b: " << mean_errs_b << endl;
+            cout << "\tstd_errs_b: " << sqrt(var_errs_b) << endl;
+            cout << "----------------------------------------"
+                << "----------------------------------------\n";
+        }
+        // SampleEntropyCalculatorSamplingLiu<T, K> secsl(
+        //     data.cbegin(), data.cend(), r_scaled, 
+        //     arg.sample_size, arg.sample_num, 
+        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
+        //     arg.random_, arg.output_level); 
+        // secsl.ComputeSampleEntropy(); 
+        // cout << secsl.get_result_str();
+    }
     if (arg.q) 
     {
         // SampleEntropyCalculatorSamplingKDTree<T, K> secs(

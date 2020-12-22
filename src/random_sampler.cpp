@@ -101,8 +101,9 @@ int RandomIndicesSampler::get()
         }
         break;
     case GRID:
-        throw std::runtime_error("SHUFFULE not implemented.");
-        break;
+        MSG_ERROR(-1, "GRID not implemented.\n");
+    case SWR:
+        MSG_ERROR(-1, "Please use class RandomIndicesSamplerSWR.\n");
     }
     return sample;
 }
@@ -111,10 +112,14 @@ vector<vector<unsigned> > GetSampleIndices(RandomType rtype,
                                            unsigned count, 
                                            unsigned sample_size, 
                                            unsigned sample_num, 
-                                           bool random_) 
+                                           bool real_random) 
 {
+    if (rtype == SWR)
+    {
+        return GetSampleIndicesWR(count, sample_size, sample_num, real_random);
+    }
     vector<vector<unsigned> > results(sample_num, vector<unsigned>(sample_size)); 
-    RandomIndicesSampler sampler(0, count - 1, rtype, random_); 
+    RandomIndicesSampler sampler(0, count - 1, rtype, real_random); 
     for (unsigned i = 0; i < results.size(); ++i) 
     {
         for (unsigned j = 0; j < sample_size; ++j) 
@@ -123,4 +128,60 @@ vector<vector<unsigned> > GetSampleIndices(RandomType rtype,
         }
     }
     return results; 
+}
+
+void RandomIndicesSamplerWR::_InitState() 
+{
+    if (_sample_size > _pop_size)
+    {
+        MSG_ERROR(-1, "The sample size (%u) is larger than population (%u).", 
+                  _sample_size, _pop_size);
+    }
+
+    if (_real_random) 
+    {
+        _eng1.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    }
+    else 
+    {
+        _eng1.seed(0);
+    }
+}
+
+
+vector<vector<unsigned> > RandomIndicesSamplerWR::GetSampleArrays() 
+{
+    
+    _uid = std::uniform_int_distribution<unsigned>();
+    _urd = std::uniform_real_distribution<double>(0., 1.);
+    for (unsigned i = 0; i < _sample_num; ++i)
+    {
+        unsigned count = 0;
+        unsigned count_selected = 0;
+        _eng2.seed(_uid(_eng1));
+        while(count < _pop_size)
+        {
+            double u = _urd(_eng2) * _pop_size / (_pop_size + 1);
+            if ((_pop_size - count) * u < (_sample_size - count_selected))
+            {
+                _samples[i][count_selected] = count;
+                count_selected++;
+                count++;
+            }
+            else
+            {
+                count++;
+            }
+        }
+    }
+    return _samples;
+}
+
+vector<vector<unsigned> > GetSampleIndicesWR(unsigned pop_size, 
+                                             unsigned sample_size, 
+                                             unsigned sample_num, 
+                                             bool real_random) 
+{
+    RandomIndicesSamplerWR sampler(pop_size, sample_size, sample_num, real_random);
+    return sampler.GetSampleArrays();
 }

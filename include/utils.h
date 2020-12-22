@@ -20,14 +20,26 @@
 #include <chrono> 
 #include <assert.h>
 
-#include "time.h"
-#include "kdpoint.h"
-
 #ifdef ENABLE_DEBUG_MACRO
 #define DEBUG
 #include <iostream> 
 #endif
 
+#include "time.h"
+#include "kdpoint.h"
+
+
+#define MSG_ERROR(error_code, fmt, ...) \
+    fprintf(stderr, "Error (File: %s, line: %u): ", __FILE__, __LINE__);\
+    fprintf(stderr, (fmt), ##__VA_ARGS__);\
+    exit((error_code));
+
+#ifdef MSG_DEBUG
+#define MSG_DEBUG(fmt, ...) fprintf(stdout, "Debug: ");\
+    fprintf(stdout, (fmt), ##__VA_ARGS__);
+#else
+#define MSG_DEBUG(fmt, ...) {}
+#endif
 
 namespace kdtree_mddc
 {

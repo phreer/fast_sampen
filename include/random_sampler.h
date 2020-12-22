@@ -17,9 +17,10 @@
 
 using std::vector;
 
-enum RandomType {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, GRID};
-static vector<std::string> random_type_names = 
-    {"uniform", "sobol", "halton", "reverse_halton", "NIEDERREITER_2", "GRID"}; 
+enum RandomType {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, 
+                 GRID, SWR};
+static vector<std::string> random_type_names = {"uniform", "sobol", "halton", 
+    "reverse_halton", "NIEDERREITER_2", "GRID", "SWR"}; 
 
 class RandomIndicesSampler
 {
@@ -62,4 +63,43 @@ vector<vector<unsigned> > GetSampleIndices(RandomType rtype,
                                            unsigned sample_size, 
                                            unsigned sample_num, 
                                            bool random_ = false); 
+
+class RandomIndicesSamplerWR
+{
+public:
+    /*
+     * @param _rangel: minimun value
+     * @param _ranger: maximum value 
+     */
+    RandomIndicesSamplerWR(unsigned pop_size, unsigned sample_size, 
+        unsigned sample_num, bool real_random = false):
+            _pop_size(pop_size), _sample_size(sample_size), 
+            _sample_num(sample_num), 
+            _samples(sample_num, vector<unsigned>(sample_size)), 
+            _real_random(real_random)
+    {
+        _InitState();
+    }
+    ~RandomIndicesSamplerWR() 
+    {
+    }
+    vector<vector<unsigned> > GetSampleArrays();
+private:
+    std::uniform_real_distribution<double> _urd;
+    std::uniform_int_distribution<unsigned> _uid;
+    std::default_random_engine _eng1;
+    std::default_random_engine _eng2;
+    unsigned _pop_size;
+    unsigned _sample_size;
+    unsigned _sample_num;
+    vector<vector<unsigned> > _samples;
+    // Whether to set seed randomly.
+    bool _real_random;
+    void _InitState();
+};
+
+vector<vector<unsigned> > GetSampleIndicesWR(unsigned pop_size, 
+                                             unsigned sample_size, 
+                                             unsigned sample_num, 
+                                             bool real_random = false);
 #endif // __RANDOM_SAMPLER_H__

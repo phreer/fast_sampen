@@ -22,7 +22,7 @@ DoExperimentConvergenceSampleSize()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
-            -q -u --random --quasi-type sobol --variance \
+            --swr -q -u --random --quasi-type sobol --variance \
             --output-level 0 >> $output_file
     done 
 }
@@ -39,7 +39,7 @@ m=3
 r=0.3
 n=300000
 sample_num=50
-subdir=new_norm
+subdir=swr
 if [ ! -e result/$subdir ]; then
     mkdir result/$subdir
 fi
