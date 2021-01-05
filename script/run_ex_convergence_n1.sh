@@ -22,7 +22,7 @@ DoExperimentConvergenceSampleNum()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
-            -q -u --random --quasi-type sobol --variance \
+            --swr -q -u --random --quasi-type sobol --variance \
             --output-level 0 >> $output_file
     done 
 }
@@ -39,10 +39,11 @@ m=3
 r=0.3
 n=300000
 sample_size=5000
+subdir=swr
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/convergence_n1_n0${sample_size}_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
+    output_file=result/${subdir}/convergence_n1/n0${sample_size}_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
     DoExperimentConvergenceSampleNum $input_file $m $r 100000 $output_file $n $sample_size &
 done 

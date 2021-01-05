@@ -87,11 +87,12 @@ public:
         typename vector<T>::const_iterator last, 
         T r, unsigned sample_size, unsigned sample_num,
         double real_entropy, double real_a_norm, double real_b_norm, 
-        RandomType rtype, bool random_, OutputLevel output_level) : 
+        RandomType rtype, bool random_, bool presort, 
+        OutputLevel output_level) : 
         SampleEntropyCalculatorSampling<T, K>(
             first, last, r, sample_size, sample_num, real_entropy, 
             real_a_norm, real_b_norm, output_level), 
-        _rtype(rtype), _random(random_) 
+        _rtype(rtype), _random(random_), _presort(presort)
     {}
     std::string get_result_str() override
     {
@@ -113,8 +114,11 @@ protected:
     void _ComputeSampleEntropy() override;
     std::string _Method() const override 
     { 
-        return std::string("sampling direct (") 
-            + random_type_names[_rtype] + std::string(")"); 
+        std::string method_name = std::string("sampling direct (") 
+            + random_type_names[_rtype];
+        if (_presort) method_name += std::string(", presort");
+        method_name += std::string(")");
+        return method_name; 
     }
 
     using SampleEntropyCalculatorSampling<T, K>::_data; 
@@ -131,6 +135,7 @@ protected:
     using SampleEntropyCalculatorSampling<T, K>::_b_vec; 
     RandomType _rtype; 
     bool _random; 
+    bool _presort;
 };
 
 
@@ -253,7 +258,7 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
     Timer timer; 
     timer.SetStartingPointNow(); 
     vector<vector<KDPoint<T, K + 1> > > points = GetKDPointsSample<T, K + 1>(
-        _data.cbegin(), _data.cend(), indices, 1); 
+        _data.cbegin(), _data.cend(), indices, 1, _presort); 
     timer.StopTimer(); 
     if (_output_level) 
     {

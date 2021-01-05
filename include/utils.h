@@ -116,7 +116,7 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
     typename vector<T>::const_iterator first, 
     typename vector<T>::const_iterator last, 
     const vector<vector<unsigned> > &indices, 
-    int count); 
+    int count, bool presort = false, OutputLevel output_level = Silent); 
 
 template<typename T, unsigned K>
 void MergeRepeatedPoints(vector<KDPoint<T, K> > &points,
@@ -256,10 +256,10 @@ private:
     clock_t _end_point;
     bool _runing = false;
 };
+
 //////////////////////////////////////////////////////////////////////////
 // Implementation 
 //////////////////////////////////////////////////////////////////////////
-
 template<typename T>
 vector<T> ReadData(std::string filename, std::string input_type, unsigned n, 
                    unsigned line_offset)
@@ -331,7 +331,7 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
     typename vector<T>::const_iterator first, 
     typename vector<T>::const_iterator last, 
     const vector<vector<unsigned> > &indices,
-    int count)
+    int count, bool presort, OutputLevel output_level)
 {
     const size_t n = last - first; 
     
@@ -340,7 +340,8 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
         std::cerr << "GetKDPoints(): Data length is too short (n = " << n;
         std::cerr << ", K = " << K << ")" << std::endl;
         exit(-1); 
-    } else
+    } 
+    else
     {
         const unsigned sample_num = indices.size(); 
         vector<vector<KDPoint<T, K> > > points(sample_num);
@@ -350,11 +351,16 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
         for (size_t i = 0; i < orig_points.size(); i++) 
             rank2index.at(i) = i;
 
-        Timer timer; 
-        std::sort(rank2index.begin(), rank2index.end(),
-                  [&orig_points](unsigned i1, unsigned i2) 
-                  { return (orig_points[i1] < orig_points[i2]); });
-        timer.StopTimer(); 
+        if (output_level && presort)
+        {
+            Timer timer; 
+            std::sort(rank2index.begin(), rank2index.end(),
+                      [&orig_points](unsigned i1, unsigned i2) 
+                      { return (orig_points[i1] < orig_points[i2]); });
+            timer.StopTimer(); 
+            std::cout << "[INFO] Time consumed in presort: " 
+                << timer.ElapsedSeconds() << " seconds\n";
+        }
 
         for (unsigned i_index = 0; i_index < sample_num; ++i_index) 
         {
@@ -363,7 +369,8 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
             for (unsigned i = 0; i < sample_size; i++)
             {
                 unsigned index = indices[i_index][i]; 
-                assert(index < n - K + 1 && "Sample index exceeds the number of points"); 
+                assert(index < n - K + 1 
+                       && "Sample index exceeds the number of points"); 
                 points[i_index][i] = orig_points[rank2index[index]]; 
             }
         }

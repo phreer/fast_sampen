@@ -17,10 +17,10 @@ using std::vector;
 
 int main()
 {
-	unsigned pop_size = 40;
+	unsigned pop_size = 1000;
 	unsigned sample_size = 20;
-	unsigned sample_num = 20;
-	auto samples = GetSampleIndicesWR(SWR_UNIFORM, pop_size, sample_size, sample_num);
+	unsigned sample_num = 4;
+	auto samples = GetSampleIndicesWR(GRID, pop_size, sample_size, sample_num);
 	cout << "pop_size:" << samples.size() << endl;
 	cout << "size:" << samples.size() << endl;
 	cout << "results: \n";

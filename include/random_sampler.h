@@ -11,6 +11,7 @@
 #include <vector>
 #include <random>
 #include <string> 
+
 #include <gsl/gsl_qrng.h>
 
 #include "utils.h"
@@ -18,9 +19,9 @@
 using std::vector;
 
 enum RandomType {UNIFORM, SOBOL, HALTON, REVERSE_HALTON, NIEDERREITER_2, 
-                 GRID, SWR};
+                 GRID, SWR_UNIFORM};
 static vector<std::string> random_type_names = {"uniform", "sobol", "halton", 
-    "reverse_halton", "NIEDERREITER_2", "GRID", "SWR"}; 
+    "reverse_halton", "NIEDERREITER_2", "GRID", "SWR_UNIFORM"}; 
 
 class RandomIndicesSampler
 {
@@ -72,13 +73,24 @@ public:
      * @param _ranger: maximum value 
      */
     RandomIndicesSamplerWR(unsigned pop_size, unsigned sample_size, 
-        unsigned sample_num, bool real_random = false):
+        unsigned sample_num, RandomType random_type, bool real_random = false):
             _pop_size(pop_size), _sample_size(sample_size), 
             _sample_num(sample_num), 
             _samples(sample_num, vector<unsigned>(sample_size)), 
-            _real_random(real_random)
+            _random_type(random_type), _real_random(real_random)
     {
-        _InitState();
+        if (random_type != GRID && random_type != SWR_UNIFORM)
+        {
+            MSG_ERROR(-1, 
+                      "Invalid random type for sampling without replacement.");
+        }
+        if (_sample_num * _sample_size > _pop_size)
+        {
+            MSG_ERROR(-1, 
+                      "Total sample size should not be larger than population"
+                      " size.");
+        }
+       _InitState();
     }
     ~RandomIndicesSamplerWR() 
     {
@@ -94,11 +106,13 @@ private:
     unsigned _sample_num;
     vector<vector<unsigned> > _samples;
     // Whether to set seed randomly.
+    RandomType _random_type;
     bool _real_random;
     void _InitState();
 };
 
-vector<vector<unsigned> > GetSampleIndicesWR(unsigned pop_size, 
+vector<vector<unsigned> > GetSampleIndicesWR(RandomType random_type,
+                                             unsigned pop_size, 
                                              unsigned sample_size, 
                                              unsigned sample_num, 
                                              bool real_random = false);

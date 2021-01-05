@@ -22,7 +22,8 @@ DoExperimentConvergenceSampleSize()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
-            --swr -q -u --random --quasi-type sobol --variance \
+            --swr --grid -q -u --random --quasi-type sobol --presort \
+            --variance \
             --output-level 0 >> $output_file
     done 
 }
@@ -35,20 +36,26 @@ input_files=(chfdb/chf01.txt\
              gaussian/gaussian_noise-2000000.txt\
              surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt
              mit-bih-long-term-ecg-database-1.0.0/14046.txt)
-m=3
-r=0.3
+
+CONFIG=script/experiment_config.sh
+if [ ! -e $CONFIG ]; then
+    echo "Configuration file does not exist." >&2
+    exit -1
+fi
+source $CONFIG
 n=300000
 sample_num=50
-subdir=swr
+line_offset=100000
+
 if [ ! -e result/$subdir ]; then
-    mkdir result/$subdir
+    mkdir -p result/$subdir
 fi
-comment="New normalization method (- 1/N)."
+comment="QMC using lattice sequence."
 echo comment > result/${subdir}/convergence.txt
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
     output_file=result/${subdir}/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
-    DoExperimentConvergenceSampleSize $input_file $m $r 100000 $output_file $n $sample_num &
+    DoExperimentConvergenceSampleSize $input_file $m $r $line_offset $output_file $n $sample_num &
 done 

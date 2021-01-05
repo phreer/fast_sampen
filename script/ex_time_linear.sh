@@ -22,7 +22,7 @@ DoExperimentTime()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
-            -q -u --random --quasi-type sobol \
+            --swr -q -u --random --quasi-type sobol \
             --output-level 0 >> $output_file
     done 
 }
@@ -45,10 +45,14 @@ m=$2
 sample_size=$3
 sample_num=$4
 l=100000
+subdir=swr/time-linear
+if [ ! -e result/${subdir} ]; then
+    mkdir -p result/$subdir
+fi
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/time-r${r}-m${m}-n0_${sample_size}-n1_${sample_num}-l_${l}-${database}_$(date +%Y-%m-%d).txt 
+    output_file=result/${subdir}/r${r}-m${m}-n0_${sample_size}-n1_${sample_num}-l_${l}-${database}_$(date +%Y-%m-%d).txt 
     DoExperimentTime $input_file ${m} ${r} $l $output_file $sample_size $sample_num &
 done 

@@ -101,8 +101,8 @@ int RandomIndicesSampler::get()
         }
         break;
     case GRID:
-        MSG_ERROR(-1, "GRID not implemented.\n");
-    case SWR:
+        MSG_ERROR(-1, "Please use class RandomIndicesSamplerSWR.\n");
+    case SWR_UNIFORM:
         MSG_ERROR(-1, "Please use class RandomIndicesSamplerSWR.\n");
     }
     return sample;
@@ -114,9 +114,10 @@ vector<vector<unsigned> > GetSampleIndices(RandomType rtype,
                                            unsigned sample_num, 
                                            bool real_random) 
 {
-    if (rtype == SWR)
+    if (rtype == SWR_UNIFORM || rtype == GRID)
     {
-        return GetSampleIndicesWR(count, sample_size, sample_num, real_random);
+        return GetSampleIndicesWR(
+            rtype, count, sample_size, sample_num, real_random);
     }
     vector<vector<unsigned> > results(sample_num, vector<unsigned>(sample_size)); 
     RandomIndicesSampler sampler(0, count - 1, rtype, real_random); 
@@ -151,37 +152,55 @@ void RandomIndicesSamplerWR::_InitState()
 
 vector<vector<unsigned> > RandomIndicesSamplerWR::GetSampleArrays() 
 {
-    
     _uid = std::uniform_int_distribution<unsigned>();
     _urd = std::uniform_real_distribution<double>(0., 1.);
-    for (unsigned i = 0; i < _sample_num; ++i)
+    if (_random_type == SWR_UNIFORM)
     {
-        unsigned count = 0;
-        unsigned count_selected = 0;
-        _eng2.seed(_uid(_eng1));
-        while(count < _pop_size)
+        for (unsigned i = 0; i < _sample_num; ++i)
         {
-            double u = _urd(_eng2) * _pop_size / (_pop_size + 1);
-            if ((_pop_size - count) * u < (_sample_size - count_selected))
+            unsigned count = 0;
+            unsigned count_selected = 0;
+            _eng2.seed(_uid(_eng1));
+            while(count < _pop_size)
             {
-                _samples[i][count_selected] = count;
-                count_selected++;
-                count++;
+                double u = _urd(_eng2) * _pop_size / (_pop_size + 1);
+                if ((_pop_size - count) * u < (_sample_size - count_selected))
+                {
+                    _samples[i][count_selected] = count;
+                    count_selected++;
+                    count++;
+                }
+                else
+                {
+                    count++;
+                }
             }
-            else
+        }
+    } 
+    else if (_random_type == GRID)
+    {
+        unsigned gap = _pop_size / _sample_size;
+        unsigned offset = gap / _sample_num;
+        for (unsigned i = 0; i < _sample_num; ++i)
+        {
+            unsigned index = (i * offset + _uid(_eng1)) % gap;
+            for (unsigned j = 0; j < _sample_size; ++j)
             {
-                count++;
+                _samples[i][j] = index;
+                index += gap;
             }
         }
     }
     return _samples;
 }
 
-vector<vector<unsigned> > GetSampleIndicesWR(unsigned pop_size, 
-                                             unsigned sample_size, 
-                                             unsigned sample_num, 
+vector<vector<unsigned> > GetSampleIndicesWR(RandomType random_type, 
+                                             unsigned pop_size,
+                                             unsigned sample_size,
+                                             unsigned sample_num,
                                              bool real_random) 
 {
-    RandomIndicesSamplerWR sampler(pop_size, sample_size, sample_num, real_random);
+    RandomIndicesSamplerWR sampler(
+        pop_size, sample_size, sample_num, random_type, real_random);
     return sampler.GetSampleArrays();
 }

@@ -1,9 +1,11 @@
 build/
+build-deb/
 .vscode/
-data.PhysioNet/
+data.PhysioNet
 result/
 gmon.out
 XCode/
 .DS_Store
 profile/
 data/
+__pycache__/
