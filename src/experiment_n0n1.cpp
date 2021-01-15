@@ -1,3 +1,10 @@
+/* file: experiment_n0n1.cpp
+ * date: 2021-01-06
+ * author: phree
+ *
+ * description: This program do experiement on convergence of sample size N_0 
+ * and sample num N_1.
+ */
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -18,7 +25,7 @@ char usage[] =\
 "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
 "                   -n <N> [-output-level {1,2,3}]\\\n"
 "                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>\n\n"
-"Arguments:\n"
+"Options:\n"
 "--input <INPUT>         The file name of the input file.\n"
 "--input-format <FORMAT> The format of the input file. Should be either simple\n"
 "                        or multirecord. If set to simple, then each line of the\n"
@@ -32,23 +39,13 @@ char usage[] =\
 "-r <R>                  The threshold argument in sample entropy.\n"
 "-m <M>                  The template length argument of sample entropy. Note\n"
 "                        that this program only supports 2 <= m <= 10.\n"
-"-n <N>                  If the length of the signal specified by <FILENAME> is\n"
-"                        greater than <N>, then it would be truncated to be of\n"
-"                        length <N>. If <N> is 0, then the the original length\n"
-"                        is employed. The default value is 0.\n"
-"--sample-size <N0>      The number of points to sample.\n"
-"--sample-num <N1>       The number of computations where the average is taken.\n"
 "--output-level <LEVEL>  The amount of information printed. Should be one of\n"
 "                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
 "                        debugging.\n"
 "--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
 "                        can be one of the following: sobol, halton,\n"
 "                        reversehalton or niederreiter_2. Default: sobol.\n\n"
-"Options:\n"
-"-d | --direct           If this option is on, then (plain) direct method will be\n"
-"                        conducted.\n"
-"-fd | --fast-direct     If this option is on, then fast direct method will be\n"
-"                        conducted.\n"
+"Arguments:\n"
 "--random                If this option is enabled, the random seed will be set\n"
 "                        randomly.\n"
 "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
@@ -79,13 +76,11 @@ struct Argument
     string filename;
     string input_format; 
     string input_type;
-    unsigned data_length;
-    unsigned sample_size; 
-    unsigned sample_num; 
+    unsigned data_length = 1000000;
+    vector<unsigned> sample_sizes; 
+    vector<unsigned> sample_nums; 
     double r;
     OutputLevel output_level;
-    bool fast_direct; 
-    bool direct; 
     bool random_, variance;
     bool q, u, swr, presort, grid;
     RandomType rtype; 
@@ -199,8 +194,6 @@ void Argument::PrintArguments() const
     std::cout << "\tthreshold: " << arg.r << std::endl;
     std::cout << "\trandom: " << arg.random_ << std::endl; 
     std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
-    std::cout << "\tsample num: " << arg.sample_num << std::endl; 
-    std::cout << "\tsample size: " << arg.sample_size << std::endl; 
 }
 
 void ParseArgument(int argc, char *argv[])
@@ -208,7 +201,6 @@ void ParseArgument(int argc, char *argv[])
     ArgumentParser parser(argc, argv);
     char _usage[sizeof(usage) + 256];
     sprintf(_usage, usage, argv[0]);
-    long result_long; 
     arg.filename = parser.getArg("--input");
     if (arg.filename.size() == 0)
     {
@@ -253,7 +245,6 @@ void ParseArgument(int argc, char *argv[])
         }
     }
 
-    arg.data_length = static_cast<unsigned>(parser.getArgLong("-n", 0));
     arg.line_offset = static_cast<unsigned>(parser.getArgLong("--line-offset", 0));
     
     string output_level = parser.getArg("--output-level");
@@ -269,14 +260,20 @@ void ParseArgument(int argc, char *argv[])
         exit(-1);
     }
 
-    arg.direct = parser.isOption("--direct") || parser.isOption("-d");
-    arg.fast_direct = parser.isOption("--fast-direct") || parser.isOption("-fd");
     arg.q = parser.isOption("-q");
     arg.u = parser.isOption("-u") || parser.isOption("--uniform");
     arg.swr = parser.isOption("--swr");
     arg.grid = parser.isOption("--grid");
     if (arg.q || arg.u || arg.swr || arg.grid) 
     {
+        for (unsigned i = 1; i <= 20; ++i)
+        {
+            arg.sample_sizes.push_back(i * 200);
+        }
+        for (unsigned i = 1; i <= 25; ++i)
+        {
+            arg.sample_nums.push_back(i * 10);
+        }
         arg.random_ = parser.isOption("--random"); 
         arg.variance = parser.isOption("--variance");
         if (arg.q || arg.grid) 
@@ -299,25 +296,6 @@ void ParseArgument(int argc, char *argv[])
                 exit(-1); 
             }
         }
-        result_long = parser.getArgLong("--sample-size", 0);
-        if (result_long <= 0)
-        {
-            cerr << "Specify a positive integer for sample size with ";
-            cerr << "--sample-size <SAMPLE_SIZE>. \n";
-            cerr << _usage;
-            exit(-1);
-        }
-        arg.sample_size = static_cast<unsigned>(result_long);
-
-        result_long = parser.getArgLong("--sample-num", 0);
-        if (result_long <= 0)
-        {
-            cerr << "Specify a positive integer for sample num with ";
-            cerr << "--sample-num <SAMPLE_SIZE>. \n";
-            cerr << _usage;
-            exit(-1);
-        }
-        arg.sample_num = static_cast<unsigned>(result_long);
     }
 }
 
@@ -410,85 +388,76 @@ void SampleEntropyN0N1()
 
     unsigned n_computation = 1;
     if (arg.variance) n_computation = 50;
-    if (arg.u) 
+    for (unsigned i = 0; i < arg.sample_sizes.size(); ++i)
     {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
-            arg.random_, false, arg.output_level); 
-        _SampleEntropySampling(secds, n_computation);
-    }
-
-    if (arg.swr) 
-    {
-        // The sampling methods using kd tree contain bugs right now. 
-        // SampleEntropyCalculatorSamplingKDTree<T, K> secs(
-        //     data.cbegin(), data.cend(), r_scaled, 
-        //     arg.sample_size, arg.sample_num, 
-        //     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
-        //     arg.random_, arg.output_level); 
-        // secs.ComputeSampleEntropy(); 
-        // cout << secs.get_result_str(); 
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM, 
-            arg.random_, false, arg.output_level); 
-        _SampleEntropySampling(secds, n_computation);
-    }
-    if (arg.q) 
-    {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
-            arg.random_, false, arg.output_level);
-
-        _SampleEntropySampling(secds, n_computation);
-        if (arg.presort)
+        unsigned sample_size = arg.sample_sizes[i];
+        for (unsigned j = 0; j < arg.sample_nums.size(); ++j)
         {
-            SampleEntropyCalculatorSamplingDirect<T, K> secds(
-                data.cbegin(), data.cend(), r_scaled, 
-                arg.sample_size, arg.sample_num, 
-                sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), 
-                arg.rtype, arg.random_, true, arg.output_level);
-            _SampleEntropySampling(secds, n_computation);
-        }
-    }
+            unsigned sample_num = arg.sample_nums[j];
+            cout << "========================================"; 
+            cout << "========================================\n"; 
+            cout << "sample_size: " << sample_size << endl;
+            cout << "sample_num: " << sample_num << endl;
+            cout << "========================================"; 
+            cout << "========================================\n"; 
+            if (arg.u) 
+            {
+                SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                    data.cbegin(), data.cend(), r_scaled, 
+                    sample_size, sample_num, 
+                    sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
+                    arg.random_, false, arg.output_level); 
+                _SampleEntropySampling(secds, n_computation);
+            }
 
-    if (arg.grid) 
-    {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, 
-            arg.sample_size, arg.sample_num, 
-            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
-            arg.random_, false, arg.output_level);
-        _SampleEntropySampling(secds, n_computation);
-        if (arg.presort)
-        {
-            SampleEntropyCalculatorSamplingDirect<T, K> secds(
-                data.cbegin(), data.cend(), r_scaled, 
-                arg.sample_size, arg.sample_num, 
-                sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
-                arg.random_, true, arg.output_level);
-            _SampleEntropySampling(secds, n_computation);
-        }
-    }
-    if (arg.fast_direct)
-    {
-        SampleEntropyCalculatorFastDirect<T, K> secfd(
-            data.cbegin(), data.cend(), r_scaled, arg.output_level);
-        secfd.ComputeSampleEntropy();
-        cout << secfd.get_result_str(); 
-    }
+            if (arg.swr) 
+            {
+                SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                    data.cbegin(), data.cend(), r_scaled, 
+                    sample_size, sample_num, 
+                    sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM, 
+                    arg.random_, false, arg.output_level); 
+                _SampleEntropySampling(secds, n_computation);
+            }
+            if (arg.q) 
+            {
+                SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                    data.cbegin(), data.cend(), r_scaled, 
+                    sample_size, sample_num, 
+                    sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
+                    arg.random_, false, arg.output_level);
 
-    if (arg.direct)
-    {
-        SampleEntropyCalculatorDirect<T, K> secd(
-            data.cbegin(), data.cend(), r_scaled, arg.output_level);
-        secd.ComputeSampleEntropy();
-        cout << secd.get_result_str(); 
+                _SampleEntropySampling(secds, n_computation);
+                if (arg.presort)
+                {
+                    SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                        data.cbegin(), data.cend(), r_scaled, 
+                        sample_size, sample_num, 
+                        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), 
+                        arg.rtype, arg.random_, true, arg.output_level);
+                    _SampleEntropySampling(secds, n_computation);
+                }
+            }
+
+            if (arg.grid) 
+            {
+                SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                    data.cbegin(), data.cend(), r_scaled, 
+                    sample_size, sample_num, 
+                    sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
+                    arg.random_, false, arg.output_level);
+                _SampleEntropySampling(secds, n_computation);
+                if (arg.presort)
+                {
+                    SampleEntropyCalculatorSamplingDirect<T, K> secds(
+                        data.cbegin(), data.cend(), r_scaled, 
+                        sample_size, sample_num, 
+                        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
+                        arg.random_, true, arg.output_level);
+                    _SampleEntropySampling(secds, n_computation);
+                }
+            }
+        }
     }
     cout << "========================================"; 
     cout << "========================================\n"; 

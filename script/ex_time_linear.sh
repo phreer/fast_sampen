@@ -22,7 +22,8 @@ DoExperimentTime()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
-            --swr -q -u --random --quasi-type sobol \
+            --fast-direct \
+            --swr -q -u --presort --random --quasi-type sobol \
             --output-level 0 >> $output_file
     done 
 }
@@ -40,19 +41,27 @@ if [ $# != 4 ]; then
     echo 'Usage: $0 M R SAMPLE_SIZE SAMPLE_NUM' >&2
     exit -1
 fi
+
+CONFIG=script/experiment_config.sh
+if [ ! -e $CONFIG ]; then
+    echo "Configuration file does not exist." >&2
+    exit -1
+fi
+source $CONFIG
 r=$1
 m=$2
 sample_size=$3
 sample_num=$4
 l=100000
-subdir=swr/time-linear
+subdir=${subdir}/time_linear_n0${sample_size}_n1${sample_num}_r${r}-m${m}
 if [ ! -e result/${subdir} ]; then
     mkdir -p result/$subdir
 fi
+
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/${subdir}/r${r}-m${m}-n0_${sample_size}-n1_${sample_num}-l_${l}-${database}_$(date +%Y-%m-%d).txt 
+    output_file=result/${subdir}/l_${l}-${database}.txt 
     DoExperimentTime $input_file ${m} ${r} $l $output_file $sample_size $sample_num &
 done 

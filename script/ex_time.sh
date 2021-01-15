@@ -12,7 +12,7 @@ DoExperimentTime()
     local sample_size=$6 
     local sample_num=$7
     date >> $output_file 
-    for i in {0..5}; do 
+    for i in {2..6}; do 
         n=$(( $(python -c "print(2 ** $i)") * 50000 ))
         ./build/bin/kdtree_sample \
             --input $filename \
@@ -22,6 +22,7 @@ DoExperimentTime()
             -m $m -r $r -n $n \
             --sample-size $sample_size \
             --sample-num $sample_num \
+            --fast-direct \
             --swr -q -u --random --quasi-type sobol \
             --output-level 0 >> $output_file
     done 
@@ -33,20 +34,27 @@ input_files=(chfdb/chf01.txt\
              mghdb/mgh001.txt\
              pink/pink_noise-2000000.txt\
              gaussian/gaussian_noise-2000000.txt\
-             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt
+             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt\
              mit-bih-long-term-ecg-database-1.0.0/14046.txt)
 
 if [ $# != 4 ]; then 
     echo 'Usage: $0 M R SAMPLE_SIZE SAMPLE_NUM' >&2
     exit -1
 fi
+
+CONFIG=script/experiment_config.sh
+if [ ! -e $CONFIG ]; then
+    echo "Configuration file does not exist." >&2
+    exit -1
+fi
+source $CONFIG
 r=$1
 m=$2
 sample_size=$3
 sample_num=$4
 l=100000
-subdir=swr/time
-set +x
+subdir=${subdir}/time_n0${sample_size}_n1${sample_num}_r${r}-m${m}
+
 if [ ! -e result/${subdir} ]; then
     mkdir -p result/$subdir
 fi
@@ -54,6 +62,6 @@ for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/${subdir}/r${r}-m${m}-n0_${sample_size}-n1_${sample_num}-l_${l}-${database}_$(date +%Y-%m-%d).txt 
+    output_file=result/${subdir}/l_${l}-${database}_$(date +%Y-%m-%d).txt 
     DoExperimentTime $input_file ${m} ${r} $l $output_file $sample_size $sample_num &
 done 

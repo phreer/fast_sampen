@@ -271,6 +271,7 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
         std::cerr << "Cannot open file! (filename: " << filename << ")\n";
         exit(-1);
     } 
+    unsigned org_n = n;
     if (n == 0) n = std::numeric_limits<unsigned>::max();
     unsigned count = 0;
     T x = 0;
@@ -295,10 +296,15 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
             if (count >= line_offset) result.push_back(x);
             ++count;
         }
-    } else 
+    } 
+    else 
     {
-        cerr << "Invalid argument n. \n"; 
-        cerr << "File: " << __FILE__ << ", Line:: " << __LINE__ << std::endl;
+        MSG_ERROR(-1, "Invalid input-type: %s\n", input_type.c_str());
+    }
+    if (org_n && org_n != result.size())
+    {
+        MSG_ERROR(-1, "Cannot read %u element from file %s. Only %lu read.\n", 
+                  org_n, filename.c_str(), result.size());
     }
     ifs.close();
     return result;
