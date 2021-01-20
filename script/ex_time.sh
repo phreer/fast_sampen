@@ -12,8 +12,8 @@ DoExperimentTime()
     local sample_size=$6 
     local sample_num=$7
     date >> $output_file 
-    for i in {2..6}; do 
-        n=$(( $(python -c "print(2 ** $i)") * 50000 ))
+    for i in {0..4}; do 
+        n=$(( $(python -c "print(2 ** $i)") * 200000 ))
         ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \
@@ -23,19 +23,10 @@ DoExperimentTime()
             --sample-size $sample_size \
             --sample-num $sample_num \
             --fast-direct \
-            --swr -q -u --random --quasi-type sobol \
+            --swr -q -u --presort --random --quasi-type sobol \
             --output-level 0 >> $output_file
     done 
 }
-
-input_files=(chfdb/chf01.txt\
-             ltafdb/00.txt\
-             ltstdb/s20011.txt\
-             mghdb/mgh001.txt\
-             pink/pink_noise-2000000.txt\
-             gaussian/gaussian_noise-2000000.txt\
-             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt\
-             mit-bih-long-term-ecg-database-1.0.0/14046.txt)
 
 if [ $# != 4 ]; then 
     echo 'Usage: $0 M R SAMPLE_SIZE SAMPLE_NUM' >&2

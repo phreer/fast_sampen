@@ -1,6 +1,8 @@
 import os
 import re
 
+from matplotlib import rcParams
+rcParams['font.family'] = 'serif'
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
@@ -21,11 +23,13 @@ err_pattern = re.compile(ERR_TEMPLATE)
 
 r = 0.1
 m = 5
-inputdir = 'result/grid_m3_r0.1_210106/time_linear_n02000_n140_r{:.1f}-m{}'.format(r, m)
-filename = 'l_100000-{}.txt.txt'
-records = ['00', 'chf01', 'mgh001', 's20011', 'gaussian_noise-2000000', 'pink_noise-2000000']
+inputdir = 'result/grid_m3_r0.1_210112/time_n04000_n140_r{:.1f}-m{}'.format(r, m)
+filename = 'l_100000-{}.txt_2021-01-18.txt'
+records = ['00', '14046', 'chf01', 'mgh001', 's20011'] # , 'gaussian_noise-2000000', 'pink_noise-2000000']
 outputdir = os.path.join(inputdir, 'fig', 'time_linear')
 os.makedirs(outputdir, exist_ok=True)
+dpi = 60
+figsize=[8, 6]
 
 for record in records:
     input_filename = os.path.join(inputdir, filename.format(record))
@@ -75,11 +79,15 @@ for record in records:
     
     print('Parsing Done.')
     savefig_options = {'bbox_inches': 'tight'}
-    dpi = 60
-    figsize=[8, 4]
     fig = plt.figure(figsize=figsize, dpi=dpi)
     ax = fig.add_subplot(111)
     for instance, result in results.items():
-        ax.loglog(data_length, result['time'])
+        ax.plot(data_length, result['time'], '-x', label=instance)
+        ax.set_ylabel('Time (Seconds)')
+        ax.set_yscale('log')
+        ax.set_xlabel('Data Length')
+        ax.set_xscale('log')
+        ax.legend()
     fig.savefig(os.path.join(outputdir, 'time_%s.pdf' % (record)), **savefig_options)
+    plt.show()
     # plt.close(fig)

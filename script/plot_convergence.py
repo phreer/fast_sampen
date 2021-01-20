@@ -85,6 +85,7 @@ for record in records:
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_sampen'], cmap=cm.coolwarm)
         ax.set_title('Mean Error of Sample Entropy')
+        ax.set_zlim(-0.004, 0.004)
         fig.savefig(os.path.join(outputdir, 'mean_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
@@ -92,12 +93,14 @@ for record in records:
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_sampen']), cmap=cm.coolwarm)
         ax.set_title('Standard Deviation of Sample Entropy')
+        ax.set_zlim(0, 0.004)
         fig.savefig(os.path.join(outputdir, 'std_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_a'], cmap=cm.coolwarm)
         ax.set_title('Mean Error of Matching Probability')
+        ax.set_zlim(-0.004, 0.004)
         fig.savefig(os.path.join(outputdir, 'mean_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
@@ -105,6 +108,7 @@ for record in records:
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_a']), cmap=cm.coolwarm)
         ax.set_title('Standard Deviation of Matching Probability')
+        ax.set_zlim(0, 0.004)
         fig.savefig(os.path.join(outputdir, 'std_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
@@ -112,6 +116,7 @@ for record in records:
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_b'], cmap=cm.coolwarm)
         ax.set_title('Mean Error of Matching Probability')
+        ax.set_zlim(-0.004, 0.004)
         fig.savefig(os.path.join(outputdir, 'mean_err_b_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
@@ -119,5 +124,6 @@ for record in records:
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_b']), cmap=cm.coolwarm)
         ax.set_title('Standard Deviation of Matching Probability')
+        ax.set_zlim(0, 0.004)
         fig.savefig(os.path.join(outputdir, 'std_err_b_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
