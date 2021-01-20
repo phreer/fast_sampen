@@ -44,7 +44,7 @@ if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
 comment="QMC using lattice sequence."
-echo comment > result/${subdir}/convergence.txt
+echo $comment > result/${subdir}/convergence.txt
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
