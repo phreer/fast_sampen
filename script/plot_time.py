@@ -30,7 +30,7 @@ records = ['00', '14046', 'chf01', 'mgh001', 's20011'] # , 'gaussian_noise-20000
 outputdir = os.path.join(inputdir, 'fig')
 os.makedirs(outputdir, exist_ok=True)
 dpi = 60
-figsize=[8, 6]
+figsize=[8, 8]
 
 for record in records:
     input_filename = os.path.join(inputdir, filename.format(record))
@@ -44,6 +44,7 @@ for record in records:
         results[instance] = {
             "err_sampen": list(),
             "time": list(), 
+            'n': list(), 
         }
     data_length = list()
     i = 0
@@ -65,16 +66,22 @@ for record in records:
         time_fast_direct = float(curr[LINE_TIME_FAST_DIRECT][OFFSET_TIME: -1])
         
         data_length.append(n)
+        results['kd']['n'].append(n)
         results['kd']['time'].append(time_kd)
         results['kd']['err_sampen'].append(0)
+        results['uniform']['n'].append(n)
         results['uniform']['time'].append(time_uniform)
         results['uniform']['err_sampen'].append(err_uniform)
+        results['swr']['n'].append(n)
         results['swr']['time'].append(time_swr)
         results['swr']['err_sampen'].append(err_swr)
+        results['qmc']['n'].append(n)
         results['qmc']['time'].append(time_qmc)
         results['qmc']['err_sampen'].append(err_qmc)
+        results['qmc_presort']['n'].append(n)
         results['qmc_presort']['time'].append(time_qmc_presort)
         results['qmc_presort']['err_sampen'].append(err_qmc_presort)
+        results['fast_direct']['n'].append(n)
         results['fast_direct']['time'].append(time_fast_direct)
         results['fast_direct']['err_sampen'].append(0)
     

@@ -1,5 +1,7 @@
 import os
 
+from matplotlib import rcParams
+rcParams['font.family'] = 'serif'
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
@@ -22,8 +24,8 @@ LINE_OFFSET_A_STD = 3
 LINE_OFFSET_B = 4
 LINE_OFFSET_B_STD = 5
 
-inputdir = 'result/grid_m3_r0.1_210106/'
-filename = 'convergence_r0.1_m3_%s.txt_2021-01-06.txt'
+inputdir = 'result/grid_m3_r0.1_210112/'
+filename = 'convergence_r0.1_m3_%s.txt_2021-01-12.txt'
 records = ['00', 'chf01', 'mgh001', 's20011', 'gaussian_noise-2000000', 'pink_noise-2000000']
 outputdir = os.path.join(inputdir, 'fig', 'convergence')
 os.makedirs(outputdir, exist_ok=True)
@@ -67,10 +69,10 @@ for record in records:
             std_b = float(curr[LINE_INSTANCE + LINE_OFFSET_B_STD][len('\tstd_errs_b: '): -1])
             results[instance]['err_sampen'][i_n0, i_n1] = err_sampen
             results[instance]['std_sampen'][i_n0, i_n1] = std_sampen
-            results[instance]['err_a'][i_n0, i_n1] = err_sampen
-            results[instance]['std_a'][i_n0, i_n1] = std_sampen
-            results[instance]['err_b'][i_n0, i_n1] = err_sampen
-            results[instance]['std_b'][i_n0, i_n1] = std_sampen
+            results[instance]['err_a'][i_n0, i_n1] = err_a
+            results[instance]['std_a'][i_n0, i_n1] = std_a
+            results[instance]['err_b'][i_n0, i_n1] = err_b
+            results[instance]['std_b'][i_n0, i_n1] = std_b
     
     print('Parsing Done.')
     
@@ -78,46 +80,59 @@ for record in records:
     n1s = np.arange(10, 251, 10)
     n0s, n1s = np.meshgrid(n1s, n0s)
     dpi = 60
-    figsize=[8, 4]
+    figsize=[8, 6]
     savefig_options = {'bbox_inches': 'tight'}
     for instance in instances:
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
+        print(type(ax))
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_sampen'], cmap=cm.coolwarm)
-        ax.set_title('Mean Error of Sample Entropy')
+        ax.set_zlabel('Mean Error of Sample Entropy', labelpad=10)
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_sampen']), cmap=cm.coolwarm)
-        ax.set_title('Standard Deviation of Sample Entropy')
+        ax.set_zlabel('Standard Deviation of Sample Entropy')
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'std_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_a'], cmap=cm.coolwarm)
-        ax.set_title('Mean Error of Matching Probability')
+        ax.set_zlabel('Mean Error of Matching Probability')
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_a']), cmap=cm.coolwarm)
-        ax.set_title('Standard Deviation of Matching Probability')
+        ax.set_zlabel('Standard Deviation of Matching Probability')
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'std_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_b'], cmap=cm.coolwarm)
-        ax.set_title('Mean Error of Matching Probability')
+        ax.set_zlabel('Mean Error of Matching Probability')
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_b_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
         
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_b']), cmap=cm.coolwarm)
-        ax.set_title('Standard Deviation of Matching Probability')
+        ax.set_zlabel('Standard Deviation of Matching Probability')
+        ax.set_xlabel('Sample Size')
+        ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'std_err_b_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
