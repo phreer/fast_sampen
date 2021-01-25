@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from scipy.io import savemat
 
 NUM_LINE_START = 1 
 NUM_LINE_CASE = 59
@@ -26,7 +27,7 @@ m = 5
 inputdir = 'result/grid_m3_r0.1_210112/time_n04000_n140_r{:.1f}-m{}'.format(r, m)
 filename = 'l_100000-{}.txt_2021-01-18.txt'
 records = ['00', '14046', 'chf01', 'mgh001', 's20011'] # , 'gaussian_noise-2000000', 'pink_noise-2000000']
-outputdir = os.path.join(inputdir, 'fig', 'time_linear')
+outputdir = os.path.join(inputdir, 'fig')
 os.makedirs(outputdir, exist_ok=True)
 dpi = 60
 figsize=[8, 6]
@@ -77,6 +78,7 @@ for record in records:
         results['fast_direct']['time'].append(time_fast_direct)
         results['fast_direct']['err_sampen'].append(0)
     
+    savemat(os.path.join(outputdir, 'result_%s.mat' % record), results)
     print('Parsing Done.')
     savefig_options = {'bbox_inches': 'tight'}
     fig = plt.figure(figsize=figsize, dpi=dpi)
