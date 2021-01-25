@@ -20,26 +20,30 @@
 #include <chrono> 
 #include <assert.h>
 
-#ifdef ENABLE_DEBUG_MACRO
-#define DEBUG
+#ifdef DEBUG
 #include <iostream> 
 #endif
 
 #include "time.h"
 #include "kdpoint.h"
 
+#define MSG(fd, prefix, fmt, ...) \
+    fprintf(fd, "[%s] ", (prefix)); \
+    fprintf(fd, (fmt), ##__VA_ARGS__);
 
 #define MSG_ERROR(error_code, fmt, ...) \
-    fprintf(stderr, "Error (File: %s, line: %u): ", __FILE__, __LINE__);\
-    fprintf(stderr, (fmt), ##__VA_ARGS__);\
+    MSG(stderr, "ERROR", (fmt), ##__VA_ARGS__);\
+    MSG(stderr, "ERROR", "File: %s, line: %d\n", __FILE__, __LINE__);\
     exit((error_code));
 
-#ifdef MSG_DEBUG
-#define MSG_DEBUG(fmt, ...) fprintf(stdout, "Debug: ");\
-    fprintf(stdout, (fmt), ##__VA_ARGS__);
+#ifdef DEBUG
+#define MSG_DEBUG(fmt, ...) \
+    MSG(stdout, "DEBUG", (fmt), ##__VA_ARGS__);
 #else
 #define MSG_DEBUG(fmt, ...) {}
 #endif
+
+#define MSG_INFO(fmt, ...) MSG(stdout, "INFO", (fmt), ##__VA_ARGS__);
 
 namespace kdtree_mddc
 {
@@ -303,7 +307,7 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
     }
     if (org_n && org_n != result.size())
     {
-        MSG_ERROR(-1, "Cannot read %u element from file %s. Only %lu read.\n", 
+        MSG_ERROR(-1, "Cannot read %u element from file %s. Only %zu read.\n", 
                   org_n, filename.c_str(), result.size());
     }
     ifs.close();
@@ -357,15 +361,17 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
         for (size_t i = 0; i < orig_points.size(); i++) 
             rank2index.at(i) = i;
 
-        if (output_level && presort)
+        if (presort)
         {
             Timer timer; 
             std::sort(rank2index.begin(), rank2index.end(),
                       [&orig_points](unsigned i1, unsigned i2) 
                       { return (orig_points[i1] < orig_points[i2]); });
             timer.StopTimer(); 
-            std::cout << "[INFO] Time consumed in presort: " 
-                << timer.ElapsedSeconds() << " seconds\n";
+            if (output_level)
+            {
+                MSG_INFO("Time consumed in presort: %f\n", timer.ElapsedSeconds());
+            }
         }
 
         for (unsigned i_index = 0; i_index < sample_num; ++i_index) 
