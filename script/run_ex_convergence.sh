@@ -7,9 +7,8 @@ DoExperimentConvergenceSampleSize()
     local filename=$1
     local m=$2
     local r=$3
-    local n=$4
-    local line_offset=$5
-    local output_file=$6
+    local line_offset=$4
+    local output_file=$5
     date >> $output_file
     ./build/bin/experiment_n0n1 \
         --input $filename \
@@ -38,7 +37,6 @@ if [ ! -e $CONFIG ]; then
 fi
 source $CONFIG
 line_offset=100000
-n=1000010
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
@@ -50,5 +48,5 @@ for f in ${input_files[@]}; do
     database=${input_file%/*}
     database=${input_file##*/}
     output_file=result/${subdir}/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
-    DoExperimentConvergenceSampleSize $input_file $m $r $n $line_offset $output_file &
+    DoExperimentConvergenceSampleSize $input_file $m $r $line_offset $output_file &
 done 
