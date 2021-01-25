@@ -29,7 +29,7 @@ records = ['00', '14046', 'chf01', 'mgh001', 's20011'] # , 'gaussian_noise-20000
 outputdir = os.path.join(inputdir, 'fig', 'time_linear')
 os.makedirs(outputdir, exist_ok=True)
 dpi = 60
-figsize=[8, 6]
+figsize=[8, 8]
 
 for record in records:
     input_filename = os.path.join(inputdir, filename.format(record))
