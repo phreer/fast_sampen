@@ -23,9 +23,8 @@ using std::vector;
 char usage[] =\
 "Usage: %s --input <INPUT> --input-type {simple, multirecord}\\\n"
 "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
-"                   -n <N> [-output-level {1,2,3}]\\\n"
-"                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>\n\n"
-"Options:\n"
+"                   [-output-level {1,2,3}]\\\n"
+"Arguments:\n"
 "--input <INPUT>         The file name of the input file.\n"
 "--input-format <FORMAT> The format of the input file. Should be either simple\n"
 "                        or multirecord. If set to simple, then each line of the\n"
@@ -45,7 +44,7 @@ char usage[] =\
 "--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
 "                        can be one of the following: sobol, halton,\n"
 "                        reversehalton or niederreiter_2. Default: sobol.\n\n"
-"Arguments:\n"
+"Options:\n"
 "--random                If this option is enabled, the random seed will be set\n"
 "                        randomly.\n"
 "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
@@ -76,7 +75,7 @@ struct Argument
     string filename;
     string input_format; 
     string input_type;
-    unsigned data_length = 1000000;
+    unsigned data_length = 1000010;
     vector<unsigned> sample_sizes; 
     vector<unsigned> sample_nums; 
     double r;
