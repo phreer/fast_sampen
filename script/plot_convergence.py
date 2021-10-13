@@ -24,8 +24,8 @@ LINE_OFFSET_A_STD = 3
 LINE_OFFSET_B = 4
 LINE_OFFSET_B_STD = 5
 
-inputdir = 'result/grid_m3_r0.1_210112/'
-filename = 'convergence_r0.1_m3_%s.txt_2021-01-12.txt'
+inputdir = 'result/grid_m3_r0.1_210125/'
+filename = 'convergence_r0.1_m3_%s.txt_2021-01-25.txt'
 records = ['00', 'chf01', 'mgh001', 's20011', 'gaussian_noise-2000000', 'pink_noise-2000000']
 outputdir = os.path.join(inputdir, 'fig', 'convergence')
 os.makedirs(outputdir, exist_ok=True)

@@ -12,7 +12,7 @@ DoExperimentTime()
     local sample_size=$6 
     local sample_num=$7
     date >> $output_file 
-    for i in {0..4}; do 
+    for i in {0..6}; do
         n=$(( $(python -c "print(2 ** $i)") * 200000 ))
         ./build/bin/kdtree_sample \
             --input $filename \

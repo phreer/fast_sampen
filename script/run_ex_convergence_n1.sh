@@ -28,21 +28,12 @@ DoExperimentConvergenceSampleNum()
     done 
 }
 
-input_files=(chfdb/chf01.txt\
-             ltafdb/00.txt\
-             ltstdb/s20011.txt\
-             mghdb/mgh001.txt\
-             pink/pink_noise-2000000.txt\
-             gaussian/gaussian_noise-2000000.txt\
-             surrogate-data-with-correlations-trends-and-nonstationarities-1.0.0/tns/d2h4pd050918s_2.txt\
-             mit-bih-long-term-ecg-database-1.0.0/14046.txt)
-
 CONFIG=script/experiment_config.sh
 if [ ! -e $CONFIG ]; then
     echo "Configuration file does not exist." >&2
     exit -1
 fi
-source $CONFI
+source $CONFIG
 
 n=1000000
 sample_size=2000

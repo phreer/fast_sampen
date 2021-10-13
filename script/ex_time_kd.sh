@@ -10,8 +10,8 @@ DoExperimentTime()
     local line_offset=$4 
     local output_file=$5 
     date >> $output_file 
-    for i in {0..4}; do 
-        n=$(( $(python -c "print(2 ** $i)") * 200000 ))
+    for i in {0..10}; do 
+        n=$(( $(python -c "print(2 ** $i)") * 1000 ))
         ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \

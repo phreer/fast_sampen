@@ -316,6 +316,34 @@ void _SampleEntropySampling(SampleEntropyCalculatorSampling<T, K> &secds,
 
     if (n_computation > 1)
     {
+        cout << "----------------------------------------"
+            << "----------------------------------------\n"
+            << secds.get_method_name() << endl;
+        if (arg.output_level)
+        {
+            cout << "[INFO] errs_entropy: "
+            for (unsigned i = 0; i < n_computation; ++i)
+           {
+               cout << << errs_sampen[i] << ", ";
+            }
+            cout << endl;
+            cout << "[INFO] errs_a: "
+            for (unsigned i = 0; i < n_computation; ++i)
+            {
+                cout << errs_a[i] << ", ";
+            }
+            cout << endl;
+            cout << "[INFO] errs_b: "
+            for (unsigned i = 0; i < n_computation; ++i)
+            {
+                cout << errs_b[i] << ", ";
+            }
+        }
+        for (int i = 0; i < n_computation; ++i) {
+            errs_sampen[i] = fabs(errs_sampen[i]);
+            errs_a[i] = fabs(errs_a[i]);
+            errs_b[i] = fabs(errs_b[i]);
+        }
         double var_errs_sampen = ComputeVariance<double>(errs_sampen);
         double mean_errs_sampen =
             ComputeSum<double>(errs_sampen) / n_computation;
@@ -323,21 +351,6 @@ void _SampleEntropySampling(SampleEntropyCalculatorSampling<T, K> &secds,
         double mean_errs_a = ComputeSum<double>(errs_a) / n_computation;
         double var_errs_b = ComputeVariance<double>(errs_b);
         double mean_errs_b = ComputeSum<double>(errs_b) / n_computation;
-        cout << "----------------------------------------"
-            << "----------------------------------------\n"
-            << secds.get_method_name() << endl;
-        if (arg.output_level)
-        {
-            for (unsigned i = 0; i < n_computation; ++i)
-            {
-                cout << "[INFO] errs_entropy[" << i << "]: "
-                    << errs_sampen[i] << endl
-                    << "[INFO] errs_a[" << i << "]: "
-                    << errs_a[i] << endl
-                    << "[INFO] errs_b[" << i << "]: "
-                    << errs_b[i] << endl;
-            }
-        }
         cout << "\tmean_errs_sampen: " << mean_errs_sampen << endl;
         cout << "\tstd_errs_sampen: " << sqrt(var_errs_sampen) << endl;
         cout << "\tmean_errs_a: " << mean_errs_a << endl;

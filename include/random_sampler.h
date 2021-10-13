@@ -84,12 +84,6 @@ public:
             MSG_ERROR(-1, 
                       "Invalid random type for sampling without replacement.\n");
         }
-        if (_sample_num * _sample_size > _pop_size)
-        {
-            MSG_ERROR(-1, 
-                      "Total sample size should not be larger than population"
-                      " size.\n");
-        }
        _InitState();
     }
     ~RandomIndicesSamplerWR() 
