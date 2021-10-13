@@ -321,19 +321,19 @@ void _SampleEntropySampling(SampleEntropyCalculatorSampling<T, K> &secds,
             << secds.get_method_name() << endl;
         if (arg.output_level)
         {
-            cout << "[INFO] errs_entropy: "
+            cout << "[INFO] errs_entropy: ";
             for (unsigned i = 0; i < n_computation; ++i)
            {
                cout << << errs_sampen[i] << ", ";
             }
             cout << endl;
-            cout << "[INFO] errs_a: "
+            cout << "[INFO] errs_a: ";
             for (unsigned i = 0; i < n_computation; ++i)
             {
                 cout << errs_a[i] << ", ";
             }
             cout << endl;
-            cout << "[INFO] errs_b: "
+            cout << "[INFO] errs_b: ";
             for (unsigned i = 0; i < n_computation; ++i)
             {
                 cout << errs_b[i] << ", ";
