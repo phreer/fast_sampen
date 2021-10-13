@@ -324,7 +324,7 @@ void _SampleEntropySampling(SampleEntropyCalculatorSampling<T, K> &secds,
             cout << "[INFO] errs_entropy: ";
             for (unsigned i = 0; i < n_computation; ++i)
            {
-               cout << << errs_sampen[i] << ", ";
+               cout << errs_sampen[i] << ", ";
             }
             cout << endl;
             cout << "[INFO] errs_a: ";

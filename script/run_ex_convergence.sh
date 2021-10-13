@@ -36,7 +36,8 @@ fi
 comment="QMC using lattice sequence."
 echo $comment > result/${subdir}/convergence.txt
 for f in ${input_files[@]}; do
-    input_file='./data.PhysioNet/'$f
+    input_file="$INPUT_DIR"/$f
+    echo "input_file: $input_file"
     database=${input_file%/*}
     database=${input_file##*/}
     output_file=result/${subdir}/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 

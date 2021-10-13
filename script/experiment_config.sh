@@ -1,8 +1,8 @@
 output_level=0
 m=4
 r=0.15
-subdir=final_m${m}_r${r}_211011
-
+subdir=final_m${m}_r${r}_211013
+INPUT_DIR=/home/shared/data.PhysioNet
 input_files=(chfdb/chf01.txt\
              ltafdb/00.txt\
              ltstdb/s20011.txt\
