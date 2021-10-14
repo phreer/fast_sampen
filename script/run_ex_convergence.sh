@@ -18,7 +18,7 @@ DoExperimentConvergenceSampleSize()
         -n $n -m $m -r $r \
         --swr --random \
         --variance \
-        --output-level 0 >> $output_file
+        --output-level 1 >> $output_file
 }
 
 
