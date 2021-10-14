@@ -368,7 +368,7 @@ vector<vector<KDPoint<T, K> > > GetKDPointsSample(
                       [&orig_points](unsigned i1, unsigned i2) 
                       { return (orig_points[i1] < orig_points[i2]); });
             timer.StopTimer(); 
-            if (output_level)
+            if (output_level == Debug)
             {
                 MSG_INFO("Time consumed in presort: %f\n", timer.ElapsedSeconds());
             }

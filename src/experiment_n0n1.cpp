@@ -13,6 +13,7 @@
 #include "sample_entropy_calculator_direct.h"
 #include "sample_entropy_calculator_kd.h"
 #include "utils.h"
+#include "experiment.h"
 
 using namespace kdtree_mddc;
 using std::cout;
@@ -298,70 +299,6 @@ void ParseArgument(int argc, char *argv[])
     }
 }
 
-template<typename T, unsigned K>
-void _SampleEntropySampling(SampleEntropyCalculatorSampling<T, K> &secds, 
-                            unsigned n_computation)
-{
-    vector<double> errs_sampen(n_computation);
-    vector<double> errs_a(n_computation);
-    vector<double> errs_b(n_computation);
-    for (unsigned i = 0; i < n_computation; ++i)
-    {
-        secds.ComputeSampleEntropy(); 
-        if (n_computation == 1) cout << secds.get_result_str();
-        errs_sampen[i] = secds.get_err_entropy();
-        errs_a[i] = secds.get_err_a();
-        errs_b[i] = secds.get_err_b();
-    }
-
-    if (n_computation > 1)
-    {
-        cout << "----------------------------------------"
-            << "----------------------------------------\n"
-            << secds.get_method_name() << endl;
-        if (arg.output_level)
-        {
-            cout << "\t[INFO] errs_entropy: ";
-            for (unsigned i = 0; i < n_computation; ++i)
-           {
-               cout << errs_sampen[i] << ", ";
-            }
-            cout << endl;
-            cout << "\t[INFO] errs_a: ";
-            for (unsigned i = 0; i < n_computation; ++i)
-            {
-                cout << errs_a[i] << ", ";
-            }
-            cout << endl;
-            cout << "\t[INFO] errs_b: ";
-            for (unsigned i = 0; i < n_computation; ++i)
-            {
-                cout << errs_b[i] << ", ";
-            }
-            cout << endl;
-        }
-        for (int i = 0; i < n_computation; ++i) {
-            errs_sampen[i] = fabs(errs_sampen[i]);
-            errs_a[i] = fabs(errs_a[i]);
-            errs_b[i] = fabs(errs_b[i]);
-        }
-        double var_errs_sampen = ComputeVariance<double>(errs_sampen);
-        double mean_errs_sampen =
-            ComputeSum<double>(errs_sampen) / n_computation;
-        double var_errs_a = ComputeVariance<double>(errs_a);
-        double mean_errs_a = ComputeSum<double>(errs_a) / n_computation;
-        double var_errs_b = ComputeVariance<double>(errs_b);
-        double mean_errs_b = ComputeSum<double>(errs_b) / n_computation;
-        cout << "\tmean_errs_sampen: " << mean_errs_sampen << endl;
-        cout << "\tstd_errs_sampen: " << sqrt(var_errs_sampen) << endl;
-        cout << "\tmean_errs_a: " << mean_errs_a << endl;
-        cout << "\tstd_errs_a: " << sqrt(var_errs_a) << endl;
-        cout << "\tmean_errs_b: " << mean_errs_b << endl;
-        cout << "\tstd_errs_b: " << sqrt(var_errs_b) << endl;
-        cout << "----------------------------------------"
-            << "----------------------------------------\n";
-    }
-}
 
 template<typename T, unsigned K>
 void SampleEntropyN0N1()
@@ -420,7 +357,7 @@ void SampleEntropyN0N1()
                     sample_size, sample_num, 
                     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM, 
                     arg.random_, false, arg.output_level); 
-                _SampleEntropySampling(secds, n_computation);
+                SampleEntropySamplingExperiment(secds, n_computation);
             }
 
             if (arg.swr) 
@@ -430,7 +367,7 @@ void SampleEntropyN0N1()
                     sample_size, sample_num, 
                     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM, 
                     arg.random_, false, arg.output_level); 
-                _SampleEntropySampling(secds, n_computation);
+                SampleEntropySamplingExperiment(secds, n_computation);
             }
             if (arg.q) 
             {
@@ -440,7 +377,7 @@ void SampleEntropyN0N1()
                     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype, 
                     arg.random_, false, arg.output_level);
 
-                _SampleEntropySampling(secds, n_computation);
+                SampleEntropySamplingExperiment(secds, n_computation);
                 if (arg.presort)
                 {
                     SampleEntropyCalculatorSamplingDirect<T, K> secds(
@@ -448,7 +385,7 @@ void SampleEntropyN0N1()
                         sample_size, sample_num, 
                         sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), 
                         arg.rtype, arg.random_, true, arg.output_level);
-                    _SampleEntropySampling(secds, n_computation);
+                    SampleEntropySamplingExperiment(secds, n_computation);
                 }
             }
 
@@ -459,7 +396,7 @@ void SampleEntropyN0N1()
                     sample_size, sample_num, 
                     sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
                     arg.random_, false, arg.output_level);
-                _SampleEntropySampling(secds, n_computation);
+                SampleEntropySamplingExperiment(secds, n_computation);
                 if (arg.presort)
                 {
                     SampleEntropyCalculatorSamplingDirect<T, K> secds(
@@ -467,7 +404,7 @@ void SampleEntropyN0N1()
                         sample_size, sample_num, 
                         sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID, 
                         arg.random_, true, arg.output_level);
-                    _SampleEntropySampling(secds, n_computation);
+                    SampleEntropySamplingExperiment(secds, n_computation);
                 }
             }
         }

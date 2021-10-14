@@ -1,4 +1,5 @@
-output_level=0
+output_level=1
+line_offset=100000
 m=4
 r=0.15
 subdir=final_m${m}_r${r}_211013

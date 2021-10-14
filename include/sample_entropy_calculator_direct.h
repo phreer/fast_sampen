@@ -260,7 +260,7 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
     vector<vector<KDPoint<T, K + 1> > > points = GetKDPointsSample<T, K + 1>(
         _data.cbegin(), _data.cend(), indices, 1, _presort); 
     timer.StopTimer(); 
-    if (_output_level) 
+    if (_output_level == Debug) 
     {
         std::cout << "[INFO] Time consumed in sampling: " 
             << timer.ElapsedSeconds() << " seconds. \n"; 
@@ -275,7 +275,7 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy()
         _b += ab[1]; 
     }
     timer.StopTimer(); 
-    if (_output_level) 
+    if (_output_level == Debug) 
     {
         std::cout << "[INFO] Time consumed in range counting: " 
             << timer.ElapsedSeconds() << " seconds. \n"; 

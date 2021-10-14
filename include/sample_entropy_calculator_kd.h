@@ -366,7 +366,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); });
     timer.StopTimer(); 
-    if (_output_level) 
+    if (_output_level == Debug) 
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -433,7 +433,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     }
     timer.StopTimer(); 
     
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
@@ -498,7 +498,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); }); 
     timer.StopTimer(); 
-    if (_output_level) 
+    if (_output_level == Debug) 
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -612,7 +612,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     }
     timer.StopTimer();
     
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
@@ -675,7 +675,7 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
               { return (points[i1] < points[i2]); });
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
     timer.StopTimer(); 
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << " seconds\n";
@@ -740,7 +740,7 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     }
     timer.StopTimer();
 
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
@@ -790,7 +790,7 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
               { return (points[i1] < points[i2]); });
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
     timer.StopTimer(); 
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -898,7 +898,7 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
     }
     timer.StopTimer();
     
-    if (_output_level)
+    if (_output_level == Debug)
     {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
