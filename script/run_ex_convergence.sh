@@ -28,7 +28,7 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
-line_offset=100000
+subdir=convergence_grid_final_m${m}_r${r}_211013
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir

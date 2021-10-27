@@ -40,6 +40,11 @@ public:
             << "\ttime: " << std::scientific << _elapsed_seconds << "\n"; 
         return ss.str(); 
     }
+    double get_computation_time()
+    {
+        if (!_computed) this->ComputeSampleEntropy();
+        return _elapsed_seconds;
+    }
     double get_entropy() 
     { 
         if (!_computed) this->ComputeSampleEntropy(); 

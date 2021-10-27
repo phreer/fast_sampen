@@ -9,12 +9,10 @@ DoExperimentConvergenceN()
     local r=$3
     local line_offset=$4
     local output_file=$5
-    for i in `seq 0 10`; do
-        local n=$(python -c "print((2 ** $i) * 4096)")
-	local sample_size=$(python -c "import math; print(int(math.ceil(math.sqrt($n))) * 2 + 2048)")
-	local sample_num=$(python -c "import math; print(max(int(math.ceil(math.log($n, 2))) * 5, 10))")
-        echo "sample_size: $sample_size"
-        echo "sample_num: $sample_num"
+    local sample_size=2000
+    local sample_num=150
+    n=10000
+    for i in `seq 0 14`; do
         ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \
@@ -26,6 +24,7 @@ DoExperimentConvergenceN()
             --swr --random \
             --variance --n-computation 50 \
             --output-level 1 >> $output_file
+        n=$(python -c "print(int($n * 1.5))")
     done
 }
 
@@ -36,17 +35,13 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
-subdir=convergence_n_new2_final_m${m}_r${r}_211021
+subdir=convergence_n_fixedn0n1_final_m${m}_r${r}_n02kn1150__211023
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
-
 date >> $output_file
-echo "import math; print(int(math.ceil(math.sqrt($n))) * 2 + 2048)" > $output_file
-echo "import math; print(max(int(math.ceil(math.log($n, 2))) * 10, 10))" > $output_file
 echo $comment > result/${subdir}/convergence.txt
-
 for f in ${input_files[@]}; do
     input_file="$INPUT_DIR"/$f
     echo "input_file: $input_file"
