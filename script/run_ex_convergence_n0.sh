@@ -2,7 +2,7 @@
 
 set -o noclobber
 
-DoExperimentConvergenceSampleNum()
+DoExperimentConvergenceSampleSize()
 {
     local filename=$1
     local m=$2
@@ -10,10 +10,10 @@ DoExperimentConvergenceSampleNum()
     local line_offset=$4
     local output_file=$5
     local n=$6
-    local sample_size=$7
+    local sample_num=$7
     date >> $output_file
-    for i in {1..25}; do 
-        local sample_num=$(( $i * 10 ))
+    for i in {1..20}; do 
+        local sample_size=$(( $i * 200 ))
         ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \
@@ -37,13 +37,13 @@ fi
 source $CONFIG
 
 n=1000010
-sample_size=2000 # N0
-subdir=convergence_n1_m${m}_r${r}_211031
+sample_num=250 # N1
+subdir=convergence_n0_m${m}_r${r}_211031
 mkdir -p result/$subdir 2>/dev/null
 for f in ${input_files[@]}; do
     input_file=${INPUT_DIR}/$f
     database=${input_file%/*}
     database=${input_file##*/}
-    output_file=result/${subdir}/n0${sample_size}_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
-    DoExperimentConvergenceSampleNum $input_file $m $r $line_offset $output_file $n $sample_size &
+    output_file=result/${subdir}/n1${sample_num}_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
+    DoExperimentConvergenceSampleSize $input_file $m $r $line_offset $output_file $n $sample_num &
 done 

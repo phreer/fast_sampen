@@ -11,8 +11,8 @@ DoExperimentConvergenceN()
     local output_file=$5
     local sample_size=2000
     local sample_num=150
-    n=10000
-    for i in `seq 0 14`; do
+    n=2048
+    for i in `seq 0 9`; do
         ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \
@@ -24,7 +24,7 @@ DoExperimentConvergenceN()
             --swr --random \
             --variance --n-computation 50 \
             --output-level 1 >> $output_file
-        n=$(python -c "print(int($n * 1.5))")
+        n=$(python -c "print(int($n * 2))")
     done
 }
 
@@ -35,7 +35,7 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
-subdir=convergence_n_fixedn0n1_final_m${m}_r${r}_n02kn1150__211023
+subdir=convergence_n_fixedn0n1_final_m${m}_r${r}_n02kn1150_211031
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
