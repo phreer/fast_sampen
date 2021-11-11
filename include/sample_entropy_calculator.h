@@ -176,7 +176,7 @@ public:
             << (get_a_norm() - _real_a_norm) / (_real_a_norm + 1e-8) 
             << "\terror (b): " 
             << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n"; 
-        if (this->_output_level) 
+        if (this->_output_level == Debug)
         {
             ss << "[INFO] sample_size: " << _sample_size 
                 << "\tsample_num: " << _sample_num << "\n";

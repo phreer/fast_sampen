@@ -31,10 +31,11 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
+input_files=(chbmit/chb07_01.txt)
 
 n=1000010
 sample_num=250 # N1
-subdir=convergence_n0_m${m}_r${r}_211101
+subdir=convergence_n0_m${m}_r${r}_211104
 mkdir -p result/$subdir 2>/dev/null
 for f in ${input_files[@]}; do
     input_file=${INPUT_DIR}/$f

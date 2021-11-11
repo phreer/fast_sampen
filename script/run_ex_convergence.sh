@@ -16,7 +16,7 @@ DoExperimentConvergenceSampleSize()
         --input-type double \
         --line-offset $line_offset \
         -n $n -m $m -r $r \
-        --swr --random \
+        --swr \
         --variance \
         --output-level 1 >> $output_file
 }

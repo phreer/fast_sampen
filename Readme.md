@@ -1,6 +1,7 @@
-# sampen_kdtree: Fast Computation of Sample Entropy
-This repository includes a program for fast computation of Sample Entropy, 
-based on KD tree and randomly sampling method.
+# fast_sampen: Fast Computation of Sample Entropy
+This repository includes a library and a program for fast computation of
+Sample Entropy, based on kd tree and randomly sample (Monte Carlo and
+quasi-Monte Carolo) method.
 
 ## Requirements
 - Linux, macOS or other UNIX-like OS
@@ -64,7 +65,7 @@ The built binary will be located in `bin` directory in the building directory.
 
 ## Usage
 ```
-Usage: build/kdtree_sample --input <INPUT> --input-type {simple, multirecord}\
+Usage: build/fast_sampen --input <INPUT> --input-type {simple, multirecord}\
                    -r <THRESHOLD> -m <TEMPLATE_LENGTH>\
                    -n <N> [-output-level {1,2,3}]\
                    --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>

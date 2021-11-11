@@ -1,5 +1,7 @@
 #ifndef __KDTREE_MDDC_EXPERIMENT_H__
 #define __KDTREE_MDDC_EXPERIMENT_H__
+#include <math.h>
+
 #include "sample_entropy_calculator.h"
 
 namespace kdtree_mddc {
