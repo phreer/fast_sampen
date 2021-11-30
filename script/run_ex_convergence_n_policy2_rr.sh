@@ -11,11 +11,11 @@ DoExperimentConvergenceN()
     local output_file=$5
     for i in `seq 0 10`; do
         local n=$(python -c "print((2 ** $i) * 4096)")
-	local sample_size=$(python -c "import math; print(int(math.ceil(math.sqrt($n))) * 2 + 2048)")
-	local sample_num=$(python -c "import math; print(max(int(math.ceil(math.log($n, 2))) * 5, 10))")
-        echo "sample_size: $sample_size"
-        echo "sample_num: $sample_num"
-        ./build/bin/kdtree_sample \
+        local n0n1_str=$(python script/get_n0n1_policy2.py $n)
+        IFS=" " read -r -a n0n1_array <<< $n0n1_str
+        local sample_size=${n0n1_array[0]}
+        local sample_num=${n0n1_array[1]}
+        ./build/bin/fast_sampen \
             --input $filename \
             --input-format multirecord \
             --input-type double \
@@ -25,6 +25,7 @@ DoExperimentConvergenceN()
             -n $n -m $m -r $r \
             --swr --random \
             --variance --n-computation 50 \
+            --fast-direct \
             --output-level 1 >> $output_file
     done
 }
@@ -32,20 +33,21 @@ DoExperimentConvergenceN()
 
 CONFIG=script/experiment_config.sh
 if [ ! -e $CONFIG ]; then
-    echo "Configuration file does not exist." >&2
+    echo "Configuration file does not exist. You need to change your working directory to the root of the fast sample entropy project." >&2
     exit -1
 fi
 source $CONFIG
-subdir=convergence_n_new2_final_m${m}_r${r}_211021
 
+line_offset=0
+input_files=(RRCHF/CHF_Filt-time-9643.rr_multirecord.txt\
+             RRHealth/Health_Filt-time-1583.01.rr_multirecord.txt\
+             RRAF/AF_fa002.rr_multirecord.txt)
+subdir=convergence_n_policy2_211130
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
 
 date >> $output_file
-echo "import math; print(int(math.ceil(math.sqrt($n))) * 2 + 2048)" > $output_file
-echo "import math; print(max(int(math.ceil(math.log($n, 2))) * 10, 10))" > $output_file
-echo $comment > result/${subdir}/convergence.txt
 
 for f in ${input_files[@]}; do
     input_file="$INPUT_DIR"/$f

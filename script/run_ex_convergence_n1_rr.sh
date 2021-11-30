@@ -31,7 +31,6 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
-input_files=(chbmit/chb07_01.txt)
 n=100000
 line_offset=0
 sample_size=4000 # N0
