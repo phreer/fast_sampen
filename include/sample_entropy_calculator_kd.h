@@ -109,10 +109,10 @@ private:
     OutputLevel _output_level;
 }; 
 
-/*
-* @brief This class calculates matched pairs like the class MatchedPairCalculatorMao,
-* except that only one kd tree is used.
-*/
+/**
+ * @brief This class calculates matched pairs like the class
+ * MatchedPairCalculatorMao, except that only one kd tree is used.
+ */
 template<typename T, unsigned K>
 class SampleEntropyCalculatorLiu : public SampleEntropyCalculator<T, K>
 {

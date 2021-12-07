@@ -10,8 +10,8 @@ DoExperimentConvergenceN()
     local line_offset=$4
     local output_file=$5
     for i in `seq 0 10`; do
-        local n=$(python -c "print((2 ** $i) * 4096)")
-        local n0n1_str=$(python script/get_n0n1_policy2.py $n)
+        local n=$(python3 -c "print((2 ** $i) * 4096)")
+        local n0n1_str=$(python3 script/get_n0n1_policy2.py $n)
         IFS=" " read -r -a n0n1_array <<< $n0n1_str
         local sample_size=${n0n1_array[0]}
         local sample_num=${n0n1_array[1]}
@@ -28,7 +28,6 @@ DoExperimentConvergenceN()
             -n $n -m $m -r $r \
             --swr --random \
             --variance --n-computation 50 \
-            --fast-direct \
             --output-level 1 >> $output_file
     done
 }
@@ -40,7 +39,7 @@ if [ ! -e $CONFIG ]; then
     exit -1
 fi
 source $CONFIG
-subdir=convergence_n_policy2_211130
+subdir=convergence_n_policy2_211201
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi

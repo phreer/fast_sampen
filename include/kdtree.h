@@ -248,7 +248,7 @@ public:
         return 0;
     }
 
-    /*
+    /**
     * @brief Update the counting of a given node and its ancestors.
     *
     * @param position: The index of the leaf node n to be updated.

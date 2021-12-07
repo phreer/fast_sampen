@@ -9,13 +9,11 @@ DoExperimentConvergenceN()
     local r=$3
     local line_offset=$4
     local output_file=$5
+    local sample_size=2000
+    local sample_num=150
+    n=2048
     for i in `seq 0 10`; do
-        local n=$(python3 -c "print((2 ** $i) * 4096)")
-        local n0n1_str=$(python3 script/get_n0n1_policy2.py $n)
-        IFS=" " read -r -a n0n1_array <<< $n0n1_str
-        local sample_size=${n0n1_array[0]}
-        local sample_num=${n0n1_array[1]}
-        ./build/bin/fast_sampen \
+        ./build/bin/kdtree_sample \
             --input $filename \
             --input-format multirecord \
             --input-type double \
@@ -26,31 +24,28 @@ DoExperimentConvergenceN()
             --swr --random \
             --variance --n-computation 50 \
             --output-level 1 >> $output_file
+        n=$(python -c "print(int($n * 2))")
     done
 }
 
 
 CONFIG=script/experiment_config.sh
 if [ ! -e $CONFIG ]; then
-    echo "Configuration file does not exist. You need to change your working directory to the root of the fast sample entropy project." >&2
+    echo "Configuration file does not exist." >&2
     exit -1
 fi
 source $CONFIG
-
+input_files=(RRAF/AF_fa002.rr_multirecord.txt\
+             RRCHF/CHF_Filt-time-9643.rr_multirecord.txt\
+             RRHealth/Health_Filt-time-1583.01.rr_multirecord.txt)
+subdir=convergence_n_fixedn0n1_final_m${m}_r${r}_n02kn1150_211108
 line_offset=0
-input_files=(RRCHF/CHF_Filt-time-9643.rr_multirecord.txt\
-             pink/pink-1m.txt\
-             gaussian/gaussian-1m.txt\
-             uniform/uniform-1m.txt\
-             RRHealth/Health_Filt-time-1583.01.rr_multirecord.txt\
-             RRAF/AF_fa002.rr_multirecord.txt)
-subdir=convergence_n_policy2_211201
+
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
-
 date >> $output_file
-
+echo $comment > result/${subdir}/convergence.txt
 for f in ${input_files[@]}; do
     input_file="$INPUT_DIR"/$f
     echo "input_file: $input_file"
