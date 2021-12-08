@@ -54,7 +54,7 @@ void SampleEntropySamplingExperiment(SampleEntropyCalculatorSampling<T, K> &secd
             std::cout << computation_times[i] << ", ";
         }
         std::cout << std::endl;
-        for (int i = 0; i < n_computation; ++i) {
+        for (unsigned i = 0; i < n_computation; ++i) {
             errs_sampen[i] = fabs(errs_sampen[i]);
             errs_a[i] = fabs(errs_a[i]);
             errs_b[i] = fabs(errs_b[i]);

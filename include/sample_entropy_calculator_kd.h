@@ -27,8 +27,9 @@ private:
     OutputLevel _output_level;
 };
 
+
 template<typename T, unsigned K> 
-class MatchedPairsCalculatorSampling 
+class MatchedPairsCalculatorSampling
 {
 public: 
     MatchedPairsCalculatorSampling(OutputLevel output_level) 
@@ -41,6 +42,22 @@ public:
 private: 
     OutputLevel _output_level; 
 }; 
+
+
+template<typename T, unsigned K> 
+class MatchedPairsCalculatorSampling2
+{
+public: 
+    MatchedPairsCalculatorSampling2(OutputLevel output_level) 
+        : _output_level(output_level) {} 
+    long long ComputeA(typename vector<T>::const_iterator first, 
+                       typename vector<T>::const_iterator last, 
+                       T r,
+                       vector<unsigned>& indices); 
+private: 
+    OutputLevel _output_level; 
+}; 
+
 
 template<typename T, unsigned K>
 class SampleEntropyCalculatorMao : public SampleEntropyCalculator<T, K>
@@ -82,6 +99,79 @@ protected:
     using SampleEntropyCalculator<T, K>::_elapsed_seconds; 
 };
 
+
+template<typename T, unsigned K>
+class SampleEntropyCalculatorSamplingMao : public SampleEntropyCalculatorSampling<T, K>
+{
+public:
+    using SampleEntropyCalculatorSampling<T, K>::SampleEntropyCalculatorSampling;
+    SampleEntropyCalculatorSamplingMao(
+        typename vector<T>::const_iterator first, 
+        typename vector<T>::const_iterator last, 
+        T r, 
+        unsigned sample_size, 
+        unsigned sample_num, 
+        double real_entropy, 
+        double real_a_norm, 
+        double real_b_norm, 
+        RandomType rtype, 
+        bool random_, 
+        OutputLevel output_level) : 
+        SampleEntropyCalculatorSampling<T, K>(
+            first, last, r, sample_size, sample_num, real_entropy, 
+            real_a_norm, real_b_norm, output_level), 
+        _rtype(rtype), _random(random_) 
+    {
+        if (sample_num != 1) {
+            std::cerr << "Only support the parameter sample_num == 1.\n" << std::endl;
+            exit(-1);
+        }
+    }
+    std::string get_result_str() override
+    {
+        std::stringstream ss;
+        ss << this->SampleEntropyCalculatorSampling<T, K>::get_result_str();
+        ss << "----------------------------------------"
+            << "----------------------------------------\n";
+        return ss.str();
+    }
+protected: 
+    void _ComputeSampleEntropy() override 
+    {
+        if (_n <= K)
+        {
+            std::cerr << "Data length is too short (n = " << _n;
+            std::cerr << ", K = " << K << ")" << std::endl;
+            exit(-1); 
+        }
+        RandomIndicesSamplerWR sampler(_n - K, _sample_size, 1, _rtype, _random);
+        std::vector<unsigned> sample_indices = sampler.GetSampleArrays()[0];
+        MatchedPairsCalculatorSampling2<T, K> b_cal(this->_output_level);
+        MatchedPairsCalculatorSampling2<T, K + 1> a_cal(this->_output_level);
+        _b = b_cal.ComputeA(_data.cbegin(), _data.cend() - 1, _r, sample_indices);
+        _a = a_cal.ComputeA(_data.cbegin(), _data.cend(), _r, sample_indices);
+        _a_vec = std::vector<long long>(1, _a);
+        _b_vec = std::vector<long long>(1, _b);
+    }
+    std::string _Method() const override 
+    { return std::string("kd tree (Mao) sampling"); }
+    using SampleEntropyCalculatorSampling<T, K>::_data; 
+    using SampleEntropyCalculatorSampling<T, K>::_r; 
+    using SampleEntropyCalculatorSampling<T, K>::_n; 
+    using SampleEntropyCalculatorSampling<T, K>::_computed; 
+    using SampleEntropyCalculatorSampling<T, K>::_a; 
+    using SampleEntropyCalculatorSampling<T, K>::_b; 
+    using SampleEntropyCalculatorSampling<T, K>::_output_level; 
+    using SampleEntropyCalculatorSampling<T, K>::_elapsed_seconds; 
+    using SampleEntropyCalculatorSampling<T, K>::_sample_size;
+    using SampleEntropyCalculatorSampling<T, K>::_sample_num;
+    using SampleEntropyCalculatorSampling<T, K>::_a_vec;
+    using SampleEntropyCalculatorSampling<T, K>::_b_vec;
+    RandomType _rtype;
+    bool _random;
+};
+
+
 template<typename T, unsigned K>
 class ABCalculatorLiu
 {
@@ -94,12 +184,13 @@ private:
     OutputLevel _output_level;
 };
 
+
 template<typename T, unsigned K> 
 class ABCalculatorSamplingLiu 
 {
 public: 
-    ABCalculatorSamplingLiu(OutputLevel output_level) 
-        : _output_level(output_level) {} 
+    ABCalculatorSamplingLiu(OutputLevel output_level):
+        _output_level(output_level) {} 
     vector<long long> ComputeAB(typename vector<T>::const_iterator first, 
                                 typename vector<T>::const_iterator last,
                                 unsigned sample_num, 
@@ -451,6 +542,132 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     return result;
 }
 
+template<typename T, unsigned K>
+long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
+    typename vector<T>::const_iterator first,
+    typename vector<T>::const_iterator last,
+    T r, std::vector<unsigned>& sample_indices)
+{
+    const size_t n = last - first;
+    assert(n - K + 1 >= sample_indices.size());
+    vector<T> data_(first, last);
+    // Add K - 1 auxiliary points. 
+    T minimum = *std::min_element(first, last);
+    for (size_t i = 0; i < K - 1; ++i) data_.push_back(minimum);
+
+    // Construct points in k-dimensional space and merge repeated points. 
+    vector<KDPoint<T, K> > points = GetKDPoints<T, K>(
+        data_.cbegin(), data_.cend(), 1);
+    for (size_t i = points.size() - K + 1; i < points.size(); ++i) {
+        points[i].set_count(0);
+    }
+
+    vector<KDPoint<T, K> > sorted_points(points);
+    // The mapping p, from rank to original index 
+    vector<unsigned> rank2index(n);
+    for (size_t i = 0; i < n; i++) rank2index.at(i) = i;
+    Timer timer; 
+    std::sort(rank2index.begin(), rank2index.end(),
+              [&points] (unsigned i1, unsigned i2) 
+              { return (points[i1] < points[i2]); });
+    timer.StopTimer(); 
+    if (_output_level == Debug) 
+    {
+        std::cout << "[INFO] Time consumed in presorting: " 
+            << timer.ElapsedSeconds() << "s\n";
+    }
+
+    for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
+
+    const Bounds bounds = GetRankBounds(sorted_points, r);
+    // Map values of each coordinate to the rank given by sorting.
+    // Since the value at first dimension equal to the index of that point
+    // in the sorted array, we can reduce the dimension of the points by 1.
+    const vector<KDPoint<unsigned, K - 1> > points_grid = 
+        Map2Grid(sorted_points, rank2index);
+
+    // Construct kd tree.
+    vector<KDPoint<unsigned, K - 1> > points_count;
+    vector<unsigned> points_count_indices;
+    // Only use points with positive count to construct the kd tree.
+    for (unsigned i = 0; i < n; i++)
+    {
+        if (points_grid[i].count())
+        {
+            points_count.push_back(points_grid[i]);
+            points_count_indices.push_back(i);
+        }
+    }
+    KDCountingTree2K<unsigned, K - 1> tree(points_count, _output_level);
+
+    // Perform counting. 
+    long long result = 0;
+    // The number of nodes has been visited. 
+    long long num_nodes = 0;
+    long long num_countrange_called = 0;
+    long long num_opened = 0;
+    unsigned upperbound_prev = 0;
+
+    const unsigned n_count = points_count.size();
+    assert(n_count == n - K + 1);
+    int i_sample_indices = 0;
+    std::sort(sample_indices.begin(), sample_indices.end());
+    timer.SetStartingPointNow();
+    for (unsigned i = 0; i < n_count; i++)
+    {
+        if (sample_indices[i_sample_indices] != i) {
+            continue;
+        }         
+        ++i_sample_indices;
+
+        const unsigned rank1 = points_count_indices[i];
+        unsigned upperbound = bounds.upper_bounds[rank1];
+
+        if (upperbound < points_count_indices[i + 1]) continue;
+        // Close nodes whose value of the first dimension are outside bounds.
+        if (i_sample_indices > 0) {
+            for (unsigned k = sample_indices[i_sample_indices - 1] + 1; k <= i; ++k) {
+                tree.Close(k);
+            }
+        }
+
+        // Update tree. 
+        if (upperbound_prev < rank1) upperbound_prev = rank1;
+        unsigned j = i + 1;
+        while (j < n_count && points_count_indices[j] <= upperbound_prev) ++j;
+        while (j < n_count && points_count_indices[j] <= upperbound) {
+            tree.UpdateCount(j, points_count[j].count());
+            ++num_opened;
+            ++j;
+        }
+
+        const Range<unsigned, K - 1> range = GetHyperCube(points_count[i], bounds);
+        result += tree.CountRange(range, num_nodes);
+        ++num_countrange_called;
+        upperbound_prev = upperbound;
+    }
+    timer.StopTimer(); 
+
+    std::cout << "i_sample_indices: " << i_sample_indices << std::endl;
+    assert(i_sample_indices == sample_indices.size());
+
+    if (_output_level == Debug)
+    {
+        std::cout << "[INFO] Time consumed in range counting: "
+            << timer.ElapsedSeconds() << " seconds\n";
+        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
+        std::cout << tree.num_nodes() << std::endl;;
+        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
+        std::cout << n_count << std::endl;
+        std::cout << "[INFO] The number of calls for CountRange(): ";
+        std::cout << num_countrange_called << std::endl;
+        std::cout << "[INFO] The number of times to open node: ";
+        std::cout << num_opened << std::endl;
+        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
+        std::cout << num_nodes << std::endl;
+    }
+    return result;
+}
 vector<unsigned> MergeRepeatedIndices(
     typename vector<unsigned>::const_iterator first, 
     typename vector<unsigned>::const_iterator last)

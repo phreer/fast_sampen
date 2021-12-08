@@ -50,6 +50,8 @@ char usage[] =\
 "                        conducted.\n"
 "-fd | --fast-direct     If this option is on, then fast direct method will be\n"
 "                        conducted.\n"
+"--kd-sample             If this option is enabled, the kd tree based sampling\n"
+"                        method will be used to perform computation.\n"
 "--random                If this option is enabled, the random seed will be set\n"
 "                        randomly.\n"
 "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
@@ -57,7 +59,7 @@ char usage[] =\
 "--variance              If this option is enabled, then the variance of the\n"
 "                        results of sampling methods will be computed. \n"
 "--n-computation <NC>    The number of computations for variance computation\n"
-"                        (defualt = 50).\n"
+"                        (default = 50).\n"
 "-u | --uniform          If this option is enabled, the Monte Carlo based\n"
 "                        method using uniform distribution will be conducted.\n"
 "--swr                   If this option is enabled, then the Monte Carlo based\n"
@@ -89,6 +91,7 @@ struct Argument
     OutputLevel output_level;
     bool fast_direct; 
     bool direct; 
+    bool kd_sample;
     bool random_, variance;
     bool q, u, swr, presort, grid;
     unsigned n_computation;
@@ -205,6 +208,7 @@ void Argument::PrintArguments() const
     std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
     std::cout << "\tsample num: " << arg.sample_num << std::endl; 
     std::cout << "\tsample size: " << arg.sample_size << std::endl; 
+    std::cout << "\tkd_sample: " << arg.kd_sample << std::endl;
 }
 
 void ParseArgument(int argc, char *argv[])
@@ -279,7 +283,8 @@ void ParseArgument(int argc, char *argv[])
     arg.u = parser.isOption("-u") || parser.isOption("--uniform");
     arg.swr = parser.isOption("--swr");
     arg.grid = parser.isOption("--grid");
-    if (arg.q || arg.u || arg.swr || arg.grid) 
+    arg.kd_sample = parser.isOption("--kd-sample");
+    if (arg.q || arg.u || arg.swr || arg.grid || arg.kd_sample) 
     {
         arg.random_ = parser.isOption("--random"); 
         arg.variance = parser.isOption("--variance");
@@ -375,7 +380,23 @@ void SampleEntropyN0N1()
             arg.random_, false, arg.output_level); 
         SampleEntropySamplingExperiment(secds, n_computation);
     }
-
+    const auto precise_entropy = sec.get_entropy();
+    const auto precise_a_norm = sec.get_a_norm();
+    const auto precise_b_norm = sec.get_b_norm();
+    if (arg.kd_sample) {
+        SampleEntropyCalculatorSamplingMao<T, K> calculator(data.cbegin(),
+                                                            data.cend(),
+                                                            r_scaled,
+                                                            arg.sample_size,
+                                                            arg.sample_num,
+                                                            precise_entropy,
+                                                            precise_a_norm,
+                                                            precise_b_norm,
+                                                            SWR_UNIFORM,
+                                                            arg.random_,
+                                                            arg.output_level);
+        SampleEntropySamplingExperiment(calculator, n_computation);
+    }
     if (arg.swr) 
     {
         // The sampling methods using kd tree contain bugs right now. 

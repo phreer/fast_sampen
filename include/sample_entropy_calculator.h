@@ -38,6 +38,9 @@ public:
             << "\ta (norm): " << get_a_norm() 
             << "\tb (norm): " << get_b_norm() << "\n" 
             << "\ttime: " << std::scientific << _elapsed_seconds << "\n"; 
+        if (_output_level == Debug) {
+            std::cout << "[INFO] a: " << _a << ", b: " << _b << std::endl;
+        }
         return ss.str(); 
     }
     double get_computation_time()
