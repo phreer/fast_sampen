@@ -127,29 +127,29 @@ public:
     }
     vector<long long> get_b_vec() 
     { 
-        if (!_computed) ComputeSampleEntropy(); 
-        return _b_vec; 
+        if (!_computed) ComputeSampleEntropy();
+        return _b_vec;
     }
     long long get_a() override 
     {
         vector<long long> a_vec = get_a_vec(); 
-        return std::accumulate(a_vec.cbegin(), a_vec.cend(), 0ll); 
+        return std::accumulate(a_vec.cbegin(), a_vec.cend(), 0ll);
     }
     long long get_b() override 
     {
         vector<long long> b_vec = get_b_vec(); 
-        return std::accumulate(b_vec.cbegin(), b_vec.cend(), 0ll); 
+        return std::accumulate(b_vec.cbegin(), b_vec.cend(), 0ll);
     }
     double get_a_norm() override 
     {
         double norm = static_cast<double>(
-            _sample_num * _sample_size * (_sample_size - 1)); 
+            _sample_num * _sample_size * (_sample_size - 1));
         return get_a() / norm; 
     }
     double get_b_norm() override 
     {
         double norm = static_cast<double>(
-            _sample_num * _sample_size * (_sample_size - 1)); 
+            _sample_num * _sample_size * (_sample_size - 1));
         return get_b() / norm; 
     }
     double get_err_entropy()
@@ -166,10 +166,10 @@ public:
     }
     std::string get_result_str() override 
     {        
-        std::stringstream ss; 
-        ss.precision(DISPLAY_PRECISION); 
-        ss << std::scientific; 
-        double entropy = get_entropy(); 
+        std::stringstream ss;
+        ss.precision(DISPLAY_PRECISION);
+        ss << std::scientific;
+        double entropy = get_entropy();
         double error = entropy - _real_entropy; 
         double rel_error = error / (entropy + 1e-8); 
         ss << this->SampleEntropyCalculator<T, K>::get_result_str() 
@@ -181,7 +181,7 @@ public:
             << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n"; 
         if (this->_output_level == Debug)
         {
-            ss << "[INFO] sample_size: " << _sample_size 
+            ss << "[INFO] sample_size: " << _sample_size
                 << "\tsample_num: " << _sample_num << "\n";
             vector<long long> a_vec = get_a_vec(); 
             vector<long long> b_vec = get_b_vec(); 

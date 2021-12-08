@@ -105,7 +105,7 @@ void SampleEntropyN0N1();
 int main(int argc, char *argv[])
 {
 #ifdef DEBUG
-    cout << "This is a debug version. " << std::endl;
+    cout << "Please note that this is a debug version." << std::endl;
 #endif
     ParseArgument(argc, argv);
 

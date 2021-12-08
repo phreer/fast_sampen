@@ -361,7 +361,7 @@ public:
     {
         std::stringstream ss;
         ss << this->SampleEntropyCalculatorSampling<T, K>::get_result_str();
-        if (_output_level)
+        if (_output_level >= Info)
         {
             ss.precision(4);
             ss << std::scientific;
@@ -457,7 +457,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); });
     timer.StopTimer(); 
-    if (_output_level == Debug) 
+    if (_output_level >= Info) 
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -524,10 +524,12 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     }
     timer.StopTimer(); 
     
-    if (_output_level == Debug)
-    {
+    if (_output_level >= Info) {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
+    }
+    if (_output_level == Debug)
+    {
         std::cout << "[INFO] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
         std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
@@ -571,7 +573,7 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); });
     timer.StopTimer(); 
-    if (_output_level == Debug) 
+    if (_output_level >= Info) 
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -612,18 +614,23 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
     assert(n_count == n - K + 1);
     int i_sample_indices = 0;
     std::sort(sample_indices.begin(), sample_indices.end());
+    for (size_t i = 0; i < sample_indices.size() - 1; ++i) {
+        assert(sample_indices[i + 1] > sample_indices[i]);
+    }
     timer.SetStartingPointNow();
-    for (unsigned i = 0; i < n_count; i++)
+    for (unsigned i = 0; i < n_count; ++i)
     {
         if (sample_indices[i_sample_indices] != i) {
             continue;
-        }         
-        ++i_sample_indices;
+        }
 
         const unsigned rank1 = points_count_indices[i];
         unsigned upperbound = bounds.upper_bounds[rank1];
 
-        if (upperbound < points_count_indices[i + 1]) continue;
+        if (upperbound < points_count_indices[i + 1]) {
+            ++i_sample_indices;
+            continue;
+        }
         // Close nodes whose value of the first dimension are outside bounds.
         if (i_sample_indices > 0) {
             for (unsigned k = sample_indices[i_sample_indices - 1] + 1; k <= i; ++k) {
@@ -645,25 +652,28 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
         result += tree.CountRange(range, num_nodes);
         ++num_countrange_called;
         upperbound_prev = upperbound;
+        ++i_sample_indices;
     }
     timer.StopTimer(); 
 
-    std::cout << "i_sample_indices: " << i_sample_indices << std::endl;
     assert(i_sample_indices == sample_indices.size());
+
+    if (_output_level >= Info) {
+        std::cout << "[INFO] Time consumed in range counting: "
+            << timer.ElapsedSeconds() << " seconds\n";
+    }
 
     if (_output_level == Debug)
     {
-        std::cout << "[INFO] Time consumed in range counting: "
-            << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
         std::cout << n_count << std::endl;
-        std::cout << "[INFO] The number of calls for CountRange(): ";
+        std::cout << "[DEBUG] The number of calls for CountRange(): ";
         std::cout << num_countrange_called << std::endl;
-        std::cout << "[INFO] The number of times to open node: ";
+        std::cout << "[DEBUG] The number of times to open node: ";
         std::cout << num_opened << std::endl;
-        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
         std::cout << num_nodes << std::endl;
     }
     return result;
@@ -710,12 +720,12 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     vector<unsigned> rank2index(n); 
     for (size_t i = 0; i < n; i++) rank2index.at(i) = i; 
 
-    Timer timer; 
+    Timer timer;
     std::sort(rank2index.begin(), rank2index.end(),
               [&points] (unsigned i1, unsigned i2) 
               { return (points[i1] < points[i2]); }); 
     timer.StopTimer(); 
-    if (_output_level == Debug) 
+    if (_output_level == Info) 
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -747,7 +757,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     {
         if (points_grid[i].count())
         {
-            for (unsigned j = 0; j < sample_groups[i].size(); ++j) 
+            for (unsigned j = 0; j < sample_groups[i].size(); ++j)
             {
                 indices_count[sample_groups[i][j]].
                     push_back(points_count.size());
@@ -818,8 +828,8 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
             ++num_countrange_called;
             upperbound_prev = upperbound;
         }
-        tree.Close(n_count - 1); 
-        results[k] = result; 
+        tree.Close(n_count - 1);
+        results[k] = result;
 
         // Close points for current sample group. 
         for (unsigned i = 0; i < indices_count[k].size(); ++i) 
@@ -829,23 +839,22 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     }
     timer.StopTimer();
     
-    if (_output_level == Debug)
-    {
+    if (_output_level >= Info) {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
-        std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
-        std::cout << n_count << std::endl;
-        std::cout << "[INFO] The number of calls for CountRange(): ";
-        std::cout << num_countrange_called << std::endl;
-        std::cout << "[INFO] The number of times to open node: ";
-        std::cout << num_opened << std::endl;
-        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
-        std::cout << num_nodes << std::endl;
     }
-    if (_output_level >= 2) 
+    if (_output_level == Debug)
     {
+        std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
+        std::cout << tree.num_nodes() << std::endl;;
+        std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
+        std::cout << n_count << std::endl;
+        std::cout << "[DEBUG] The number of calls for CountRange(): ";
+        std::cout << num_countrange_called << std::endl;
+        std::cout << "[DEBUG] The number of times to open node: ";
+        std::cout << num_opened << std::endl;
+        std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
+        std::cout << num_nodes << std::endl;
         std::cout << "[DEBUG] The numbers of the matched pairs: \n";
         for (unsigned i = 0; i < sample_num; ++i) 
         {
@@ -892,7 +901,7 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
               { return (points[i1] < points[i2]); });
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
     timer.StopTimer(); 
-    if (_output_level == Debug)
+    if (_output_level >= Info)
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << " seconds\n";
@@ -957,19 +966,21 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     }
     timer.StopTimer();
 
-    if (_output_level == Debug)
-    {
+    if (_output_level >= Info) {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
+    }
+    if (_output_level == Debug)
+    {
+        std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
         std::cout << n_count << std::endl;
-        std::cout << "[INFO] The number of calls for CountRange(): ";
+        std::cout << "[DEBUG] The number of calls for CountRange(): ";
         std::cout << num_countrange_called << std::endl;
-        std::cout << "[INFO] The number times to open node: ";
+        std::cout << "[DEBUG] The number times to open node: ";
         std::cout << num_opened << std::endl;
-        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
         std::cout << num_nodes << std::endl;
     }
 
@@ -1007,7 +1018,7 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
               { return (points[i1] < points[i2]); });
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
     timer.StopTimer(); 
-    if (_output_level == Debug)
+    if (_output_level >= Info)
     {
         std::cout << "[INFO] Time consumed in presorting: " 
             << timer.ElapsedSeconds() << "s\n";
@@ -1115,19 +1126,21 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
     }
     timer.StopTimer();
     
-    if (_output_level == Debug)
-    {
+    if (_output_level >= Info) {
         std::cout << "[INFO] Time consumed in range counting: "
             << timer.ElapsedSeconds() << " seconds\n";
-        std::cout << "[INFO] The number of nodes (K = " << K << "): ";
+    }
+    if (_output_level == Debug)
+    {
+        std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
         std::cout << tree.num_nodes() << std::endl;;
-        std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
         std::cout << n_count << std::endl;
-        std::cout << "[INFO] The number of calls for CountRange(): ";
+        std::cout << "[DEBUG] The number of calls for CountRange(): ";
         std::cout << num_countrange_called << std::endl;
-        std::cout << "[INFO] The number times to open node: ";
+        std::cout << "[DEBUG] The number times to open node: ";
         std::cout << num_opened << std::endl;
-        std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
+        std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
         std::cout << num_nodes << std::endl;
     }
 
