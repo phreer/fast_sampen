@@ -155,6 +155,10 @@ public:
                        vector<const KDCountingTree2KNode *> &q1,
                        vector<const KDCountingTree2KNode *> &q2) const;
 
+  double CountRangeEstimate(const Range<T, K> &range, long long &num_nodes,
+                            vector<const KDCountingTree2KNode *> &q1,
+                            vector<const KDCountingTree2KNode *> &q2,
+                            unsigned max_depth) const;
   void UpdateCount(int d) {
     KDCountingTree2KNode *node = this;
     while (node) {
