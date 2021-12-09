@@ -20,14 +20,12 @@
 #include <string>
 #include <vector>
 
-
 #ifdef DEBUG
 #include <iostream>
 #endif
 
 #include "kdpoint.h"
 #include "time.h"
-
 
 #define MSG(fd, prefix, fmt, ...)                                              \
   fprintf(fd, "[%s] ", (prefix));                                              \

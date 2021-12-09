@@ -10,11 +10,15 @@ n = 1000
 m = 3
 points, var = gen_points(sys.argv[1], n, m)
 
+
 def less_point(p1, p2):
     for i in range(m):
-        if p1[i] < p2[i]: return -1
-        elif p1[i] > p2[i]: return 1
+        if p1[i] < p2[i]:
+            return -1
+        elif p1[i] > p2[i]:
+            return 1
     return 0
+
 
 r = 0.1 * math.sqrt(var)
 
@@ -26,8 +30,8 @@ for i in range(len(points)):
             zuv[j, i] = 1
 
 As = np.sum(zuv, axis=1)
-vas = np.abs(As[1: ] - As[: -1]).sum()
-vzuv = np.abs(zuv[1 : , : ] - zuv[ : -1, : ]).sum()
+vas = np.abs(As[1:] - As[: -1]).sum()
+vzuv = np.abs(zuv[1:, :] - zuv[: -1, :]).sum()
 
 print('Result (no presort)')
 print('A: ', As.sum())
@@ -43,8 +47,8 @@ for i in range(len(points)):
             zuv[j, i] = 1
 
 As = np.sum(zuv, axis=1)
-vas = np.abs(As[1: ] - As[: -1]).sum()
-vzuv = np.abs(zuv[1 : , : ] - zuv[ : -1, : ]).sum()
+vas = np.abs(As[1:] - As[: -1]).sum()
+vzuv = np.abs(zuv[1:, :] - zuv[: -1, :]).sum()
 
 print('Result (presort)')
 print('A: ', As.sum())

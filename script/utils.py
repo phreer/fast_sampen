@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def gen_points(filename, n, m):
     xs = []
     points = []
@@ -12,6 +13,7 @@ def gen_points(filename, n, m):
         p = xs[i: i + m]
         points.append(p)
     return points, var
+
 
 def distance_within(p1, p2, r, m):
     for i in range(m):

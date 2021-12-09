@@ -3,7 +3,7 @@ find_package(GSL REQUIRED)
 set(APP_NAME fast_sampen)
 set(LIB_NAME sampen)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
-set(CPP_LIST utils.cpp sample_entropy_calculator.cpp random_sampler.cpp) 
+set(CPP_LIST utils.cpp sample_entropy_calculator.cpp random_sampler.cpp)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_library(${LIB_NAME} ${CPP_LIST})

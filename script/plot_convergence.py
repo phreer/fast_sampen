@@ -1,6 +1,7 @@
 import os
 
 from matplotlib import rcParams
+
 rcParams['font.family'] = 'serif'
 from matplotlib import pyplot as plt
 from matplotlib import cm
@@ -34,10 +35,10 @@ for record in records:
     input_filename = os.path.join(inputdir, filename % record)
     with open(input_filename) as f:
         lines = f.readlines()
-    
+
     increment_ss = 200
     increment_sn = 10
-    lines = lines[NUM_LINE_SETTING: ]
+    lines = lines[NUM_LINE_SETTING:]
     results = {}
     instances = ['uniform', 'swr', 'qmc', 'qmc_presort', 'grid', 'grid_presort']
     num_ss = 20
@@ -45,14 +46,14 @@ for record in records:
     num_case = num_ss * num_sn
     for instance in instances:
         results[instance] = {
-            "err_sampen": np.zeros([num_ss, num_sn]), 
-            "std_sampen": np.zeros([num_ss, num_sn]), 
-            "std_a": np.zeros([num_ss, num_sn]), 
-            "err_a": np.zeros([num_ss, num_sn]), 
-            "err_b": np.zeros([num_ss, num_sn]), 
-            "std_b": np.zeros([num_ss, num_sn]), 
+            "err_sampen": np.zeros([num_ss, num_sn]),
+            "std_sampen": np.zeros([num_ss, num_sn]),
+            "std_a": np.zeros([num_ss, num_sn]),
+            "err_a": np.zeros([num_ss, num_sn]),
+            "err_b": np.zeros([num_ss, num_sn]),
+            "std_b": np.zeros([num_ss, num_sn]),
         }
-    
+
     for i in range(num_case - 2):
         curr = lines[NUM_LINE_CASE * i: NUM_LINE_CASE * (i + 1)]
         n0 = int(curr[LINE_SAMPLE_SIZE][13: -1])
@@ -73,14 +74,14 @@ for record in records:
             results[instance]['std_a'][i_n0, i_n1] = std_a
             results[instance]['err_b'][i_n0, i_n1] = err_b
             results[instance]['std_b'][i_n0, i_n1] = std_b
-    
+
     print('Parsing Done.')
-    
+
     n0s = np.arange(200, 4001, 200)
     n1s = np.arange(10, 251, 10)
     n0s, n1s = np.meshgrid(n1s, n0s)
     dpi = 60
-    figsize=[8, 6]
+    figsize = [8, 6]
     savefig_options = {'bbox_inches': 'tight'}
     for instance in instances:
         fig = plt.figure(figsize=figsize, dpi=dpi)
@@ -92,7 +93,7 @@ for record in records:
         ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
-        
+
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_sampen']), cmap=cm.coolwarm)
@@ -101,7 +102,7 @@ for record in records:
         ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'std_err_sampen_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
-        
+
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_a'], cmap=cm.coolwarm)
         ax.set_zlabel('Mean Error of Matching Probability')
@@ -109,7 +110,7 @@ for record in records:
         ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
-        
+
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_a']), cmap=cm.coolwarm)
@@ -118,7 +119,7 @@ for record in records:
         ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'std_err_a_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
-        
+
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, results[instance]['err_b'], cmap=cm.coolwarm)
@@ -127,7 +128,7 @@ for record in records:
         ax.set_ylabel('The Number of Computations')
         fig.savefig(os.path.join(outputdir, 'mean_err_b_%s_%s.pdf' % (record, instance)), **savefig_options)
         plt.close(fig)
-        
+
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(n1s, n0s, np.abs(results[instance]['std_b']), cmap=cm.coolwarm)
