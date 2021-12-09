@@ -45,7 +45,7 @@
 
 #define MSG_INFO(fmt, ...) MSG(stdout, "INFO", (fmt), ##__VA_ARGS__);
 
-namespace kdtree_mddc {
+namespace sampen {
 using std::cerr;
 using std::ifstream;
 using std::string;
@@ -481,6 +481,6 @@ Range<unsigned, K> GetHyperCube(const KDPoint<unsigned, K> &point,
   return result;
 }
 
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__UTILS__

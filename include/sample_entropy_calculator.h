@@ -8,7 +8,7 @@
 
 #include "utils.h"
 
-namespace kdtree_mddc {
+namespace sampen {
 using std::vector;
 
 const unsigned DISPLAY_PRECISION = 6;
@@ -178,6 +178,6 @@ protected:
   vector<long long> _a_vec, _b_vec;
 };
 
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR__

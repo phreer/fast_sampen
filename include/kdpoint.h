@@ -5,7 +5,7 @@
 #include <string.h>
 #include <vector>
 
-namespace kdtree_mddc {
+namespace sampen {
 using std::vector;
 
 template <typename T, unsigned K> class KDPoint {
@@ -72,6 +72,6 @@ KDPoint<T, K>::KDPoint(typename vector<T>::const_iterator first,
   unsigned n = K < (last - first) ? K : (last - first);
   std::copy(first, first + n, _data);
 }
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__KDPOINT__

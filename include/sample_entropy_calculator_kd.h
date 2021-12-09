@@ -8,7 +8,7 @@
 #include "utils.h"
 #include <algorithm>
 
-namespace kdtree_mddc {
+namespace sampen {
 using std::vector;
 
 // The kd tree of Mao Dong's version.
@@ -1069,6 +1069,6 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   return results;
 }
 
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR_KD__

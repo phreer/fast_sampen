@@ -16,7 +16,7 @@
 
 #include "utils.h"
 
-namespace kdtree_mddc {
+namespace sampen {
 
 template <typename T, unsigned K, unsigned D>
 Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
@@ -825,6 +825,6 @@ vector<long long> KDTreeNode2K<T, K>::CountRange(
   return result;
 }
 
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__KDTREE__

@@ -8,7 +8,7 @@
 #include "sample_entropy_calculator_kd.h"
 #include "utils.h"
 
-using namespace kdtree_mddc;
+using namespace sampen;
 using std::cout;
 using std::endl;
 using std::string;

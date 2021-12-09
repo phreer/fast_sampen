@@ -15,7 +15,7 @@
 
 #include "utils.h"
 
-namespace kdtree_mddc {
+namespace sampen {
 using namespace std;
 
 double ComputeSampen(double A, double B, unsigned N, unsigned m) {
@@ -106,4 +106,4 @@ vector<int> ArgumentParser::getArgIntArray(const string &arg) {
   }
   return result;
 }
-} // namespace kdtree_mddc
+} // namespace sampen

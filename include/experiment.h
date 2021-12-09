@@ -4,7 +4,7 @@
 
 #include "sample_entropy_calculator.h"
 
-namespace kdtree_mddc {
+namespace sampen {
 
 template <typename T, unsigned K>
 void SampleEntropySamplingExperiment(
@@ -74,6 +74,6 @@ void SampleEntropySamplingExperiment(
   }
 }
 
-}; // namespace kdtree_mddc
+}; // namespace sampen
 
 #endif // __KDTREE_MDDC_EXPERIMENT_H_

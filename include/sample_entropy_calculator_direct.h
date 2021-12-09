@@ -8,7 +8,7 @@
 #include "random_sampler.h"
 #include "sample_entropy_calculator.h"
 
-namespace kdtree_mddc {
+namespace sampen {
 
 template <typename T, unsigned K>
 vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r);
@@ -252,6 +252,6 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy() {
               << timer.ElapsedSeconds() << " seconds. \n";
   }
 }
-} // namespace kdtree_mddc
+} // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR_DIRECT__
