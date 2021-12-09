@@ -38,7 +38,7 @@ public:
             << "\ta (norm): " << get_a_norm() 
             << "\tb (norm): " << get_b_norm() << "\n" 
             << "\ttime: " << std::scientific << _elapsed_seconds << "\n"; 
-        if (_output_level == Debug) {
+        if (_output_level >= Info) {
             std::cout << "[INFO] a: " << _a << ", b: " << _b << std::endl;
         }
         return ss.str(); 
@@ -179,7 +179,7 @@ public:
             << (get_a_norm() - _real_a_norm) / (_real_a_norm + 1e-8) 
             << "\terror (b): " 
             << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n"; 
-        if (this->_output_level == Debug)
+        if (this->_output_level >= Info)
         {
             ss << "[INFO] sample_size: " << _sample_size
                 << "\tsample_num: " << _sample_num << "\n";

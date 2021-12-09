@@ -204,11 +204,11 @@ void Argument::PrintArguments() const
     std::cout << "\tdata length: " << arg.data_length << std::endl;
     std::cout << "\ttemplate length: " << arg.template_length << std::endl;
     std::cout << "\tthreshold: " << arg.r << std::endl;
+    std::cout << "\tsample num (N1): " << arg.sample_num << std::endl; 
+    std::cout << "\tsample size (N0): " << arg.sample_size << std::endl; 
+    std::cout << "\tuse kd tree based sampling: " << arg.kd_sample << std::endl;
     std::cout << "\trandom: " << arg.random_ << std::endl; 
     std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
-    std::cout << "\tsample num: " << arg.sample_num << std::endl; 
-    std::cout << "\tsample size: " << arg.sample_size << std::endl; 
-    std::cout << "\tkd_sample: " << arg.kd_sample << std::endl;
 }
 
 void ParseArgument(int argc, char *argv[])

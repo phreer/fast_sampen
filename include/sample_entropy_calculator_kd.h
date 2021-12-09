@@ -444,9 +444,11 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     // TODO: !! For debug here. 
     for (size_t i = 0; i < K - 1; i++) data_.push_back(minimum);
     // Construct Points and merge repeated points. 
-    const vector<KDPoint<T, K> > points = GetKDPoints<T, K>(
+    vector<KDPoint<T, K> > points = GetKDPoints<T, K>(
         data_.cbegin(), data_.cend(), 1);
-
+    for (size_t i = points.size() - K + 1; i < points.size(); ++i) {
+        points[i].set_count(0);
+    }
     vector<KDPoint<T, K> > sorted_points(points);
     // The mapping p, from rank to original index 
     vector<unsigned> rank2index(n);
@@ -465,7 +467,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
 
     for (size_t i = 0; i < n; i++) sorted_points[i] = points[rank2index[i]];
 
-    MergeRepeatedPoints(sorted_points, rank2index);
+    // MergeRepeatedPoints(sorted_points, rank2index);
 
     const Bounds bounds = GetRankBounds(sorted_points, r);
     const vector<KDPoint<unsigned, K - 1> > points_grid = 
@@ -497,14 +499,16 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     timer.SetStartingPointNow();
     for (unsigned i = 0; i < n_count - 1; i++)
     {
+        // Close current node. 
+        tree.Close(i);
+
         const unsigned rank1 = points_count_indices[i];
+
         unsigned upperbound = bounds.upper_bounds[rank1];
         long long count_repeated = static_cast<long long>(points_count[i].count());
         result += (count_repeated - 1) * count_repeated / 2;
 
         if (upperbound < points_count_indices[i + 1]) continue;
-        // Close current node. 
-        tree.Close(i);
 
         // Update tree. 
         if (upperbound_prev < rank1) upperbound_prev = rank1;
@@ -518,7 +522,8 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
         }
 
         const Range<unsigned, K - 1> range = GetHyperCube(points_count[i], bounds);
-        result += tree.CountRange(range, num_nodes) * count_repeated;
+        long long current_count = tree.CountRange(range, num_nodes) * count_repeated;
+        result += current_count;
         ++num_countrange_called;
         upperbound_prev = upperbound;
     }
@@ -620,22 +625,22 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
     timer.SetStartingPointNow();
     for (unsigned i = 0; i < n_count; ++i)
     {
-        if (sample_indices[i_sample_indices] != i) {
-            continue;
-        }
-
         const unsigned rank1 = points_count_indices[i];
         unsigned upperbound = bounds.upper_bounds[rank1];
 
-        if (upperbound < points_count_indices[i + 1]) {
-            ++i_sample_indices;
-            continue;
-        }
         // Close nodes whose value of the first dimension are outside bounds.
         if (i_sample_indices > 0) {
             for (unsigned k = sample_indices[i_sample_indices - 1] + 1; k <= i; ++k) {
                 tree.Close(k);
             }
+        }
+
+        if (sample_indices[i_sample_indices] != i) {
+            continue;
+        }
+        if (upperbound < points_count_indices[i + 1]) {
+            ++i_sample_indices;
+            continue;
         }
 
         // Update tree. 
@@ -796,6 +801,9 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
             if (points_count[i].count() == 0) 
                 continue; 
 
+            // Close current node.
+            tree.Close(i);
+
             const unsigned rank1 = points_count_indices[i];
             unsigned upperbound = bounds.upper_bounds[rank1];
             long long count_repeated =
@@ -804,8 +812,6 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
 
             if (upperbound < points_count_indices[i + 1])
                 continue;
-            // Close current node.
-            tree.Close(i);
 
             // Update tree.
             if (upperbound_prev < rank1)
@@ -939,12 +945,13 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
     timer.SetStartingPointNow();
     for (unsigned i = 0; i < n_count - 1; i++)
     {
-        const unsigned rank1 = points_count_indices[i];
-        unsigned upperbound = bounds.upper_bounds[rank1];
-        if (upperbound < points_count_indices[i + 1]) continue;
         // Close current node. 
         tree.Close(i);
 
+        const unsigned rank1 = points_count_indices[i];
+        unsigned upperbound = bounds.upper_bounds[rank1];
+
+        if (upperbound < points_count_indices[i + 1]) continue;
         // Update tree. 
         if (upperbound_prev < rank1) upperbound_prev = rank1;
         unsigned j = i + 1;
@@ -1081,6 +1088,9 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
         {
             if (points_count[i].count() == 0) continue; 
 
+            // Close current node. 
+            tree.Close(i);
+
             const unsigned rank1 = points_count_indices[i];
             unsigned upperbound = bounds.upper_bounds[rank1];
             long long count_repeated = 
@@ -1089,8 +1099,6 @@ ABCalculatorSamplingLiu<T, K>::ComputeAB(
             result_b += (count_repeated - 1) * count_repeated / 2; 
 
             if (upperbound < points_count_indices[i + 1]) continue;
-            // Close current node. 
-            tree.Close(i);
 
             // Update tree. 
             if (upperbound_prev < rank1) upperbound_prev = rank1;

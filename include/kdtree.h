@@ -232,7 +232,7 @@ public:
         t = clock() - t;
         if (_output_level == Debug)
         {
-            std::cout << "[Debug] The time consumed to build a KDCountingTree (K = " << K << "): ";
+            std::cout << "[DEBUG] The time consumed to build a KDCountingTree (K = " << K << "): ";
             std::cout << static_cast<double>(t) / CLOCKS_PER_SEC << " seconds. \n";
         }
     }
