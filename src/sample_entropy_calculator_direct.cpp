@@ -87,8 +87,8 @@ void SampleEntropyCalculatorDirect<T, K>::_ComputeSampleEntropy() {
 
 template <typename T, unsigned K>
 void SampleEntropyCalculatorFastDirect<T, K>::_ComputeSampleEntropy() {
-  if (_n <= K) {
-    std::cerr << "Data length is too short (n = " << _n;
+  if (_data.size() <= K) {
+    std::cerr << "Data length is too short (n = " << _data.size();
     std::cerr << ", K = " << K << ")" << std::endl;
     exit(-1);
   }
@@ -101,7 +101,7 @@ void SampleEntropyCalculatorFastDirect<T, K>::_ComputeSampleEntropy() {
 template <typename T, unsigned K>
 void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy() {
   const vector<vector<unsigned>> indices =
-      GetSampleIndices(_rtype, _n - K, _sample_size, _sample_num, _random);
+      GetSampleIndices(_rtype, _GetNumTempates(), _sample_size, _sample_num, _random);
   _a_vec = vector<long long>(_sample_num);
   _b_vec = vector<long long>(_sample_num);
   Timer timer;

@@ -44,7 +44,6 @@ protected:
   std::string _Method() const override { return std::string("plain direct"); }
   using SampleEntropyCalculator<T, K>::_data;
   using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
   using SampleEntropyCalculator<T, K>::_computed;
   using SampleEntropyCalculator<T, K>::_a;
   using SampleEntropyCalculator<T, K>::_b;
@@ -72,7 +71,6 @@ protected:
   std::string _Method() const override { return std::string("fast direct"); }
   using SampleEntropyCalculator<T, K>::_data;
   using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
   using SampleEntropyCalculator<T, K>::_computed;
   using SampleEntropyCalculator<T, K>::_a;
   using SampleEntropyCalculator<T, K>::_b;
@@ -121,7 +119,6 @@ protected:
 
   using SampleEntropyCalculatorSampling<T, K>::_data;
   using SampleEntropyCalculatorSampling<T, K>::_r;
-  using SampleEntropyCalculatorSampling<T, K>::_n;
   using SampleEntropyCalculatorSampling<T, K>::_computed;
   using SampleEntropyCalculatorSampling<T, K>::_a;
   using SampleEntropyCalculatorSampling<T, K>::_b;

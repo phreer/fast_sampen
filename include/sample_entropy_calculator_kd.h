@@ -64,8 +64,8 @@ public:
 
 protected:
   void _ComputeSampleEntropy() override {
-    if (_n <= K) {
-      std::cerr << "Data length is too short (n = " << _n;
+    if (_data.size() <= K) {
+      std::cerr << "Data length is too short (n = " << _data.size();
       std::cerr << ", K = " << K << ")" << std::endl;
       exit(-1);
     }
@@ -78,7 +78,6 @@ protected:
   std::string _Method() const override { return std::string("kd tree (Mao)"); }
   using SampleEntropyCalculator<T, K>::_data;
   using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
   using SampleEntropyCalculator<T, K>::_computed;
   using SampleEntropyCalculator<T, K>::_a;
   using SampleEntropyCalculator<T, K>::_b;
@@ -117,12 +116,12 @@ public:
 
 protected:
   void _ComputeSampleEntropy() override {
-    if (_n <= K) {
-      std::cerr << "Data length is too short (n = " << _n;
+    if (_data.size() <= K) {
+      std::cerr << "Data length is too short (n = " << _data.size();
       std::cerr << ", K = " << K << ")" << std::endl;
       exit(-1);
     }
-    RandomIndicesSamplerWR sampler(_n - K, _sample_size, 1, _rtype, _random);
+    RandomIndicesSamplerWR sampler(_data.size() - K, _sample_size, 1, _rtype, _random);
     std::vector<unsigned> sample_indices = sampler.GetSampleArrays()[0];
     MatchedPairsCalculatorSampling2<T, K> b_cal(this->_output_level);
     MatchedPairsCalculatorSampling2<T, K + 1> a_cal(this->_output_level);
@@ -136,7 +135,6 @@ protected:
   }
   using SampleEntropyCalculatorSampling<T, K>::_data;
   using SampleEntropyCalculatorSampling<T, K>::_r;
-  using SampleEntropyCalculatorSampling<T, K>::_n;
   using SampleEntropyCalculatorSampling<T, K>::_computed;
   using SampleEntropyCalculatorSampling<T, K>::_a;
   using SampleEntropyCalculatorSampling<T, K>::_b;
@@ -191,8 +189,8 @@ public:
 
 protected:
   void _ComputeSampleEntropy() override {
-    if (_n <= K) {
-      std::cerr << "Data length is too short (n = " << _n;
+    if (_data.size() <= K) {
+      std::cerr << "Data length is too short (n = " << _data.size();
       std::cerr << ", K = " << K << ")" << std::endl;
       exit(-1);
     }
@@ -205,7 +203,6 @@ protected:
 
   using SampleEntropyCalculator<T, K>::_data;
   using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
   using SampleEntropyCalculator<T, K>::_computed;
   using SampleEntropyCalculator<T, K>::_a;
   using SampleEntropyCalculator<T, K>::_b;
@@ -245,12 +242,12 @@ public:
 
 protected:
   void _ComputeSampleEntropy() override {
-    if (_n <= K) {
-      std::cerr << "Data length is too short (n = " << _n;
+    if (_data.size() <= K) {
+      std::cerr << "Data length is too short (n = " << _data.size();
       std::cerr << ", K = " << K << ")" << std::endl;
       exit(-1);
     }
-    RandomIndicesSampler uig(0, _n - 2, _rtype, _random);
+    RandomIndicesSampler uig(0, _data.size() - 2, _rtype, _random);
     vector<unsigned> indices(_sample_size * _sample_num);
     for (unsigned i = 0; i < _sample_num; ++i) {
       for (unsigned j = 0; j < _sample_size; ++j) {
@@ -273,7 +270,6 @@ protected:
 
   using SampleEntropyCalculatorSampling<T, K>::_data;
   using SampleEntropyCalculatorSampling<T, K>::_r;
-  using SampleEntropyCalculatorSampling<T, K>::_n;
   using SampleEntropyCalculatorSampling<T, K>::_computed;
   using SampleEntropyCalculatorSampling<T, K>::_a;
   using SampleEntropyCalculatorSampling<T, K>::_b;
@@ -320,12 +316,12 @@ public:
 
 protected:
   void _ComputeSampleEntropy() override {
-    if (_n <= K) {
-      std::cerr << "Data length is too short (n = " << _n;
+    if (_data.size() <= K) {
+      std::cerr << "Data length is too short (n = " << _data.size();
       std::cerr << ", K = " << K << ")" << std::endl;
       exit(-1);
     }
-    RandomIndicesSampler uig(0, _n - 2, _rtype, _random);
+    RandomIndicesSampler uig(0, _data.size() - 2, _rtype, _random);
     vector<unsigned> indices(_sample_size * _sample_num);
     for (unsigned i = 0; i < _sample_num; ++i) {
       for (unsigned j = 0; j < _sample_size; ++j) {
@@ -351,7 +347,6 @@ protected:
 
   using SampleEntropyCalculatorSampling<T, K>::_data;
   using SampleEntropyCalculatorSampling<T, K>::_r;
-  using SampleEntropyCalculatorSampling<T, K>::_n;
   using SampleEntropyCalculatorSampling<T, K>::_computed;
   using SampleEntropyCalculatorSampling<T, K>::_a;
   using SampleEntropyCalculatorSampling<T, K>::_b;

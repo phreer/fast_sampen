@@ -21,8 +21,7 @@ public:
   SampleEntropyCalculator(typename vector<T>::const_iterator first,
                           typename vector<T>::const_iterator last, T r,
                           OutputLevel output_level)
-      : _data(first, last), _r(r), _n(last - first),
-        _output_level(output_level) {}
+      : _data(first, last), _r(r), _output_level(output_level) {}
   virtual std::string get_result_str() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -31,8 +30,8 @@ public:
     ss << "----------------------------------------"
        << "----------------------------------------\n"
        << _Method() << ": \n"
-       << "\tentropy: " << get_entropy() << "\n"
-       << "\ta (norm): " << get_a_norm() << "\tb (norm): " << get_b_norm()
+       << "\tentropy (" << _dimension << "d): " << get_entropy() << "\n"
+       << "\ta (norm): " << get_a_norm() << ", b (norm): " << get_b_norm()
        << "\n"
        << "\ttime: " << std::scientific << _elapsed_seconds << "\n";
     if (_output_level >= Info) {
@@ -49,7 +48,7 @@ public:
     if (!_computed)
       this->ComputeSampleEntropy();
     return ComputeSampen(static_cast<double>(get_a()),
-                         static_cast<double>(get_b()), _n - K, K);
+                         static_cast<double>(get_b()), _GetNumTemplates(), K);
   }
   virtual long long get_a() {
     if (!_computed)
@@ -62,11 +61,13 @@ public:
     return _b;
   }
   virtual double get_a_norm() {
-    double norm = static_cast<double>(_n - K - 1) * (_n - K);
+    const int n = _GetNumTemplates();
+    double norm = static_cast<double>(n - 1) * n;
     return get_a() / norm;
   }
   virtual double get_b_norm() {
-    double norm = static_cast<double>(_n - K - 1) * (_n - K);
+    const int n = _GetNumTemplates();
+    double norm = static_cast<double>(n- 1) * n;
     return get_b() / norm;
   }
   void ComputeSampleEntropy() {
@@ -77,17 +78,23 @@ public:
     _computed = true;
   }
   std::string get_method_name() { return _Method(); }
-
+  int GetDimension() const {
+    return _dimension;
+  }
 protected:
+  virtual unsigned _GetNumTemplates() const {
+    return _data.size() - K;
+  }
   virtual void _ComputeSampleEntropy() = 0;
   virtual std::string _Method() const = 0;
+
   const vector<T> _data;
   const T _r;
-  const unsigned _n;
   OutputLevel _output_level;
   long long _a, _b;
   bool _computed = false;
   double _elapsed_seconds;
+  const int _dimension;
 };
 
 template <typename T, unsigned K>
@@ -146,7 +153,7 @@ public:
        << "\terror: " << error << "\terror (relative): " << rel_error << "\n"
        << "\terror (a): "
        << (get_a_norm() - _real_a_norm) / (_real_a_norm + 1e-8)
-       << "\terror (b): "
+       << ", error (b): "
        << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n";
     if (this->_output_level >= Info) {
       ss << "[INFO] sample_size: " << _sample_size
@@ -155,7 +162,7 @@ public:
       vector<long long> b_vec = get_b_vec();
       for (unsigned i = 0; i < _sample_num; ++i) {
         ss << "[INFO] "
-           << "a: " << a_vec[i] << "\tb: " << b_vec[i] << "\n";
+           << "a: " << a_vec[i] << ", b: " << b_vec[i] << "\n";
       }
     }
     return ss.str();
@@ -164,7 +171,6 @@ public:
 protected:
   using SampleEntropyCalculator<T, K>::_data;
   using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
   using SampleEntropyCalculator<T, K>::_computed;
   using SampleEntropyCalculator<T, K>::_a;
   using SampleEntropyCalculator<T, K>::_b;
