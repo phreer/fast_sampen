@@ -87,7 +87,7 @@ vector<int> ParseIntArrayFromString(const string &arg) {
     int val = std::stoi(arg.substr(curr, next - curr));
     result.push_back(val);
     curr = next + 1;
-    if (curr == arg.size() + 1)
+    if (curr == static_cast<int>(arg.size() + 1))
       break;
     next = std::find(arg.cbegin() + next + 1, arg.cend(), ',') - arg.cbegin();
   }
