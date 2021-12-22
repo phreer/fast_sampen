@@ -9,3 +9,7 @@ XCode/
 profile/
 data/
 __pycache__/
+.idea/
+.cache/
+cmake-build-*/
+compile_commands.json

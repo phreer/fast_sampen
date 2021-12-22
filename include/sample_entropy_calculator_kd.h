@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "kdtree.h"
+#include "sample_entropy_calculator.h"
 #include "random_sampler.h"
 #include "utils.h"
 #include <algorithm>
