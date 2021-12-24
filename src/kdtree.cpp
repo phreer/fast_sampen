@@ -199,7 +199,8 @@ long long KDCountingTreeNode<T, K>::CountRange(const Range<T, K> &range,
           }
           break;
         }
-        default: break;
+        default:
+          break;
       }
     }
     std::swap(q1, q2);
@@ -261,6 +262,7 @@ KDCountingTree2KNode<T, K>::KDCountingTree2KNode(
   _num_child = k;
 }
 
+
 template<typename T, unsigned K>
 long long KDCountingTree2KNode<T, K>::CountRange(
     const Range<T, K> &range, long long &num_nodes,
@@ -321,6 +323,84 @@ long long KDCountingTree2KNode<T, K>::CountRange(
   return result;
 }
 
+template<typename T, unsigned K>
+double InteractRatio(const Range<T, K>& current_range,
+                     const Range<T, K>& range) {
+  double result = 1.;
+  T a, b;
+  for (unsigned i = 0; i < K; ++i) {
+    a = std::max(current_range.lower_ranges[i], range.lower_ranges[i]);
+    b = std::min(current_range.upper_ranges[i], range.upper_ranges[i]);
+    result *= std::max((T) 0, b - a) / (current_range.upper_ranges[i] - current_range.lower_ranges[i]);
+  }
+  return result;
+}
+
+template<typename T, unsigned K>
+double KDCountingTree2KNode<T, K>::CountRangeEstimate(
+    const Range<T, K> &range, long long &num_nodes,
+    vector<const KDCountingTree2KNode *> &q1,
+    vector<const KDCountingTree2KNode *> &q2,
+    unsigned max_depth) const {
+  if (weighted_count() == 0)
+    return 0;
+  enum CASE { NOT_INTER, WITHIN, INTER };
+
+  double result = 0;
+  // Nodes to count.
+  q1[0] = this;
+  unsigned n1 = 1, n2 = 0;
+
+  T a, b, c, d;
+  while (n1) {
+    num_nodes += n1;
+    for (unsigned j = 0; j < n1; j++) {
+      const KDCountingTree2KNode *curr = q1[j];
+      enum CASE _case = WITHIN;
+      for (unsigned i = 0; i < K; ++i) {
+        a = curr->_range.lower_ranges[i];
+        b = curr->_range.upper_ranges[i];
+        c = range.lower_ranges[i];
+        d = range.upper_ranges[i];
+        if (a > d || b < c) {
+          _case = NOT_INTER;
+          break;
+        }
+        if (a < c || b > d) {
+          _case = INTER;
+        }
+      }
+
+      switch (_case) {
+        case WITHIN: {
+          result += static_cast<double>(curr->_weighted_count);
+          break;
+        }
+        case INTER: {
+          if (max_depth != 0) {
+            for (unsigned i = 0; i < curr->num_child(); ++i) {
+              // This criterion is critical!
+              if (curr->_children[i]->_weighted_count) {
+                q2[n2] = curr->_children[i];
+                ++n2;
+              }
+            }
+          } else {
+            result += static_cast<double>(curr->weighted_count()) * InteractRatio(curr->_range, range);
+          }
+          break;
+        }
+        case NOT_INTER:
+        default:break;
+      }
+    }
+    std::swap(q1, q2);
+    n1 = n2;
+    n2 = 0;
+    --max_depth;
+  }
+  return result;
+}
 template<typename T, unsigned K>
 KDTree2KNode<T, K>::KDTree2KNode(
     unsigned depth, KDTree2KNode *father, vector<KDTree2KNode *> &leaves,
