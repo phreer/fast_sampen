@@ -708,16 +708,21 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
 }
 
 #define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(K) \
-template class SampleEntropyCalculatorLiu<int , K>; \
-template class SampleEntropyCalculatorMao<int , K>; \
-template class SampleEntropyCalculatorSamplingLiu<int , K>; \
-template class SampleEntropyCalculatorSamplingMao<int , K>; \
-template class SampleEntropyCalculatorSamplingKDTree<int , K>; \
-template class SampleEntropyCalculatorLiu<double, K>; \
-template class SampleEntropyCalculatorMao<double, K>; \
-template class SampleEntropyCalculatorSamplingLiu<double, K>; \
-template class SampleEntropyCalculatorSamplingMao<double, K>; \
-template class SampleEntropyCalculatorSamplingKDTree<double, K>;
+  INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(int, K) \
+  INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(double, K)
+  
+#define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(TYPE, K) \
+template class SampleEntropyCalculatorLiu<TYPE , K>; \
+template class SampleEntropyCalculatorMao<TYPE , K>; \
+template class SampleEntropyCalculatorSamplingLiu<TYPE , K>; \
+template class SampleEntropyCalculatorSamplingMao<TYPE , K>; \
+template class SampleEntropyCalculatorSamplingKDTree<TYPE , K>; \
+template class MatchedPairsCalculatorMao<TYPE, K>; \
+template class MatchedPairsCalculatorSampling<TYPE, K>; \
+template class MatchedPairsCalculatorSampling2<TYPE, K>; \
+template class ABCalculatorLiu<TYPE, K>; \
+template class ABCalculatorSamplingLiu<TYPE, K>;
+
 
 INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(2);
 INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(3);

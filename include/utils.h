@@ -292,6 +292,7 @@ vector<KDPoint<T, K>> GetKDPoints(typename vector<T>::const_iterator first,
     return points;
   }
 }
+
 template <typename T, unsigned K>
 vector<vector<KDPoint<T, K>>>
 GetKDPointsSample(typename vector<T>::const_iterator first,

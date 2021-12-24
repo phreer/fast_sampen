@@ -448,15 +448,17 @@ vector<long long> KDTree2KNode<T, K>::CountRange(
 }
 
 #define INSTANTIATE_KDTREE(K) \
-template class KDCountingTree2K<int, K>; \
-template class KDCountingTree<int, K>; \
-template class KDTree2K<int, K>; \
-template class KDCountingTree2K<double, K>; \
-template class KDCountingTree<double, K>; \
-template class KDTree2K<double, K>; \
-template class KDCountingTree2K<unsigned, K>; \
-template class KDCountingTree<unsigned, K>; \
-template class KDTree2K<unsigned, K>;
+  INSTANTIATE_KDTREE_TYPE_K(int, K) \
+  INSTANTIATE_KDTREE_TYPE_K(double, K) \
+  INSTANTIATE_KDTREE_TYPE_K(unsigned, K)
+
+#define INSTANTIATE_KDTREE_TYPE_K(TYPE, K) \
+template class KDCountingTree2K<TYPE, K>; \
+template class KDCountingTree<TYPE, K>; \
+template class KDTree2K<TYPE, K>; \
+template class KDCountingTree2KNode<TYPE, K>; \
+template class KDCountingTreeNode<TYPE, K>; \
+template class KDTree2KNode<TYPE, K>;
 
 
 INSTANTIATE_KDTREE(1)

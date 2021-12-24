@@ -30,9 +30,9 @@ public:
     ss.precision(kResultDisplayPrecision);
     ss << "----------------------------------------"
        << "----------------------------------------\n"
-       << _Method() << ": \n"
-       << "\tentropy: " << get_entropy() << "\n"
-       << "\ta (norm): " << get_a_norm() << "\tb (norm): " << get_b_norm()
+       << get_method_name() << ": \n"
+       << "\tsampen: " << get_entropy() << "\n"
+       << "\ta (norm): " << get_a_norm() << ", b (norm): " << get_b_norm()
        << "\n"
        << "\ttime: " << std::scientific << _elapsed_seconds << "\n";
     if (_output_level >= Info) {
@@ -76,7 +76,7 @@ public:
     _elapsed_seconds = timer.ElapsedSeconds();
     _computed = true;
   }
-  std::string get_method_name() { return _Method(); }
+  virtual std::string get_method_name() { return _Method(); }
 
 protected:
   virtual void _ComputeSampleEntropy() = 0;
@@ -143,19 +143,19 @@ public:
     double error = entropy - _real_entropy;
     double rel_error = error / (entropy + 1e-8);
     ss << this->SampleEntropyCalculator<T, K>::get_result_str()
-       << "\terror: " << error << "\terror (relative): " << rel_error << "\n"
+       << "\terror: " << error << ", error (relative): " << rel_error << "\n"
        << "\terror (a): "
        << (get_a_norm() - _real_a_norm) / (_real_a_norm + 1e-8)
-       << "\terror (b): "
+       << ", error (b): "
        << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n";
     if (this->_output_level >= Info) {
       ss << "[INFO] sample_size: " << _sample_size
-         << "\tsample_num: " << _sample_num << "\n";
+         << ", sample_num: " << _sample_num << "\n";
       vector<long long> a_vec = get_a_vec();
       vector<long long> b_vec = get_b_vec();
       for (unsigned i = 0; i < _sample_num; ++i) {
         ss << "[INFO] "
-           << "a: " << a_vec[i] << "\tb: " << b_vec[i] << "\n";
+           << "a: " << a_vec[i] << ", b: " << b_vec[i] << "\n";
       }
     }
     return ss.str();

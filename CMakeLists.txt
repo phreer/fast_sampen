@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3")
+set($ENV{PKG_CONFIG_PATH} $ENV{HOME}/local/lib/pkgconfig)
 
 message(STATUS "Build Type: " ${CMAKE_BUILD_TYPE})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)

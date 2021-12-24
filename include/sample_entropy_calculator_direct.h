@@ -94,7 +94,7 @@ public:
             first, last, r, sample_size, sample_num, real_entropy, real_a_norm,
             real_b_norm, output_level),
         _rtype(rtype), _random(random_), _presort(presort) {}
-  std::string get_result_str() override {
+  virtual std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculatorSampling<T, K>::get_result_str();
     ss << "----------------------------------------"

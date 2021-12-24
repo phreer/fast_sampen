@@ -12,3 +12,9 @@ target_link_libraries(${APP_NAME} ${LIB_NAME})
 
 add_executable(experiment_n0n1 experiment_n0n1.cpp kdtree.cpp)
 target_link_libraries(experiment_n0n1 ${LIB_NAME})
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MAGICKPP REQUIRED Magick++)
+add_executable(sampen2d sampen2d.cpp)
+target_link_libraries(sampen2d sampen ${MAGICKPP_LINK_LIBRARIES})
+target_include_directories(sampen2d PUBLIC ${MAGICKPP_INCLUDE_DIRS})
