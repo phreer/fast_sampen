@@ -1,11 +1,13 @@
 #ifndef __SAMPLE_ENTROPY_CALCULATOR2D__
 #define __SAMPLE_ENTROPY_CALCULATOR2D__
 
+#include <array>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <vector>
 
+#include "random_sampler.h"
 #include "utils.h"
 
 namespace sampen {
@@ -97,6 +99,43 @@ protected:
   }
   virtual void _ComputeSampleEntropy() = 0;
   virtual std::string _Method() const = 0;
+  bool _IsMatchedK(unsigned i, unsigned j, unsigned k, unsigned l) {
+    const unsigned end_y = i + _window_size;
+    const unsigned end_x = j + _window_size;
+    for (; i < end_y - 1; i += _dilation_factor, k += _dilation_factor) {
+      const unsigned offset1 = i * _width;
+      const unsigned offset2 = k * _width;
+      for (unsigned jj = j, ll = l; jj < end_x - 1;
+          jj += _dilation_factor, ll += _dilation_factor) {
+        T val1 = _data[offset1 + jj];
+        T val2 = _data[offset2 + ll];
+        if (val1 > val2 + _r || val2 > val1 + _r) return false;
+      }
+    }
+    return true;
+  }
+
+  bool _IsMatchedNext(unsigned i, unsigned j, unsigned k, unsigned l) {
+    const unsigned end_y = i + _window_size;
+    const unsigned end_x = j + _window_size;
+    for (unsigned ii = i, kk = k; ii < end_y;
+        ii += _dilation_factor, kk += _dilation_factor) {
+      const unsigned offset1 = ii * _width;
+      const unsigned offset2 = kk * _width;
+      T val1 = _data[offset1 + j + _window_size - 1];
+      T val2 = _data[offset2 + l + _window_size - 1];
+      if (val1 > val2 + _r || val2 > val1 + _r) return false;
+    }
+    const unsigned offset1 = (i + _window_size - 1) * _width;
+    const unsigned offset2 = (k + _window_size - 1) * _width;
+    for (; j < end_x - 1; j += _dilation_factor, l += _dilation_factor) {
+      T val1 = _data[offset1 + j];
+      T val2 = _data[offset2 + l];
+      if (val1 > val2 + _r || val2 > val1 + _r) return false;
+    }
+    return true;
+  }
+
   
   const vector<T> _data;
   const unsigned K;
@@ -124,7 +163,25 @@ template <typename T>
 class SampleEntropyCalculator2DSampling : public SampleEntropyCalculator2D<T> {
 public:
   using SampleEntropyCalculator2D<T>::ComputeSampleEntropy;
+  using SampleEntropyCalculator2D<T>::_ComputeSampleEntropy;
   using SampleEntropyCalculator2D<T>::get_entropy;
+  using SampleEntropyCalculator2D<T>::_data;
+  using SampleEntropyCalculator2D<T>::K;
+  using SampleEntropyCalculator2D<T>::_r;
+  using SampleEntropyCalculator2D<T>::_width;
+  using SampleEntropyCalculator2D<T>::_height;
+  using SampleEntropyCalculator2D<T>::_window_size;
+  using SampleEntropyCalculator2D<T>::_moving_step_size;
+  using SampleEntropyCalculator2D<T>::_dilation_factor;
+  using SampleEntropyCalculator2D<T>::_num_steps_x;
+  using SampleEntropyCalculator2D<T>::_num_steps_y;
+  using SampleEntropyCalculator2D<T>::_computed;
+  using SampleEntropyCalculator2D<T>::_a;
+  using SampleEntropyCalculator2D<T>::_b;
+  using SampleEntropyCalculator2D<T>::_output_level;
+  using SampleEntropyCalculator2D<T>::_elapsed_seconds;
+  using SampleEntropyCalculator2D<T>::_IsMatchedK;
+  using SampleEntropyCalculator2D<T>::_IsMatchedNext;
   SampleEntropyCalculator2DSampling(typename vector<T>::const_iterator first,
                                     typename vector<T>::const_iterator last,
                                     unsigned m, T r,
@@ -198,24 +255,63 @@ public:
   }
 
 protected:
-  using SampleEntropyCalculator2D<T>::_data;
-  using SampleEntropyCalculator2D<T>::K;
-  using SampleEntropyCalculator2D<T>::_r;
-  using SampleEntropyCalculator2D<T>::_width;
-  using SampleEntropyCalculator2D<T>::_height;
-  using SampleEntropyCalculator2D<T>::_moving_step_size;
-  using SampleEntropyCalculator2D<T>::_dilation_factor;
-  using SampleEntropyCalculator2D<T>::_computed;
-  using SampleEntropyCalculator2D<T>::_a;
-  using SampleEntropyCalculator2D<T>::_b;
-  using SampleEntropyCalculator2D<T>::_output_level;
-  using SampleEntropyCalculator2D<T>::_elapsed_seconds;
   const unsigned _sample_size;
   const unsigned _sample_num;
   const double _real_entropy;
   const double _real_a_norm;
   const double _real_b_norm;
   vector<long long> _a_vec, _b_vec;
+};
+
+
+template <typename T>
+class SampleEntropyCalculator2DSamplingDirect :
+    public SampleEntropyCalculator2DSampling<T> {
+  using SampleEntropyCalculator2DSampling<T>::ComputeSampleEntropy;
+  using SampleEntropyCalculator2DSampling<T>::get_entropy;
+  using SampleEntropyCalculator2DSampling<T>::_data;
+  using SampleEntropyCalculator2DSampling<T>::K;
+  using SampleEntropyCalculator2DSampling<T>::_r;
+  using SampleEntropyCalculator2DSampling<T>::_width;
+  using SampleEntropyCalculator2DSampling<T>::_height;
+  using SampleEntropyCalculator2DSampling<T>::_moving_step_size;
+  using SampleEntropyCalculator2DSampling<T>::_window_size;
+  using SampleEntropyCalculator2DSampling<T>::_dilation_factor;
+  using SampleEntropyCalculator2DSampling<T>::_num_steps_x;
+  using SampleEntropyCalculator2DSampling<T>::_num_steps_y;
+  using SampleEntropyCalculator2DSampling<T>::_computed;
+  using SampleEntropyCalculator2DSampling<T>::_a;
+  using SampleEntropyCalculator2DSampling<T>::_b;
+  using SampleEntropyCalculator2DSampling<T>::_output_level;
+  using SampleEntropyCalculator2DSampling<T>::_elapsed_seconds;
+  using SampleEntropyCalculator2DSampling<T>::_sample_size;
+  using SampleEntropyCalculator2DSampling<T>::_sample_num;
+  using SampleEntropyCalculator2DSampling<T>::_real_entropy;
+  using SampleEntropyCalculator2DSampling<T>::_real_a_norm;
+  using SampleEntropyCalculator2DSampling<T>::_real_b_norm;
+  using SampleEntropyCalculator2DSampling<T>::_a_vec;
+  using SampleEntropyCalculator2DSampling<T>::_b_vec;
+  using SampleEntropyCalculator2DSampling<T>::_IsMatchedK;
+  using SampleEntropyCalculator2DSampling<T>::_IsMatchedNext;
+public:
+  SampleEntropyCalculator2DSamplingDirect(
+      typename vector<T>::const_iterator first,
+      typename vector<T>::const_iterator last,
+      unsigned m, T r,
+      unsigned width, unsigned height,
+      unsigned moving_step_size,
+      unsigned dilation_factor,
+      unsigned sample_size, unsigned sample_num,
+      double real_entropy, double real_a_norm,
+      double real_b_norm, OutputLevel output_level):
+      SampleEntropyCalculator2DSampling<T>(first, last, m, r, width, height,
+                                           moving_step_size, dilation_factor,
+                                           sample_size, sample_num,
+                                           real_entropy, real_a_norm,
+                                           real_b_norm, output_level) {}
+protected:
+  virtual std::string _Method() const override { return "sampling direct"; }
+  virtual void _ComputeSampleEntropy() override;
 };
 
 template <typename T>
@@ -227,11 +323,13 @@ class SampleEntropyCalculator2DDirect : public SampleEntropyCalculator2D<T> {
   using SampleEntropyCalculator2D<T>::_r;
   using SampleEntropyCalculator2D<T>::_width;
   using SampleEntropyCalculator2D<T>::_height;;
+  using SampleEntropyCalculator2D<T>::_num_steps_x;
+  using SampleEntropyCalculator2D<T>::_num_steps_y;
   using SampleEntropyCalculator2D<T>::_moving_step_size;
   using SampleEntropyCalculator2D<T>::_dilation_factor;;
   using SampleEntropyCalculator2D<T>::_window_size;;
-  using SampleEntropyCalculator2D<T>::_num_steps_x;
-  using SampleEntropyCalculator2D<T>::_num_steps_y;
+  using SampleEntropyCalculator2D<T>::_IsMatchedK;
+  using SampleEntropyCalculator2D<T>::_IsMatchedNext;
 public:
   SampleEntropyCalculator2DDirect(typename vector<T>::const_iterator first,
                             typename vector<T>::const_iterator last,
@@ -241,57 +339,13 @@ public:
       : SampleEntropyCalculator2D<T>(first, last, m, r, width, height,
                                      moving_step_size, dilation_factor,
                                      output_level) {}
-  virtual void _ComputeSampleEntropy() override;
 protected:
   virtual std::string _Method() const override { return "direct"; }
-private:
-  bool IsMatchedK(unsigned i, unsigned j, unsigned k, unsigned l);
-  bool IsMatchedNext(unsigned i, unsigned j, unsigned k, unsigned l);
+  virtual void _ComputeSampleEntropy() override;
 };
 
 
-
-template <typename T>
-bool SampleEntropyCalculator2DDirect<T>::IsMatchedK(unsigned i, unsigned j,
-                                                    unsigned k, unsigned l) {
-  const unsigned end_y = i + _window_size;
-  const unsigned end_x = j + _window_size;
-  for (; i < end_y - 1; i += _dilation_factor, k += _dilation_factor) {
-    const unsigned offset1 = i * _width;
-    const unsigned offset2 = k * _width;
-    for (unsigned jj = j, ll = l; jj < end_x - 1;
-        jj += _dilation_factor, ll += _dilation_factor) {
-      T val1 = _data[offset1 + jj];
-      T val2 = _data[offset2 + ll];
-      if (val1 > val2 + _r || val2 > val1 + _r) return false;
-    }
-  }
-  return true;
-}
-
-template <typename T>
-bool SampleEntropyCalculator2DDirect<T>::IsMatchedNext(unsigned i, unsigned j,
-                                                       unsigned k, unsigned l) {
-  const unsigned end_y = i + _window_size;
-  const unsigned end_x = j + _window_size;
-  for (unsigned ii = i, kk = k; ii < end_y;
-      ii += _dilation_factor, kk += _dilation_factor) {
-    const unsigned offset1 = ii * _width;
-    const unsigned offset2 = kk * _width;
-    T val1 = _data[offset1 + j + _window_size - 1];
-    T val2 = _data[offset2 + l + _window_size - 1];
-    if (val1 > val2 + _r || val2 > val1 + _r) return false;
-  }
-  const unsigned offset1 = (i + _window_size - 1) * _width;
-  const unsigned offset2 = (k + _window_size - 1) * _width;
-  for (; j < end_x - 1; j += _dilation_factor, l += _dilation_factor) {
-    T val1 = _data[offset1 + j];
-    T val2 = _data[offset2 + l];
-    if (val1 > val2 + _r || val2 > val1 + _r) return false;
-  }
-  return true;
-}
-
+// Implementation
 template <typename T>
 void SampleEntropyCalculator2DDirect<T>::_ComputeSampleEntropy() {
   long long a = 0;
@@ -301,19 +355,21 @@ void SampleEntropyCalculator2DDirect<T>::_ComputeSampleEntropy() {
   // Compare template (i, j) and template (k, l).
   for (unsigned i = 0; i < end_y; i += _moving_step_size) {
     for (unsigned j = 0; j < end_x; j += _moving_step_size) {
-      for (unsigned k = i + _moving_step_size; k < end_y; k += _moving_step_size) {
-        if (IsMatchedK(i, j, k, j)) {
+      for (unsigned k = i + _moving_step_size; k < end_y;
+          k += _moving_step_size) {
+        if (_IsMatchedK(i, j, k, j)) {
           b++;
-          if (IsMatchedNext(i, j, k, j)) {
+          if (_IsMatchedNext(i, j, k, j)) {
             a++;
           }
         }
       }
       for (unsigned k = 0; k < end_y; k += _moving_step_size) {
-        for (unsigned l = j + _moving_step_size; l < end_x; l += _moving_step_size) {
-          if (IsMatchedK(i, j, k, l)) {
+        for (unsigned l = j + _moving_step_size; l < end_x;
+            l += _moving_step_size) {
+          if (_IsMatchedK(i, j, k, l)) {
             b++;
-            if (IsMatchedNext(i, j, k, l)) {
+            if (_IsMatchedNext(i, j, k, l)) {
               a++;
             }
           }        
@@ -323,6 +379,41 @@ void SampleEntropyCalculator2DDirect<T>::_ComputeSampleEntropy() {
   }
   _a = a;
   _b = b;
+}
+
+
+template <typename T>
+void SampleEntropyCalculator2DSamplingDirect<T>::_ComputeSampleEntropy() {
+  unsigned num_templates = _num_steps_x * _num_steps_y;
+  RandomIndicesSamplerWR sampler(num_templates, _sample_size, _sample_num,
+                                 RandomType::SWR_UNIFORM);
+  const auto random_indices_array = sampler.GetSampleArrays();
+  _a_vec.clear();
+  _b_vec.clear();
+  for (unsigned sample_i = 0; sample_i < random_indices_array.size(); ++sample_i) {
+    const auto& random_indices = random_indices_array[sample_i];
+    std::vector<std::array<unsigned, 2> > random_indices_xy;
+    for (auto index: random_indices) {
+      random_indices_xy.push_back({_moving_step_size * (index / _num_steps_x),
+                                   _moving_step_size * (index % _num_steps_x)});
+    }
+    long long a = 0;
+    long long b = 0;
+    for (unsigned i = 0; i < _sample_size - 1; ++i) {
+      const auto& index_xy = random_indices_xy[i];
+      for (unsigned j = i + 1; j < _sample_size; ++i) {
+        const auto& index_xy2 = random_indices_xy[j];
+        if (_IsMatchedK(index_xy[0], index_xy[1], index_xy2[0], index_xy2[1])) {
+          ++b;
+          if (_IsMatchedNext(index_xy[0], index_xy[1], index_xy2[0], index_xy2[1])) {
+            ++a;
+          }
+        }
+      }
+    }
+    _a_vec.push_back(a);
+    _b_vec.push_back(b);
+  }
 }
 } // namespace sampen
 
