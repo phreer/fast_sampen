@@ -228,6 +228,76 @@ private:
   bool _runing = false;
 };
 
+
+void PrintSeperator(char x);
+
+/**
+ * @brief Find the `index` of the smallest element in an increasingly sorted
+ * `data` such that `data[index] >= value`. If multiple elements in `data`
+ * satisfy this condition, return the largest index. Note that `value`
+ * must be in interval [min(`data`), max(`data`)). This means that the
+ * returned `index` obeys `data[index] <= value < data[index + 1]`.
+ * 
+ * @tparam T 
+ * @param data an increasingly ordered array
+ * @param value the value must be in [min(`data`), max(`data`))
+ * @return int the index
+ */
+template <typename T>
+inline int BinarySearchIndexNoCheck(const std::vector<T> &data, T value) {
+  size_t left = 0;
+  size_t right = data.size();
+  while (left < right - 1) {
+    size_t median = left + (right - left) / 2;
+    if (value < data[median]) {
+      right = median;
+    } else {
+      left = median;
+    }
+  }
+  return left;
+}
+
+// Find the number of elements in range [`lower`, `upper`] of an increasing
+// array `data`
+template<typename T>
+long long CountRangeLastAxis(T lower, T upper, const std::vector<T> &data) {
+  if (lower > data.back() || upper < data.front()) {
+    return 0ll;
+  }
+  unsigned min_index = 0;
+  unsigned max_index = data.size();
+  if (lower <= data.front()) {
+    min_index = 0;
+  } else {
+    unsigned left = 0, right = data.size();
+    while (left < right - 1) {
+      unsigned median = left + (right - left) / 2;
+      if (data[median] < lower) {
+        left = median;
+      } else {
+        right = median;
+      }
+    }
+    min_index = left;
+  }
+  if (upper >= data.back()) {
+    max_index = data.size();
+  } else {
+    unsigned left = min_index, right = data.size();
+    while (left < right - 1) {
+      unsigned median = left + (right - left) / 2;
+      if (data[median] > upper) {
+        right = median;
+      } else {
+        left = median;
+      }
+    }
+    max_index = right;
+  }
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Implementation
 //////////////////////////////////////////////////////////////////////////

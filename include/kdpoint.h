@@ -15,8 +15,10 @@ public:
           typename vector<T>::const_iterator last, int count = 0);
   int count() const { return _count; }
   int value() const { return _value; }
+  int rank_last_axis() const { return _rank_last_axis; }
   void set_value(int value) { _value = value; }
   void set_count(int count) { _count = count; }
+  void set_rank_last_axis(int rank) { _rank_last_axis = rank; }
   void increase_count(int count) { _count += count; }
   unsigned dim() const { return K; }
   bool Within(const KDPoint<T, K> &p, T r, unsigned m = K) const {
@@ -58,6 +60,7 @@ private:
   int _count;
   T _data[K];
   int _value;
+  int _rank_last_axis;
 };
 
 //////////////////////////////////////////////////////////////////////////

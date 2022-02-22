@@ -296,6 +296,7 @@ public:
   }
   unsigned count() const { return _count; }
   int weighted_count() const { return _weighted_count; }
+  // TODD: This can be optimized.
   unsigned num_child() const { return _num_child; }
   unsigned num_nodes() const {
     unsigned result = 1;
@@ -308,14 +309,20 @@ private:
   KDTree2KNode *_father;
   vector<KDTree2KNode *> _children;
   unsigned _depth;
+  // The number of points (whether account or not) in this node.
   unsigned _count;
+  // Or more precisely, effective_count. Some points in the tree may be closed
+  // so as to skipped counting these unnecessary points, without deleting them
+  // from the tree.
   int _weighted_count;
   // The index of the first leaf in the current node.
   unsigned _leaf_left;
   Range<T, K> _range;
   unsigned _num_child;
+  // Meaningful only for leaf nodes.
   T _last_axis;
 };
+
 
 template <typename T, unsigned K>
 class KDTree2K {
@@ -389,6 +396,145 @@ private:
   OutputLevel _output_level;
 };
 
+
+template <typename T, unsigned K>
+class RangeKDTree2KNode {
+public:
+  RangeKDTree2KNode(
+      unsigned depth, RangeKDTree2KNode *father,
+     vector<RangeKDTree2KNode *> &leaves,
+     typename vector<KDPoint<T, K + 1>>::iterator first,
+     typename vector<KDPoint<T, K + 1>>::iterator last,
+     unsigned leaf_left,
+     unsigned last_axis_threshold);
+  ~RangeKDTree2KNode() {
+    for (unsigned i = 0; i < _num_child; i++)
+      delete _children[i];
+  }
+  vector<long long> CountRange(const Range<T, K + 1> &range,
+                               long long &num_nodes,
+                               const vector<RangeKDTree2KNode *> &leaves,
+                               vector<const RangeKDTree2KNode *> &q1,
+                               vector<const RangeKDTree2KNode *> &q2) const;
+  void UpdateCount(int d) {
+    RangeKDTree2KNode *node = this;
+    while (node) {
+      node->_weighted_count += d;
+      node = node->_father;
+    }
+  }
+  unsigned count() const { return _count; }
+  int weighted_count() const { return _weighted_count; }
+  // TODD: This can be optimized.
+  unsigned num_child() const { return _num_child; }
+  unsigned num_nodes() const {
+    unsigned result = 1;
+    for (unsigned i = 0; i < num_child(); ++i)
+      result += _children[i]->num_nodes();
+    return result;
+  }
+
+private:
+  RangeKDTree2KNode *_father;
+  vector<RangeKDTree2KNode *> _children;
+  unsigned _depth;
+  // The number of points (whether account or not) in this node.
+  unsigned _count;
+  // Or more precisely, effective_count. Some points in the tree may be closed
+  // so as to skipped counting these unnecessary points, without deleting them
+  // from the tree.
+  int _weighted_count;
+  // The index of the first leaf in the current node.
+  unsigned _leaf_left;
+  Range<T, K> _range;
+  unsigned _num_child;
+  // Meaningful only for leaf nodes.
+  T _last_axis;
+  // For non-leaf nodes for fast searching.
+  vector<T> _last_axis_array;
+};
+
+template <typename T, unsigned K>
+class RangeKDTree2K {
+public:
+  RangeKDTree2K(const vector<KDPoint<T, K + 1>> &points,
+                unsigned last_axis_threshold,
+                OutputLevel output_level)
+      : _root(nullptr), _leaves(0), _points(points), _index2leaf(points.size()),
+        _q1(points.size()), _q2(points.size()), _output_level(output_level) {
+    clock_t t = clock();
+
+    const size_t n = points.size();
+    if (n == 0)
+      return;
+    
+    std::vector<int> order_last_axis(n);
+    std::sort(order_last_axis.begin(), order_last_axis.end(), 
+              [&points] (int i, int j) { return points[i][K] < points[j][K]; });
+    for (unsigned i = 0; i < n; ++i) {
+      _points[order_last_axis[i]].set_rank_last_axis(i);
+    }
+    // For mapping from index to leaf.
+    for (unsigned i = 0; i < n; ++i) {
+      _points[i].set_value(i);
+    }
+    _root = new RangeKDTree2KNode<T, K>(0, nullptr, _leaves, _points.begin(),
+                                   _points.end(), 0, last_axis_threshold);
+    for (unsigned i = 0; i < n; ++i) {
+      _index2leaf[_points[i].value()] = i;
+    }
+
+    t = clock() - t;
+    if (_output_level == Debug) {
+      std::cout << "[DEBUG] The time consumed to build a KDCountingTree (K = "
+                << K << "): ";
+      std::cout << static_cast<double>(t) / CLOCKS_PER_SEC << " seconds. \n";
+    }
+  }
+  ~RangeKDTree2K() {
+    if (_root)
+      delete _root;
+  }
+  vector<long long> CountRange(const Range<T, K + 1> &range,
+                               long long &num_nodes) {
+    if (_root) {
+      return _root->CountRange(range, num_nodes, _leaves, _q1, _q2);
+    }
+    return vector<long long>({0, 0});
+  }
+  void UpdateCount(unsigned position, int d) {
+    assert(position < count() && "position >= count()");
+    position = _index2leaf[position];
+    if (d)
+      _leaves[position]->UpdateCount(d);
+  }
+
+  void Close(unsigned position) {
+    assert(position < count() && "position >= count()");
+    position = _index2leaf[position];
+    int w = _leaves[position]->weighted_count();
+    if (w != 0)
+      _leaves[position]->UpdateCount(-w);
+  }
+
+  unsigned count() const { return _leaves.size(); }
+
+  unsigned num_nodes() const {
+    if (_root)
+      return _root->num_nodes();
+    return 0;
+  }
+
+private:
+  RangeKDTree2KNode<T, K> *_root;
+  vector<RangeKDTree2KNode<T, K> *> _leaves;
+  vector<KDPoint<T, K + 1>> _points;
+  vector<unsigned> _index2leaf;
+  // Buffers for searching without recursion.
+  vector<const RangeKDTree2KNode<T, K> *> _q1;
+  vector<const RangeKDTree2KNode<T, K> *> _q2;
+  OutputLevel _output_level;
+};
 } // namespace sampen
 
 #endif // !__FAST_SAMPEN_KDTREE__

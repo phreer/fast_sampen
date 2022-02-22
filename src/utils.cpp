@@ -106,4 +106,12 @@ vector<int> ArgumentParser::getArgIntArray(const string &arg) {
   }
   return result;
 }
+
+void PrintSeperator(char x) {
+  const int kCount = 80;
+  for (unsigned i = 0; i < kCount; ++i) {
+    std::cout << x;
+  }
+  std::cout << std::endl;
+}
 } // namespace sampen

@@ -36,6 +36,8 @@ public:
     if (K == 0) {
       MSG_ERROR(-1, "Argument m must be positive.");
     }
+    MSG_DEBUG("_num_steps_x: %u\n", _num_steps_x);
+    MSG_DEBUG("_num_steps_y: %u\n", _num_steps_y);
   }
   virtual std::string get_result_str() {
     if (!_computed)
@@ -99,7 +101,7 @@ protected:
   }
   virtual void _ComputeSampleEntropy() = 0;
   virtual std::string _Method() const = 0;
-  bool _IsMatchedK(unsigned i, unsigned j, unsigned k, unsigned l) {
+  bool _IsMatchedK(unsigned i, unsigned j, unsigned k, unsigned l) const {
     const unsigned end_y = i + _window_size;
     const unsigned end_x = j + _window_size;
     for (; i < end_y - 1; i += _dilation_factor, k += _dilation_factor) {
@@ -115,7 +117,7 @@ protected:
     return true;
   }
 
-  bool _IsMatchedNext(unsigned i, unsigned j, unsigned k, unsigned l) {
+  bool _IsMatchedNext(unsigned i, unsigned j, unsigned k, unsigned l) const {
     const unsigned end_y = i + _window_size;
     const unsigned end_x = j + _window_size;
     for (unsigned ii = i, kk = k; ii < end_y;
@@ -180,6 +182,7 @@ public:
   using SampleEntropyCalculator2D<T>::_b;
   using SampleEntropyCalculator2D<T>::_output_level;
   using SampleEntropyCalculator2D<T>::_elapsed_seconds;
+  using SampleEntropyCalculator2D<T>::_num_templates;
   using SampleEntropyCalculator2D<T>::_IsMatchedK;
   using SampleEntropyCalculator2D<T>::_IsMatchedNext;
   SampleEntropyCalculator2DSampling(typename vector<T>::const_iterator first,
@@ -196,7 +199,11 @@ public:
                                      output_level),
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
-        _real_b_norm(real_b_norm) {}
+        _real_b_norm(real_b_norm) {
+    if (_num_templates < _sample_size) {
+      MSG_ERROR(-1, "Sample size (N0) exceeds the number of templates.\n");
+    }
+  }
   vector<long long> get_a_vec() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -401,7 +408,7 @@ void SampleEntropyCalculator2DSamplingDirect<T>::_ComputeSampleEntropy() {
     long long b = 0;
     for (unsigned i = 0; i < _sample_size - 1; ++i) {
       const auto& index_xy = random_indices_xy[i];
-      for (unsigned j = i + 1; j < _sample_size; ++i) {
+      for (unsigned j = i + 1; j < _sample_size; ++j) {
         const auto& index_xy2 = random_indices_xy[j];
         if (_IsMatchedK(index_xy[0], index_xy[1], index_xy2[0], index_xy2[1])) {
           ++b;
