@@ -261,14 +261,15 @@ inline int BinarySearchIndexNoCheck(const std::vector<T> &data, T value) {
 // Find the number of elements in range [`lower`, `upper`] of an increasing
 // array `data`
 template<typename T>
-long long CountRangeLastAxis(T lower, T upper, const std::vector<T> &data) {
+inline long long CountRangeLastAxis(T lower, T upper,
+                                    const std::vector<T> &data) {
   if (lower > data.back() || upper < data.front()) {
     return 0ll;
   }
   unsigned min_index = 0;
   unsigned max_index = data.size();
   if (lower <= data.front()) {
-    min_index = 0;
+    min_index = -1;
   } else {
     unsigned left = 0, right = data.size();
     while (left < right - 1) {
@@ -295,6 +296,7 @@ long long CountRangeLastAxis(T lower, T upper, const std::vector<T> &data) {
     }
     max_index = right;
   }
+  return max_index - min_index - 1;
 }
 
 

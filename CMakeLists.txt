@@ -7,6 +7,8 @@ set(APP_NAME fast_sampen)
 set(LIB_NAME sampen)
 set(CMAKE_CXX_STANDARD 11)
 
+option(PACKAGE_TESTS "Build the tests" on)
+
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall -O3")
 set($ENV{PKG_CONFIG_PATH} $ENV{HOME}/local/lib/pkgconfig)
@@ -17,4 +19,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 add_subdirectory(src)
-add_subdirectory(test)
+
+if(PACKAGE_TESTS)
+        enable_testing()
+        include(GoogleTest)
+        add_subdirectory(test)
+endif()
