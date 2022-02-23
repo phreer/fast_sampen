@@ -556,6 +556,122 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   return result;
 }
 
+
+template <typename T, unsigned K>
+inline vector<long long>
+ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
+                                 typename vector<T>::const_iterator last, T r) {
+  const unsigned n = last - first;
+  vector<T> data_(first, last);
+  // Add K - 1 auxiliary points.
+  T minimum = *std::min_element(first, last);
+  for (size_t i = 0; i < K; i++)
+    data_.push_back(minimum);
+  // Construct Points and merge repeated points.
+  const vector<KDPoint<T, K + 1>> points =
+      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend());
+
+  vector<KDPoint<T, K + 1>> sorted_points(points);
+  // The mapping p, from rank to original index
+  vector<unsigned> rank2index(n);
+  for (size_t i = 0; i < n; i++)
+    rank2index.at(i) = i;
+
+  Timer timer;
+  std::sort(rank2index.begin(), rank2index.end(),
+            [&points](unsigned i1, unsigned i2) {
+              return (points[i1] < points[i2]);
+            });
+  for (size_t i = 0; i < n; i++)
+    sorted_points[i] = points[rank2index[i]];
+  timer.StopTimer();
+  if (_output_level >= Info) {
+    std::cout << "[INFO] Time consumed in presorting: "
+              << timer.ElapsedSeconds() << " seconds\n";
+  }
+
+  // MergeRepeatedPoints(sorted_points, rank2index);
+  CloseAuxiliaryPoints(sorted_points, rank2index);
+
+  const Bounds bounds = GetRankBounds(sorted_points, r);
+  const vector<KDPoint<unsigned, K>> points_grid =
+      Map2Grid(sorted_points, rank2index);
+
+  // Construct kd tree.
+  vector<KDPoint<unsigned, K>> points_count;
+  vector<unsigned> points_count_indices;
+  for (unsigned i = 0; i < n; i++) {
+    if (points_grid[i].count()) {
+      points_count.push_back(points_grid[i]);
+      points_count_indices.push_back(i);
+    }
+  }
+  RangeKDTree2K<unsigned, K - 1> tree(points_count, 32, _output_level);
+
+  // Perform counting.
+  vector<long long> result({0, 0});
+  // The number of nodes has been visited.
+  long long num_nodes = 0;
+  long long num_countrange_called = 0;
+  long long num_opened = 0;
+  unsigned upperbound_prev = 0;
+
+  const unsigned n_count = points_count.size();
+
+  timer.SetStartingPointNow();
+  for (unsigned i = 0; i < n_count - 1; i++) {
+    // Close current node.
+    tree.Close(i);
+
+    const unsigned rank1 = points_count_indices[i];
+    unsigned upperbound = bounds.upper_bounds[rank1];
+
+    if (upperbound < points_count_indices[i + 1])
+      continue;
+    // Update tree.
+    if (upperbound_prev < rank1)
+      upperbound_prev = rank1;
+    unsigned j = i + 1;
+    while (j < n_count && points_count_indices[j] <= upperbound_prev)
+      ++j;
+    while (j < n_count && points_count_indices[j] <= upperbound) {
+      tree.UpdateCount(j, points_count[j].count());
+      ++num_opened;
+      ++j;
+    }
+
+    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    vector<long long> ab = tree.CountRange(range, num_nodes);
+
+    result[0] += ab[0];
+    result[1] += ab[1];
+    ++num_countrange_called;
+    upperbound_prev = upperbound;
+  }
+  timer.StopTimer();
+
+  if (_output_level >= Info) {
+    std::cout << "[INFO] Time consumed in range counting: "
+              << timer.ElapsedSeconds() << " seconds\n";
+  }
+  if (_output_level == Debug) {
+    std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
+    std::cout << tree.num_nodes() << std::endl;
+    ;
+    std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
+    std::cout << n_count << std::endl;
+    std::cout << "[DEBUG] The number of calls for CountRange(): ";
+    std::cout << num_countrange_called << std::endl;
+    std::cout << "[DEBUG] The number times to open node: ";
+    std::cout << num_opened << std::endl;
+    std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
+    std::cout << num_nodes << std::endl;
+  }
+
+  return result;
+}
+
+
 template <typename T, unsigned K>
 vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
     typename vector<T>::const_iterator first,
@@ -713,6 +829,7 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   
 #define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(TYPE, K) \
 template class SampleEntropyCalculatorLiu<TYPE , K>; \
+template class SampleEntropyCalculatorRKD<TYPE , K>; \
 template class SampleEntropyCalculatorMao<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingLiu<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingMao<TYPE , K>; \
@@ -721,6 +838,7 @@ template class MatchedPairsCalculatorMao<TYPE, K>; \
 template class MatchedPairsCalculatorSampling<TYPE, K>; \
 template class MatchedPairsCalculatorSampling2<TYPE, K>; \
 template class ABCalculatorLiu<TYPE, K>; \
+template class ABCalculatorRKD<TYPE, K>; \
 template class ABCalculatorSamplingLiu<TYPE, K>;
 
 

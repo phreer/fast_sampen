@@ -479,7 +479,7 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     int node_index = BinarySearchIndexNoCheck(splitters, index);
     sub_order_last_axis[node_index].push_back(index);
   }
-  for (unsigned i = 0; 1u << K; ++i) {
+  for (unsigned i = 0; i < (1u << K); ++i) {
     const auto &current_sub_order_last_axis = sub_order_last_axis[i];
     size_t size = current_sub_order_last_axis.size();
     for (unsigned j = 0; j < size; ++j) {

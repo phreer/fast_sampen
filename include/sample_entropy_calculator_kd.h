@@ -173,6 +173,15 @@ private:
   OutputLevel _output_level;
 };
 
+template <typename T, unsigned K> class ABCalculatorRKD {
+public:
+  ABCalculatorRKD(OutputLevel output_level) : _output_level(output_level) {}
+  vector<long long> ComputeAB(typename vector<T>::const_iterator first,
+                              typename vector<T>::const_iterator last, T r);
+
+private:
+  OutputLevel _output_level;
+};
 /**
  * @brief This class calculates matched pairs like the class
  * MatchedPairCalculatorMao, except that only one kd tree is used.
@@ -365,6 +374,45 @@ protected:
   bool _random;
 };
 
+/**
+ * @brief This class calculates matched pairs like the class
+ * MatchedPairCalculatorMao, except that only one kd tree is used.
+ */
+template <typename T, unsigned K>
+class SampleEntropyCalculatorRKD : public SampleEntropyCalculator<T, K> {
+public:
+  using SampleEntropyCalculator<T, K>::SampleEntropyCalculator;
+  std::string get_result_str() override {
+    std::stringstream ss;
+    ss << this->SampleEntropyCalculator<T, K>::get_result_str();
+    ss << "----------------------------------------"
+       << "----------------------------------------\n";
+    return ss.str();
+  }
+
+protected:
+  void _ComputeSampleEntropy() override {
+    if (_n <= K) {
+      std::cerr << "Data length is too short (n = " << _n;
+      std::cerr << ", K = " << K << ")" << std::endl;
+      exit(-1);
+    }
+    ABCalculatorRKD<T, K> abc(this->_output_level);
+    vector<long long> result = abc.ComputeAB(_data.cbegin(), _data.cend(), _r);
+    _a = result[0];
+    _b = result[1];
+  }
+  std::string _Method() const override { return std::string("range kd tree"); }
+
+  using SampleEntropyCalculator<T, K>::_data;
+  using SampleEntropyCalculator<T, K>::_r;
+  using SampleEntropyCalculator<T, K>::_n;
+  using SampleEntropyCalculator<T, K>::_computed;
+  using SampleEntropyCalculator<T, K>::_a;
+  using SampleEntropyCalculator<T, K>::_b;
+  using SampleEntropyCalculator<T, K>::_output_level;
+  using SampleEntropyCalculator<T, K>::_elapsed_seconds;
+};
 } // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR_KD__

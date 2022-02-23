@@ -14,6 +14,7 @@ using std::endl;
 using std::string;
 using std::vector;
 
+// clang-format off
 char usage[] =
     "Usage: %s --input <INPUT> --input-type {simple, multirecord}\\\n"
     "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
@@ -22,83 +23,55 @@ char usage[] =
     "<SAMPLE_NUM>\n\n"
     "Arguments:\n"
     "--input <INPUT>         The file name of the input file.\n"
-    "--input-format <FORMAT> The format of the input file. Should be either "
-    "'simple'\n"
-    "                        or 'multirecord'. If set to simple, then each "
-    "line of the\n"
-    "                        input file contains exactly one column; if set "
-    "to\n"
-    "                        multirecord, then each line contains <NUM_RECORD> "
-    "+ 1\n"
-    "                        columns, of which the first indicates the line "
-    "number\n"
-    "                        and the remaining columns are instances of the "
-    "records.\n"
+    "--input-format <FORMAT> The format of the input file. Should be either 'simple'\n"
+    "                        or 'multirecord'. If set to simple, then each line of the\n"
+    "                        input file contains exactly one column; if set to\n"
+    "                        multirecord, then each line contains <NUM_RECORD> + 1\n"
+    "                        columns, of which the first indicates the line number\n"
+    "                        and the remaining columns are instances of the records.\n"
     "                        The default value is simple.\n"
-    "--input-type <TYPE>     The data type of the input data, either int or "
-    "float.\n"
+    "--input-type <TYPE>     The data type of the input data, either int or " "float.\n"
     "                        Default: double.\n"
     "-r <R>                  The threshold argument in sample entropy.\n"
-    "-m <M>                  The template length argument of sample entropy. "
-    "Note\n"
+    "-m <M>                  The template length argument of sample entropy. Note\n"
     "                        that this program only supports 2 <= m <= 10.\n"
-    "-n <N>                  If the length of the signal specified by "
-    "<FILENAME> is\n"
-    "                        greater than <N>, then it would be truncated to "
-    "be of\n"
-    "                        length <N>. If <N> is 0, then the the original "
-    "length\n"
+    "-n <N>                  If the length of the signal specified by <FILENAME> is\n"
+    "                        greater than <N>, then it would be truncated to be of\n"
+    "                        length <N>. If <N> is 0, then the the original length\n"
     "                        is employed. The default value is 0.\n"
     "--sample-size <N0>      The number of points to sample.\n"
-    "--sample-num <N1>       The number of computations where the average is "
-    "taken.\n"
-    "--output-level <LEVEL>  The amount of information printed. Should be one "
-    "of\n"
-    "                        {0,1,2}. Level 0 is most silent while level 2 is "
-    "for\n"
+    "--sample-num <N1>       The number of computations where the average is taken.\n"
+    "--output-level <LEVEL>  The amount of information printed. Should be one of\n"
+    "                        {0,1,2}. Level 0 is most silent while level 2 is for\n"
     "                        debugging.\n"
-    "--quasi-type <TYPE>     The type of the quasi-random sequence for "
-    "sampling,\n"
+    "--quasi-type <TYPE>     The type of the quasi-random sequence for sampling,\n"
     "                        can be one of the following: sobol, halton,\n"
-    "                        reversehalton or niederreiter_2. Default: "
-    "sobol.\n\n"
+    "                        reversehalton or niederreiter_2. Default: sobol.\n\n"
     "Options:\n"
-    "-d | --direct           If this option is on, then (plain) direct method "
-    "will be\n"
+    "-d | --direct           If this option is on, then (plain) direct method will be\n"
     "                        conducted.\n"
-    "-fd | --fast-direct     If this option is on, then fast direct method "
-    "will be\n"
+    "-fd | --fast-direct     If this option is on, then fast direct method will be\n"
     "                        conducted.\n"
-    "--kd-sample             If this option is enabled, the kd tree based "
-    "sampling\n"
+    "-rkd | --range-kdtree   If this option is on, then the range kd tree will be run.\n"
+    "--kd-sample             If this option is enabled, the kd tree based sampling\n"
     "                        method will be used to perform computation.\n"
-    "--random                If this option is enabled, the random seed will "
-    "be set\n"
+    "--random                If this option is enabled, the random seed will be set\n"
     "                        randomly.\n"
-    "-q                      If this option is enabled, the quasi-Monte Carlo "
-    "based\n"
+    "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
     "                        method is conducted.\n"
-    "--variance              If this option is enabled, then the variance of "
-    "the\n"
+    "--variance              If this option is enabled, then the variance of the\n"
     "                        results of sampling methods will be computed. \n"
-    "--n-computation <NC>    The number of computations for variance "
-    "computation\n"
+    "--n-computation <NC>    The number of computations for variance computation\n"
     "                        (default = 50).\n"
     "-u | --uniform          If this option is enabled, the Monte Carlo based\n"
-    "                        method using uniform distribution will be "
-    "conducted.\n"
-    "--swr                   If this option is enabled, then the Monte Carlo "
-    "based\n"
+    "                        method using uniform distribution will be conducted.\n"
+    "--swr                   If this option is enabled, then the Monte Carlo based\n"
     "                        method without placement will be performed.\n"
-    "--grid                  If this option is enabled, then the quasi-Monte "
-    "Carlo\n"
-    "                        based method using grid (lattice) as sampling "
-    "indexes\n"
+    "--grid                  If this option is enabled, then the quasi-Monte Carlo\n"
+    "                        based method using grid (lattice) as sampling indexes\n"
     "                        will be performed.\n"
-    "--presort               If this option is enabled, then a presorting "
-    "operation\n"
-    "                        is conducted before sampling in quasi-Monte "
-    "Carlo\n"
+    "--presort               If this option is enabled, then a presorting operation\n"
+    "                        is conducted before sampling in quasi-Monte Carlo\n"
     "                        based method.\n";
 
 template <typename T>
@@ -121,6 +94,7 @@ struct Argument {
   bool fast_direct;
   bool direct;
   bool kd_sample;
+  bool rkd;
   bool random_, variance;
   bool q, u, swr, presort, grid;
   unsigned n_computation;
@@ -298,6 +272,7 @@ void ParseArgument(int argc, char *argv[]) {
 
   arg.direct = parser.isOption("--direct") || parser.isOption("-d");
   arg.fast_direct = parser.isOption("--fast-direct") || parser.isOption("-fd");
+  arg.rkd = parser.isOption("-rkd") || parser.isOption("--range-kdtree");
   arg.q = parser.isOption("-q");
   arg.u = parser.isOption("-u") || parser.isOption("--uniform");
   arg.swr = parser.isOption("--swr");
@@ -454,6 +429,13 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   if (arg.direct) {
     SampleEntropyCalculatorDirect<T, K> secd(data.cbegin(), data.cend(),
                                              r_scaled, arg.output_level);
+    secd.ComputeSampleEntropy();
+    cout << secd.get_result_str();
+  }
+  
+  if (arg.rkd) {
+    SampleEntropyCalculatorRKD<T, K> secd(data.cbegin(), data.cend(),
+                                          r_scaled, arg.output_level);
     secd.ComputeSampleEntropy();
     cout << secd.get_result_str();
   }
