@@ -173,7 +173,8 @@ private:
   OutputLevel _output_level;
 };
 
-template <typename T, unsigned K> class ABCalculatorRKD {
+template <typename T, unsigned K>
+class ABCalculatorRKD {
 public:
   ABCalculatorRKD(OutputLevel output_level) : _output_level(output_level) {}
   vector<long long> ComputeAB(typename vector<T>::const_iterator first,
@@ -182,6 +183,8 @@ public:
 private:
   OutputLevel _output_level;
 };
+
+
 /**
  * @brief This class calculates matched pairs like the class
  * MatchedPairCalculatorMao, except that only one kd tree is used.

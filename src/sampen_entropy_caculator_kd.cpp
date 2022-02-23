@@ -138,13 +138,13 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
     data_.push_back(minimum);
 
   // Construct points in k-dimensional space and merge repeated points.
-  vector<KDPoint<T, K>> points =
+  vector<KDPoint<T, K> > points =
       GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 1);
   for (size_t i = points.size() - K + 1; i < points.size(); ++i) {
     points[i].set_count(0);
   }
 
-  vector<KDPoint<T, K>> sorted_points(points);
+  vector<KDPoint<T, K> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -598,15 +598,15 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K>> points_count;
+  vector<KDPointRKD<unsigned, K> > points_count;
   vector<unsigned> points_count_indices;
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
-      points_count.push_back(points_grid[i]);
+      points_count.push_back(KDPointRKD<unsigned, K>(points_grid[i]));
       points_count_indices.push_back(i);
     }
   }
-  RangeKDTree2K<unsigned, K - 1> tree(points_count, 32, _output_level);
+  RangeKDTree2K<unsigned, K - 1> tree(points_count, 0, _output_level);
 
   // Perform counting.
   vector<long long> result({0, 0});

@@ -434,6 +434,11 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   }
   
   if (arg.rkd) {
+    SampleEntropyCalculatorLiu<T, K> secl(data.cbegin(), data.cend(),
+                                          r_scaled, arg.output_level);
+    secl.ComputeSampleEntropy();
+    cout << secl.get_result_str();
+
     SampleEntropyCalculatorRKD<T, K> secd(data.cbegin(), data.cend(),
                                           r_scaled, arg.output_level);
     secd.ComputeSampleEntropy();

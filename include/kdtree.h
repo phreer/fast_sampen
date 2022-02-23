@@ -22,6 +22,10 @@ template <typename T, unsigned K, unsigned D>
 Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
                      typename vector<KDPoint<T, D>>::const_iterator last);
 
+template<typename T, unsigned K, unsigned D>
+Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
+                     typename vector<KDPointRKD<T, D>>::const_iterator last);
+
 template <typename T, unsigned K>
 class KDCountingTreeNode {
 public:
@@ -397,19 +401,145 @@ private:
 };
 
 
+template <typename T>
+class LastAxisTreeNode {
+public:
+  LastAxisTreeNode(typename vector<LastAxisTreeNode<T> >::iterator first,
+                   typename vector<LastAxisTreeNode<T> >::iterator last,
+                   T lower, T upper, LastAxisTreeNode<T> *parent)
+      : _is_leaf(false), _weighted_count(last - first),
+      _lower(lower), _upper(upper), _parent(parent) {
+    const unsigned count = last - first;
+    const unsigned median = count / 2;
+    if (count > 3) {
+      _left_child = new LastAxisTreeNode<T>(
+          first, first + median, this->lower(), (first + median - 1)->upper(),
+          this);
+      _right_child = new LastAxisTreeNode<T>(
+          first + median, last, (first + median)->lower(), this->upper(), this);
+    } else if (count == 3) {
+      first->_parent = this;
+      _left_child = &(*first);
+      _right_child = new LastAxisTreeNode<T>(
+          first + median, last, (first + median)->lower(), this->upper(), this);
+    } else if (count == 2) {
+      first->_parent = this;
+      _left_child = &(*first);
+      (first + 1)->_parent = this;
+      _right_child = &(*(first + 1));
+    } else {
+      _left_child = nullptr;
+      first->_parent = this;
+      _right_child = &(*first);
+    }
+  }
+  LastAxisTreeNode(T value)
+      : _is_leaf(true), _weighted_count(1), _lower(value), _upper(value),
+      _parent(nullptr), _left_child(nullptr), _right_child(nullptr) {} 
+  ~LastAxisTreeNode() {
+    if (_left_child && !_left_child->is_leaf()) {
+      delete _left_child;
+    }
+    if (_right_child && !_right_child->is_leaf()) {
+      delete _right_child;
+    }
+  }
+  unsigned CountRange(T lower, T upper) const {
+    if (lower <= _lower && _upper <= upper) {
+      return weighted_count();
+    }
+    if (upper < _lower || _upper < lower) {
+      return 0;
+    }
+    return _left_child->CountRange(lower, upper) +\
+        _right_child->CountRange(lower, upper);
+  }
+
+  T lower() const { return _lower; }
+  T upper() const { return _upper; }
+  bool is_leaf() const { return _is_leaf; }
+  int weighted_count() const { return _weighted_count; }
+  void UpdateCount(int x) {
+    LastAxisTreeNode<T> *curr = this;
+    while (curr) {
+      curr->_weighted_count += x;
+      curr = curr->_parent;
+    }
+  }
+private:
+  bool _is_leaf;
+  int _weighted_count;
+  T _lower;
+  T _upper;
+  LastAxisTreeNode<T> *_parent;
+  LastAxisTreeNode<T> *_left_child;
+  LastAxisTreeNode<T> *_right_child;
+};
+
+
+template <typename T>
+class LastAxisTree {
+public:
+  // Note that nodes must be increasingly ordered.
+  LastAxisTree(vector<LastAxisTreeNode<T> > &&nodes)
+      : _leaf_nodes(std::move(nodes)), _root(nullptr) {
+    if (_leaf_nodes.size() > 1) {
+      _root = new LastAxisTreeNode<T>(_leaf_nodes.begin(),
+                                      _leaf_nodes.end(),
+                                      _leaf_nodes.front().lower(),
+                                      _leaf_nodes.back().upper(),
+                                      nullptr);
+    } else if (_leaf_nodes.size() == 1) {
+      _root = &_leaf_nodes[0];
+    }
+  }
+  LastAxisTree(const vector<LastAxisTreeNode<T> > &nodes)
+      : _leaf_nodes(nodes), _root(nullptr) {
+    if (_leaf_nodes.size() > 1) {
+      _root = new LastAxisTreeNode<T>(_leaf_nodes.begin(),
+                                      _leaf_nodes.end(),
+                                      _leaf_nodes.front().lower(),
+                                      _leaf_nodes.back().upper(),
+                                      nullptr);
+    } else if (_leaf_nodes.size() == 1) {
+      _root = &_leaf_nodes[0];
+    }
+  }
+  ~LastAxisTree() {
+    if (_root && !_root->is_leaf()) {
+      delete _root;
+    }
+  }
+  unsigned CountRange(T lower, T upper) const {
+    if (_root) {
+      return _root->CountRange(lower, upper);
+    }
+    return 0;
+  }
+  const vector<LastAxisTreeNode<T> >& leaf_nodes() const { return _leaf_nodes; }
+  vector<LastAxisTreeNode<T> >& leaf_nodes() { return _leaf_nodes; }
+private:
+  vector<LastAxisTreeNode<T> > _leaf_nodes;
+  LastAxisTreeNode<T> *_root;
+};
+
+
 template <typename T, unsigned K>
 class RangeKDTree2KNode {
 public:
   RangeKDTree2KNode(
       unsigned depth, RangeKDTree2KNode *father,
      vector<RangeKDTree2KNode *> &leaves,
-     typename vector<KDPoint<T, K + 1>>::iterator first,
-     typename vector<KDPoint<T, K + 1>>::iterator last,
+     typename vector<KDPointRKD<T, K + 1>>::iterator first,
+     typename vector<KDPointRKD<T, K + 1>>::iterator last,
      unsigned leaf_left,
      unsigned last_axis_threshold);
   ~RangeKDTree2KNode() {
     for (unsigned i = 0; i < _num_child; i++)
       delete _children[i];
+    if (_subtree) {
+      delete _subtree;
+    }
   }
   vector<long long> CountRange(const Range<T, K + 1> &range,
                                long long &num_nodes,
@@ -452,13 +582,15 @@ private:
   // Meaningful only for leaf nodes.
   T _last_axis;
   // For non-leaf nodes for fast searching.
-  vector<T> _last_axis_array;
+  // vector<T> _last_axis_array;
+  LastAxisTree<T> *_subtree;
 };
+
 
 template <typename T, unsigned K>
 class RangeKDTree2K {
 public:
-  RangeKDTree2K(const vector<KDPoint<T, K + 1>> &points,
+  RangeKDTree2K(const vector<KDPointRKD<T, K + 1>> &points,
                 unsigned last_axis_threshold,
                 OutputLevel output_level)
       : _root(nullptr),
@@ -476,6 +608,9 @@ public:
       return;
     
     std::vector<int> order_last_axis(n);
+    for (size_t i = 0; i < n; ++i) {
+      order_last_axis[i] = i;
+    }
     std::sort(order_last_axis.begin(), order_last_axis.end(), 
               [&points] (int i, int j) { return points[i][K] < points[j][K]; });
     for (unsigned i = 0; i < n; ++i) {
@@ -485,8 +620,9 @@ public:
     for (unsigned i = 0; i < n; ++i) {
       _points[i].set_value(i);
     }
-    _root = new RangeKDTree2KNode<T, K>(0, nullptr, _leaves, _points.begin(),
-                                   _points.end(), 0, last_axis_threshold);
+    _root = new RangeKDTree2KNode<T, K>(
+        0, nullptr, _leaves, _points.begin(), _points.end(), 0,
+        last_axis_threshold);
     for (unsigned i = 0; i < n; ++i) {
       _index2leaf[_points[i].value()] = i;
     }
@@ -513,16 +649,26 @@ public:
   void UpdateCount(unsigned position, int d) {
     assert(position < count() && "position >= count()");
     position = _index2leaf[position];
-    if (d)
+    if (d) {
       _leaves[position]->UpdateCount(d);
+      auto subtree_nodes = _points[position].subtree_nodes();
+      for (LastAxisTreeNode<T> *node: subtree_nodes) {
+        node->UpdateCount(d);
+      }
+    }
   }
 
   void Close(unsigned position) {
     assert(position < count() && "position >= count()");
     position = _index2leaf[position];
     int w = _leaves[position]->weighted_count();
-    if (w != 0)
+    if (w != 0) {
       _leaves[position]->UpdateCount(-w);
+      auto subtree_nodes = _points[position].subtree_nodes();
+      for (LastAxisTreeNode<T> *node: subtree_nodes) {
+        node->UpdateCount(-w);
+      }
+    }
   }
 
   unsigned count() const { return _leaves.size(); }
@@ -536,7 +682,7 @@ public:
 private:
   RangeKDTree2KNode<T, K> *_root;
   vector<RangeKDTree2KNode<T, K> *> _leaves;
-  vector<KDPoint<T, K + 1>> _points;
+  vector<KDPointRKD<T, K + 1>> _points;
   vector<unsigned> _index2leaf;
   // Buffers for searching without recursion.
   vector<const RangeKDTree2KNode<T, K> *> _q1;

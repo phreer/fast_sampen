@@ -16,6 +16,7 @@ void KDCountingTree<T, K>::Print() {
   }
 }
 
+
 template<typename T, unsigned K, unsigned D>
 Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
                      typename vector<KDPoint<T, D>>::const_iterator last) {
@@ -66,6 +67,59 @@ Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
   }
   return range;
 }
+
+
+template<typename T, unsigned K, unsigned D>
+Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
+                     typename vector<KDPointRKD<T, D>>::const_iterator last) {
+  const size_t n = last - first;
+  assert(n > 0);
+  Range<T, K> range;
+
+  T maximum[K];
+  T minimum[K];
+  for (unsigned i = 0; i < K; ++i) {
+    minimum[i] = (*first)[i];
+    maximum[i] = minimum[i];
+  }
+  for (size_t j = 0; j < (n - 1) / 2; ++j) {
+    const KDPointRKD<T, D> &point1 = *(first + 2 * j + 1);
+    const KDPointRKD<T, D> &point2 = *(first + 2 * (j + 1));
+    for (unsigned i = 0; i < K; ++i) {
+      T curr1 = point1[i];
+      T curr2 = point2[i];
+      if (curr1 < curr2) {
+        if (maximum[i] < curr2)
+          maximum[i] = curr2;
+        if (minimum[i] > curr1)
+          minimum[i] = curr1;
+      } else {
+        if (maximum[i] < curr1)
+          maximum[i] = curr1;
+        if (minimum[i] > curr2)
+          minimum[i] = curr2;
+      }
+    }
+  }
+
+// last one
+  if (n % 2 == 0) {
+    const KDPointRKD<T, D> &point = *(first + n - 1);
+    for (unsigned i = 0; i < K; ++i) {
+      T curr = point[i];
+      if (maximum[i] < curr)
+        maximum[i] = curr;
+      if (minimum[i] > curr)
+        minimum[i] = curr;
+    }
+  }
+  for (unsigned i = 0; i < K; ++i) {
+    range.lower_ranges[i] = minimum[i];
+    range.upper_ranges[i] = maximum[i];
+  }
+  return range;
+}
+
 
 template<typename T, unsigned K>
 long long KDCountingTree<T, K>::CountRange(const Range<T, K> &range,
@@ -410,19 +464,22 @@ template<typename T, unsigned K>
 RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     unsigned depth, RangeKDTree2KNode *father,
     vector<RangeKDTree2KNode *> &leaves,
-    typename vector<KDPoint<T, K + 1>>::iterator first,
-    typename vector<KDPoint<T, K + 1>>::iterator last,
+    typename vector<KDPointRKD<T, K + 1>>::iterator first,
+    typename vector<KDPointRKD<T, K + 1>>::iterator last,
     unsigned leaf_left,
     unsigned last_axis_threshold)
     : _father(father), _depth(depth), _count(last - first), _weighted_count(0),
-      _leaf_left(leaf_left) {
+      _leaf_left(leaf_left), _subtree(nullptr) {
   assert(_count > 0);
   _range = GetRange<T, K, K + 1>(first, last);
 
   if (_count == 1) {
     _num_child = 0;
     _last_axis = (*first)[K];
+    first->set_rkd_node(this);
     leaves.push_back(this);
+    _subtree = new LastAxisTree<T>(
+        vector<LastAxisTreeNode<T> >(1, LastAxisTreeNode<T>(_last_axis)));
     return;
   }
 
@@ -447,7 +504,37 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     }
   }
   
+  // Reverse mapping.
+  std::vector<int> order_last_axis(count());
+  for (unsigned i = 0; i < count(); ++i) {
+    order_last_axis[(first + i)->rank_last_axis()] = i;
+  }
 
+  std::vector<LastAxisTreeNode<T> > subtree_leaf_nodes;
+  std::vector<std::vector<int> > sub_order_last_axis(1u << K);
+  for (unsigned i = 0; i < count(); ++i) {
+    int index = order_last_axis[i];
+    T last_axis_value = (first + index)->operator[](K);
+    subtree_leaf_nodes.emplace_back(LastAxisTreeNode<T>(last_axis_value));
+    int node_index = BinarySearchIndexNoCheck(splitters, index);
+    sub_order_last_axis[node_index].push_back(index);
+  }
+  _subtree = new LastAxisTree<T>(std::move(subtree_leaf_nodes));
+  for (unsigned i = 0; i < count(); ++i) {
+    int index = order_last_axis[i];
+    (first + index)->AddSubtreeNode(&_subtree->leaf_nodes()[i]);
+  }
+  
+  // Adjust rank of the last axis after partition.
+  for (unsigned i = 0; i < (1u << K); ++i) {
+    const auto &current_sub_order_last_axis = sub_order_last_axis[i];
+    size_t size = current_sub_order_last_axis.size();
+    for (unsigned j = 0; j < size; ++j) {
+      (first + current_sub_order_last_axis[j])->set_rank_last_axis(j);
+    }
+  }
+  
+  // Construct children.
   unsigned k = 0;
   for (unsigned i = 0; i < (1u << K); i++) {
     splitter1 = splitters[i];
@@ -464,28 +551,6 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     }
   }
   _num_child = k;
-
-  if (count() < last_axis_threshold) {
-    return;
-  }
-  std::vector<int> order_last_axis(count());
-  for (unsigned i = 0; i < count(); ++i) {
-    order_last_axis[(first + i)->rank_last_axis()] = i;
-  }
-  std::vector<std::vector<int> > sub_order_last_axis(1u << K);
-  for (unsigned i = 0; i < count(); ++i) {
-    int index = order_last_axis[i];
-    _last_axis_array.push_back((first + index)->operator[](K));
-    int node_index = BinarySearchIndexNoCheck(splitters, index);
-    sub_order_last_axis[node_index].push_back(index);
-  }
-  for (unsigned i = 0; i < (1u << K); ++i) {
-    const auto &current_sub_order_last_axis = sub_order_last_axis[i];
-    size_t size = current_sub_order_last_axis.size();
-    for (unsigned j = 0; j < size; ++j) {
-      (first + current_sub_order_last_axis[j])->set_rank_last_axis(j);
-    }
-  }
 }
 
 
@@ -532,7 +597,7 @@ vector<long long> RangeKDTree2KNode<T, K>::CountRange(
           result[1] += static_cast<long long>(curr->_weighted_count);
           T last_axis_low = range.lower_ranges[K];
           T last_axis_high = range.upper_ranges[K];
-          if (count() < last_axis_threshold) {
+          if (curr->count() < last_axis_threshold) {
             // Check last coordinate.
             for (unsigned i = 0; i < curr->_count; ++i) {
               if (leaves[curr->_leaf_left + i]->weighted_count() == 0)
@@ -543,8 +608,7 @@ vector<long long> RangeKDTree2KNode<T, K>::CountRange(
               }
             }
           } else {
-            result[0] += CountRangeLastAxis(last_axis_low, last_axis_high,
-                                            curr->_last_axis_array);
+            result[0] += curr->_subtree->CountRange(last_axis_low, last_axis_high);
           }
           break;
         }
