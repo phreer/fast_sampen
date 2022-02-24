@@ -480,6 +480,7 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     leaves.push_back(this);
     _subtree = new LastAxisTree<T>(
         vector<LastAxisTreeNode<T> >(1, LastAxisTreeNode<T>(_last_axis)));
+    first->AddSubtreeNode(&_subtree->leaf_nodes()[0]);
     return;
   }
 
@@ -597,19 +598,21 @@ vector<long long> RangeKDTree2KNode<T, K>::CountRange(
           result[1] += static_cast<long long>(curr->_weighted_count);
           T last_axis_low = range.lower_ranges[K];
           T last_axis_high = range.upper_ranges[K];
-          if (curr->count() < last_axis_threshold) {
-            // Check last coordinate.
-            for (unsigned i = 0; i < curr->_count; ++i) {
-              if (leaves[curr->_leaf_left + i]->weighted_count() == 0)
-                continue;
-              T last_axis = leaves[curr->_leaf_left + i]->_last_axis;
-              if (last_axis_low <= last_axis && last_axis <= last_axis_high) {
-                result[0] += 1;
-              }
+          assert (curr->weighted_count() == curr->_subtree->weighted_count());
+          // if (curr->count() < last_axis_threshold) {
+          // Check last coordinate.
+          int result_check = 0;  
+          for (unsigned i = 0; i < curr->_count; ++i) {
+            if (leaves[curr->_leaf_left + i]->weighted_count() == 0)
+              continue;
+            T last_axis = leaves[curr->_leaf_left + i]->_last_axis;
+            if (last_axis_low <= last_axis && last_axis <= last_axis_high) {
+              result_check += leaves[curr->_leaf_left + i]->weighted_count();
             }
-          } else {
-            result[0] += curr->_subtree->CountRange(last_axis_low, last_axis_high);
           }
+          int result_subtree = curr->_subtree->CountRange(last_axis_low, last_axis_high);
+          assert (result_subtree == result_check);
+          result[0] += result_check;
           break;
         }
         case INTER: {

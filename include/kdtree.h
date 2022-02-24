@@ -407,9 +407,9 @@ public:
   LastAxisTreeNode(typename vector<LastAxisTreeNode<T> >::iterator first,
                    typename vector<LastAxisTreeNode<T> >::iterator last,
                    T lower, T upper, LastAxisTreeNode<T> *parent)
-      : _is_leaf(false), _weighted_count(last - first),
+      : _is_leaf(false), _weighted_count(0), _count(last - first),
       _lower(lower), _upper(upper), _parent(parent) {
-    const unsigned count = last - first;
+    const unsigned count = this->count();
     const unsigned median = count / 2;
     if (count > 3) {
       _left_child = new LastAxisTreeNode<T>(
@@ -434,8 +434,9 @@ public:
     }
   }
   LastAxisTreeNode(T value)
-      : _is_leaf(true), _weighted_count(1), _lower(value), _upper(value),
-      _parent(nullptr), _left_child(nullptr), _right_child(nullptr) {} 
+      : _is_leaf(true), _weighted_count(0), _count(1),
+      _lower(value), _upper(value), _parent(nullptr),
+      _left_child(nullptr), _right_child(nullptr) {} 
   ~LastAxisTreeNode() {
     if (_left_child && !_left_child->is_leaf()) {
       delete _left_child;
@@ -444,7 +445,7 @@ public:
       delete _right_child;
     }
   }
-  unsigned CountRange(T lower, T upper) const {
+  int CountRange(T lower, T upper) const {
     if (lower <= _lower && _upper <= upper) {
       return weighted_count();
     }
@@ -459,6 +460,7 @@ public:
   T upper() const { return _upper; }
   bool is_leaf() const { return _is_leaf; }
   int weighted_count() const { return _weighted_count; }
+  unsigned count() const { return _count; }
   void UpdateCount(int x) {
     LastAxisTreeNode<T> *curr = this;
     while (curr) {
@@ -469,6 +471,7 @@ public:
 private:
   bool _is_leaf;
   int _weighted_count;
+  unsigned _count;
   T _lower;
   T _upper;
   LastAxisTreeNode<T> *_parent;
@@ -510,7 +513,7 @@ public:
       delete _root;
     }
   }
-  unsigned CountRange(T lower, T upper) const {
+  int CountRange(T lower, T upper) const {
     if (_root) {
       return _root->CountRange(lower, upper);
     }
@@ -518,6 +521,7 @@ public:
   }
   const vector<LastAxisTreeNode<T> >& leaf_nodes() const { return _leaf_nodes; }
   vector<LastAxisTreeNode<T> >& leaf_nodes() { return _leaf_nodes; }
+  int weighted_count() const { return _root->weighted_count(); }
 private:
   vector<LastAxisTreeNode<T> > _leaf_nodes;
   LastAxisTreeNode<T> *_root;
