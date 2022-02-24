@@ -583,8 +583,6 @@ private:
   unsigned _leaf_left;
   Range<T, K> _range;
   unsigned _num_child;
-  // Meaningful only for leaf nodes.
-  T _last_axis;
   // For non-leaf nodes for fast searching.
   // vector<T> _last_axis_array;
   LastAxisTree<T> *_subtree;
@@ -611,6 +609,7 @@ public:
     if (n == 0)
       return;
     
+    // Sort points according to the last axis and store the rank to the point.
     std::vector<int> order_last_axis(n);
     for (size_t i = 0; i < n; ++i) {
       order_last_axis[i] = i;
@@ -620,6 +619,7 @@ public:
     for (unsigned i = 0; i < n; ++i) {
       _points[order_last_axis[i]].set_rank_last_axis(i);
     }
+
     // For mapping from index to leaf.
     for (unsigned i = 0; i < n; ++i) {
       _points[i].set_value(i);

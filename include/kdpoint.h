@@ -76,13 +76,12 @@ public:
   KDPointRKD(typename vector<T>::const_iterator first,
              typename vector<T>::const_iterator last, int count = 0)
       : KDPoint<T, K>(first, last, count), _rank_last_axis(-1),
-      _subtree_nodes(0), _rkd_node(nullptr) {}
+      _subtree_nodes(0) {}
   KDPointRKD(KDPoint<T, K> &&point)
       : KDPoint<T, K>(std::move(point)), _rank_last_axis(-1),
-      _subtree_nodes(0), _rkd_node(nullptr) {}
+      _subtree_nodes(0) {}
   KDPointRKD(const KDPoint<T, K> &point)
-      : KDPoint<T, K>(point), _rank_last_axis(-1),
-      _subtree_nodes(0), _rkd_node(nullptr) {}
+      : KDPoint<T, K>(point), _rank_last_axis(-1), _subtree_nodes(0) {}
 
   void AddSubtreeNode(LastAxisTreeNode<T> *node) {
     _subtree_nodes.push_back(node);
@@ -90,8 +89,6 @@ public:
   vector<LastAxisTreeNode<T> *>& subtree_nodes() {
     return _subtree_nodes;
   }
-  void set_rkd_node(RangeKDTree2KNode<T, K - 1> *node) { _rkd_node = node; }
-  RangeKDTree2KNode<T, K - 1>* rkd_node() { return _rkd_node; }
   void set_rank_last_axis(int rank) { _rank_last_axis = rank; }
   int rank_last_axis() const { return _rank_last_axis; }
 
@@ -99,7 +96,6 @@ private:
   // For range kd tree (rkd) method.
   int _rank_last_axis;
   std::vector<LastAxisTreeNode<T> *> _subtree_nodes;
-  RangeKDTree2KNode<T, K - 1> *_rkd_node;
 };
 
 //////////////////////////////////////////////////////////////////////////

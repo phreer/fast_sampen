@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
       SampleEntropyN0N1<Type, 10>();
       break;
     default:
-      cerr << "Invalid argument: --input-type " << arg.template_length
-           << ". \n";
+      cerr << "Invalid argument: -m " << arg.template_length << ".\n";
+      cerr << "Should be an integer in range [2, 10]." << std::endl;
       cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
       exit(-1);
     }

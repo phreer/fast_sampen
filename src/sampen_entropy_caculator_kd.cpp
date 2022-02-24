@@ -42,7 +42,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
   for (size_t i = 0; i < n; i++)
     sorted_points[i] = points[rank2index[i]];
 
-  MergeRepeatedPoints(sorted_points, rank2index);
+  // MergeRepeatedPoints(sorted_points, rank2index);
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
   const vector<KDPoint<unsigned, K - 1>> points_grid =
@@ -111,7 +111,6 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
   if (_output_level == Debug) {
     std::cout << "[INFO] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[INFO] The number of calls for CountRange(): ";
@@ -247,7 +246,6 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
   if (_output_level == Debug) {
     std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[DEBUG] The number of calls for CountRange(): ";
@@ -414,7 +412,6 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
   if (_output_level == Debug) {
     std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[DEBUG] The number of calls for CountRange(): ";
@@ -542,7 +539,6 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   if (_output_level == Debug) {
     std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[DEBUG] The number of calls for CountRange(): ";
@@ -657,7 +653,6 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   if (_output_level == Debug) {
     std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[DEBUG] The number of calls for CountRange(): ";
@@ -809,7 +804,6 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   if (_output_level == Debug) {
     std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
     std::cout << tree.num_nodes() << std::endl;
-    ;
     std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
     std::cout << n_count << std::endl;
     std::cout << "[DEBUG] The number of calls for CountRange(): ";
