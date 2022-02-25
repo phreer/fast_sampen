@@ -550,6 +550,17 @@ Range<unsigned, K> GetHyperCube(const KDPoint<unsigned, K> &point,
   return result;
 }
 
+
+template <typename T, unsigned K>
+Range<T, K> GetHyperCubeR(const KDPoint<T, K> &point, T r) {
+  Range<T, K> result;
+  for (size_t i = 0; i < K; ++i) {
+    result.lower_ranges[i] = point[i] - r;
+    result.upper_ranges[i] = point[i] + r;
+  }
+  return result;
+}
+
 } // namespace sampen
 
 #endif // !__UTILS__

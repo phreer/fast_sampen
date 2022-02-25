@@ -8,6 +8,50 @@
 namespace sampen {
 
 template <typename T, unsigned K>
+long long MatchedPairsCalculatorSimpleKD<T, K>::ComputeA(
+    typename vector<T>::const_iterator first,
+    typename vector<T>::const_iterator last, T r) {
+  vector<T> data_(first, last);
+  // Construct Points and merge repeated points.
+  vector<KDPoint<T, K> > points =
+      GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 1);
+
+  KDCountingTree2K<T, K> tree(points, _output_level);
+
+  // Perform counting.
+  long long result = 0;
+  // The number of nodes has been visited.
+  long long num_nodes = 0;
+
+  const unsigned n_count = points.size();
+
+  Timer timer;
+  timer.SetStartingPointNow();
+  for (unsigned i = 1; i < n_count; i++) {
+    tree.UpdateCount(i - 1, points[i].count());
+    const Range<T, K> range = GetHyperCubeR<T, K>(points[i], r);
+    long long current_count = tree.CountRange(range, num_nodes);
+    result += current_count;
+  }
+  timer.StopTimer();
+
+  if (_output_level >= Info) {
+    std::cout << "[INFO] Time consumed in range counting: "
+              << timer.ElapsedSeconds() << " seconds\n";
+  }
+  if (_output_level == Debug) {
+    std::cout << "[INFO] The number of nodes (K = " << K << "): ";
+    std::cout << tree.num_nodes() << std::endl;
+    std::cout << "[INFO] The number of leaf nodes (K = " << K << "): ";
+    std::cout << n_count << std::endl;
+    std::cout << "[INFO] The number of nodes visited (K = " << K << "): ";
+    std::cout << num_nodes << std::endl;
+  }
+  return result;
+}
+
+
+template <typename T, unsigned K>
 long long MatchedPairsCalculatorMao<T, K>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, T r) {
@@ -123,6 +167,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
   }
   return result;
 }
+
 
 template <typename T, unsigned K>
 long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
@@ -941,11 +986,13 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
 template class SampleEntropyCalculatorLiu<TYPE , K>; \
 template class SampleEntropyCalculatorRKD<TYPE , K>; \
 template class SampleEntropyCalculatorMao<TYPE , K>; \
+template class SampleEntropyCalculatorSimpleKD<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingLiu<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingRKD<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingMao<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingKDTree<TYPE , K>; \
 template class MatchedPairsCalculatorMao<TYPE, K>; \
+template class MatchedPairsCalculatorSimpleKD<TYPE, K>; \
 template class MatchedPairsCalculatorSampling<TYPE, K>; \
 template class MatchedPairsCalculatorSampling2<TYPE, K>; \
 template class ABCalculatorLiu<TYPE, K>; \

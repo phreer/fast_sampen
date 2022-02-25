@@ -53,8 +53,11 @@ char usage[] =
     "-fd | --fast-direct     If this option is on, then fast direct method will be\n"
     "                        conducted.\n"
     "-rkd | --range-kdtree   If this option is on, then the range kd tree will be run.\n"
-    "--kd-sample             If this option is enabled, the kd tree based sampling\n"
-    "                        method will be used to perform computation.\n"
+    "--simple-kdtree         If this option is on, then trivial kd tree based method\n"
+    "                        (without sliding window of the first component) will be\n"
+    "                         run.\n"
+    "--kdtree-sample         If this option is enabled, the kd tree based sampling\n"
+    "                        method will be run.\n"
     "--random                If this option is enabled, the random seed will be set\n"
     "                        randomly.\n"
     "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
@@ -93,7 +96,8 @@ struct Argument {
   OutputLevel output_level;
   bool fast_direct;
   bool direct;
-  bool kd_sample;
+  bool kdtree_sample;
+  bool simple_kdtree;
   bool rkd;
   bool random_, variance;
   bool q, u, swr, presort, grid;
@@ -200,7 +204,8 @@ void Argument::PrintArguments() const {
   std::cout << "\tthreshold: " << arg.r << std::endl;
   std::cout << "\tsample num (N1): " << arg.sample_num << std::endl;
   std::cout << "\tsample size (N0): " << arg.sample_size << std::endl;
-  std::cout << "\tuse kd tree based sampling: " << arg.kd_sample << std::endl;
+  std::cout << "\tuse kd tree based sampling: " << arg.kdtree_sample << std::endl;
+  std::cout << "\tuse simple kd tree: " << arg.simple_kdtree << std::endl;
   std::cout << "\trandom: " << arg.random_ << std::endl;
   std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
   std::cout << "\toutput level: ";
@@ -279,13 +284,14 @@ void ParseArgument(int argc, char *argv[]) {
 
   arg.direct = parser.isOption("--direct") || parser.isOption("-d");
   arg.fast_direct = parser.isOption("--fast-direct") || parser.isOption("-fd");
+  arg.simple_kdtree = parser.isOption("--simple-kdtree");
   arg.rkd = parser.isOption("-rkd") || parser.isOption("--range-kdtree");
   arg.q = parser.isOption("-q");
   arg.u = parser.isOption("-u") || parser.isOption("--uniform");
   arg.swr = parser.isOption("--swr");
   arg.grid = parser.isOption("--grid");
-  arg.kd_sample = parser.isOption("--kd-sample");
-  if (arg.q || arg.u || arg.swr || arg.grid || arg.kd_sample) {
+  arg.kdtree_sample = parser.isOption("--kdtree-sample");
+  if (arg.q || arg.u || arg.swr || arg.grid || arg.kdtree_sample) {
     arg.random_ = parser.isOption("--random");
     arg.variance = parser.isOption("--variance");
     arg.n_computation =
@@ -374,18 +380,11 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   const auto precise_entropy = sec.get_entropy();
   const auto precise_a_norm = sec.get_a_norm();
   const auto precise_b_norm = sec.get_b_norm();
-  if (arg.kd_sample) {
+  if (arg.kdtree_sample) {
     SampleEntropyCalculatorSampling<T, K> *calculator = nullptr;
     calculator = new SampleEntropyCalculatorSamplingMao<T, K>(
         data.cbegin(), data.cend(), r_scaled, arg.sample_size, arg.sample_num,
         precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM,
-        arg.random_, arg.output_level);
-    SampleEntropySamplingExperiment(*calculator, n_computation);
-    delete calculator;
-
-    calculator = new SampleEntropyCalculatorSamplingRKD<T, K>(
-        data.cbegin(), data.cend(), r_scaled, arg.sample_size, arg.sample_num,
-        precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM, 
         arg.random_, arg.output_level);
     SampleEntropySamplingExperiment(*calculator, n_computation);
     delete calculator;
@@ -441,7 +440,7 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
     secfd.ComputeSampleEntropy();
     cout << secfd.get_result_str();
   }
-
+  
   if (arg.direct) {
     SampleEntropyCalculatorDirect<T, K> secd(data.cbegin(), data.cend(),
                                              r_scaled, arg.output_level);
@@ -450,13 +449,14 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   }
   
   if (arg.rkd) {
-    SampleEntropyCalculatorLiu<T, K> secl(data.cbegin(), data.cend(),
-                                          r_scaled, arg.output_level);
-    secl.ComputeSampleEntropy();
-    cout << secl.get_result_str();
-
     SampleEntropyCalculatorRKD<T, K> secd(data.cbegin(), data.cend(),
                                           r_scaled, arg.output_level);
+    secd.ComputeSampleEntropy();
+    cout << secd.get_result_str();
+  }
+  if (arg.simple_kdtree) {
+    SampleEntropyCalculatorSimpleKD<T, K> secd(data.cbegin(), data.cend(),
+                                               r_scaled, arg.output_level);
     secd.ComputeSampleEntropy();
     cout << secd.get_result_str();
   }

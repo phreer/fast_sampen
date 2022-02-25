@@ -13,6 +13,19 @@ namespace sampen {
 using std::vector;
 
 // The kd tree of Mao Dong's version.
+template <typename T, unsigned K> class MatchedPairsCalculatorSimpleKD {
+public:
+  MatchedPairsCalculatorSimpleKD(OutputLevel output_level)
+      : _output_level(output_level) {}
+  long long ComputeA(typename vector<T>::const_iterator first,
+                     typename vector<T>::const_iterator last, T r);
+
+private:
+  OutputLevel _output_level;
+};
+
+
+// The kd tree of Mao Dong's version.
 template <typename T, unsigned K> class MatchedPairsCalculatorMao {
 public:
   MatchedPairsCalculatorMao(OutputLevel output_level)
@@ -48,6 +61,38 @@ public:
 private:
   OutputLevel _output_level;
 };
+
+
+template <typename T, unsigned K>
+class SampleEntropyCalculatorSimpleKD : public SampleEntropyCalculator<T, K> {
+public:
+  using SampleEntropyCalculator<T, K>::SampleEntropyCalculator;
+  std::string get_result_str() override {
+    std::stringstream ss;
+    ss << this->SampleEntropyCalculator<T, K>::get_result_str();
+    ss << "----------------------------------------"
+       << "----------------------------------------\n";
+    return ss.str();
+  }
+
+protected:
+  void _ComputeSampleEntropy() override {
+    if (_n <= K) {
+      std::cerr << "Data length is too short (n = " << _n;
+      std::cerr << ", K = " << K << ")" << std::endl;
+      exit(-1);
+    }
+
+    MatchedPairsCalculatorSimpleKD<T, K> b_cal(this->_output_level);
+    MatchedPairsCalculatorSimpleKD<T, K + 1> a_cal(this->_output_level);
+    _b = b_cal.ComputeA(_data.cbegin(), _data.cend() - 1, _r);
+    _a = a_cal.ComputeA(_data.cbegin(), _data.cend(), _r);
+  }
+  std::string _Method() const override { return std::string("simple kd tree"); }
+  
+  USING_CALCULATOR_FIELDS
+};
+
 
 template <typename T, unsigned K>
 class SampleEntropyCalculatorMao : public SampleEntropyCalculator<T, K> {
