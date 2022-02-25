@@ -20,7 +20,7 @@ int main() {
   unsigned sample_size = 20;
   unsigned sample_num = 20;
   auto samples =
-      GetSampleIndicesWR(SWR_UNIFORM, pop_size, sample_size, sample_num);
+      GetSampleIndices(SWR_UNIFORM, pop_size, sample_size, sample_num);
   cout << "pop_size:" << samples.size() << endl;
   cout << "size:" << samples.size() << endl;
   cout << "results: \n";

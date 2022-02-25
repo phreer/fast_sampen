@@ -366,7 +366,7 @@ vector<KDPoint<T, K>> GetKDPoints(typename vector<T>::const_iterator first,
 }
 
 template <typename T, unsigned K>
-vector<vector<KDPoint<T, K>>>
+vector<vector<KDPoint<T, K> > >
 GetKDPointsSample(typename vector<T>::const_iterator first,
                   typename vector<T>::const_iterator last,
                   const vector<vector<unsigned>> &indices, int count,
@@ -436,12 +436,8 @@ template <typename T> double ComputeVariance(const vector<T> &data) {
     x *= x;
   });
   long double sum = ComputeSum(data_);
-#ifdef DEBUG
-  std::cout << "avg: " << avg << std::endl;
-  std::cout << "variance * size: " << sum << std::endl;
-#endif
   sum /= data.size();
-  return (double)sum;
+  return static_cast<double>(sum);
 }
 
 template <typename T, unsigned K>

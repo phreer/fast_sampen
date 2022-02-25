@@ -62,6 +62,7 @@ void RandomIndicesSampler::init_state() {
   }
 }
 
+
 int RandomIndicesSampler::get() {
   int l = _ranger - _rangel;
   switch (_rtype) {
@@ -88,10 +89,22 @@ int RandomIndicesSampler::get() {
   return sample;
 }
 
-vector<vector<unsigned>> GetSampleIndices(RandomType rtype, unsigned count,
-                                          unsigned sample_size,
-                                          unsigned sample_num,
-                                          bool real_random) {
+
+vector<vector<unsigned> > GetSampleIndicesWR(RandomType random_type,
+                                             unsigned pop_size,
+                                             unsigned sample_size,
+                                             unsigned sample_num,
+                                             bool real_random) {
+  RandomIndicesSamplerWR sampler(pop_size, sample_size, sample_num, random_type,
+                                 real_random);
+  return sampler.GetSampleArrays();
+}
+
+
+vector<vector<unsigned> > GetSampleIndices(RandomType rtype, unsigned count,
+                                           unsigned sample_size,
+                                           unsigned sample_num,
+                                           bool real_random) {
   if (rtype == SWR_UNIFORM || rtype == GRID) {
     return GetSampleIndicesWR(rtype, count, sample_size, sample_num,
                               real_random);
@@ -106,6 +119,7 @@ vector<vector<unsigned>> GetSampleIndices(RandomType rtype, unsigned count,
   return results;
 }
 
+
 void RandomIndicesSamplerWR::_InitState() {
   if (_sample_size > _pop_size) {
     MSG_ERROR(-1, "The sample size (%u) is larger than population (%u).",
@@ -119,7 +133,9 @@ void RandomIndicesSamplerWR::_InitState() {
   }
 }
 
-vector<vector<unsigned>> RandomIndicesSamplerWR::GetSampleArrays() {
+
+
+vector<vector<unsigned> > RandomIndicesSamplerWR::GetSampleArrays() {
   _uid = std::uniform_int_distribution<unsigned>();
   _urd = std::uniform_real_distribution<double>(0., 1.);
   if (_random_type == SWR_UNIFORM) {
@@ -150,14 +166,4 @@ vector<vector<unsigned>> RandomIndicesSamplerWR::GetSampleArrays() {
     }
   }
   return _samples;
-}
-
-vector<vector<unsigned>> GetSampleIndicesWR(RandomType random_type,
-                                            unsigned pop_size,
-                                            unsigned sample_size,
-                                            unsigned sample_num,
-                                            bool real_random) {
-  RandomIndicesSamplerWR sampler(pop_size, sample_size, sample_num, random_type,
-                                 real_random);
-  return sampler.GetSampleArrays();
 }

@@ -19,7 +19,7 @@ int main() {
   unsigned pop_size = 1000;
   unsigned sample_size = 20;
   unsigned sample_num = 4;
-  auto samples = GetSampleIndicesWR(GRID, pop_size, sample_size, sample_num);
+  auto samples = GetSampleIndices(GRID, pop_size, sample_size, sample_num);
   cout << "pop_size:" << samples.size() << endl;
   cout << "size:" << samples.size() << endl;
   cout << "results: \n";

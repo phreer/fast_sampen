@@ -536,8 +536,7 @@ public:
      vector<RangeKDTree2KNode *> &leaves,
      typename vector<KDPointRKD<T, K + 1>>::iterator first,
      typename vector<KDPointRKD<T, K + 1>>::iterator last,
-     unsigned leaf_left,
-     unsigned last_axis_threshold);
+     unsigned leaf_left);
   ~RangeKDTree2KNode() {
     for (unsigned i = 0; i < _num_child; i++)
       delete _children[i];
@@ -549,8 +548,7 @@ public:
                                long long &num_nodes,
                                const vector<RangeKDTree2KNode *> &leaves,
                                vector<const RangeKDTree2KNode *> &q1,
-                               vector<const RangeKDTree2KNode *> &q2,
-                               unsigned last_axis_threshold) const;
+                               vector<const RangeKDTree2KNode *> &q2) const;
   void UpdateCount(int d) {
     RangeKDTree2KNode *node = this;
     while (node) {
@@ -593,7 +591,6 @@ template <typename T, unsigned K>
 class RangeKDTree2K {
 public:
   RangeKDTree2K(const vector<KDPointRKD<T, K + 1>> &points,
-                unsigned last_axis_threshold,
                 OutputLevel output_level)
       : _root(nullptr),
         _leaves(0),
@@ -601,7 +598,6 @@ public:
         _index2leaf(points.size()),
         _q1(points.size()),
         _q2(points.size()),
-        _last_axis_threshold(last_axis_threshold),
         _output_level(output_level) {
     clock_t t = clock();
 
@@ -625,8 +621,7 @@ public:
       _points[i].set_value(i);
     }
     _root = new RangeKDTree2KNode<T, K>(
-        0, nullptr, _leaves, _points.begin(), _points.end(), 0,
-        last_axis_threshold);
+        0, nullptr, _leaves, _points.begin(), _points.end(), 0);
     for (unsigned i = 0; i < n; ++i) {
       _index2leaf[_points[i].value()] = i;
     }
@@ -645,8 +640,7 @@ public:
   vector<long long> CountRange(const Range<T, K + 1> &range,
                                long long &num_nodes) {
     if (_root) {
-      return _root->CountRange(range, num_nodes, _leaves, _q1, _q2,
-                               _last_axis_threshold);
+      return _root->CountRange(range, num_nodes, _leaves, _q1, _q2);
     }
     return vector<long long>({0, 0});
   }
@@ -691,7 +685,6 @@ private:
   // Buffers for searching without recursion.
   vector<const RangeKDTree2KNode<T, K> *> _q1;
   vector<const RangeKDTree2KNode<T, K> *> _q2;
-  unsigned _last_axis_threshold;
   OutputLevel _output_level;
 };
 } // namespace sampen

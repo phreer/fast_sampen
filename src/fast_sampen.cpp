@@ -19,8 +19,8 @@ char usage[] =
     "Usage: %s --input <INPUT> --input-type {simple, multirecord}\\\n"
     "                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\\\n"
     "                   -n <N> [-output-level {1,2,3}]\\\n"
-    "                   --sample-size <SAMPLE_SIZE> --sample-num "
-    "<SAMPLE_NUM>\n\n"
+    "                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>\n\n"
+    "The default method is the sliding kd-tree method.\n"
     "Arguments:\n"
     "--input <INPUT>         The file name of the input file.\n"
     "--input-format <FORMAT> The format of the input file. Should be either 'simple'\n"
@@ -203,6 +203,13 @@ void Argument::PrintArguments() const {
   std::cout << "\tuse kd tree based sampling: " << arg.kd_sample << std::endl;
   std::cout << "\trandom: " << arg.random_ << std::endl;
   std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
+  std::cout << "\toutput level: ";
+  switch (arg.output_level) {
+  case OutputLevel::Info: std::cout << "Info" << std::endl; break;
+  case OutputLevel::Debug: std::cout << "Debug" << std::endl; break;
+  case OutputLevel::Silent: std::cout << "Silent" << std::endl; break;
+  default: std::cout << "Unknown" << std::endl;
+  }
 }
 
 void ParseArgument(int argc, char *argv[]) {
@@ -368,11 +375,20 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   const auto precise_a_norm = sec.get_a_norm();
   const auto precise_b_norm = sec.get_b_norm();
   if (arg.kd_sample) {
-    SampleEntropyCalculatorSamplingMao<T, K> calculator(
+    SampleEntropyCalculatorSampling<T, K> *calculator = nullptr;
+    calculator = new SampleEntropyCalculatorSamplingMao<T, K>(
         data.cbegin(), data.cend(), r_scaled, arg.sample_size, arg.sample_num,
         precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM,
         arg.random_, arg.output_level);
-    SampleEntropySamplingExperiment(calculator, n_computation);
+    SampleEntropySamplingExperiment(*calculator, n_computation);
+    delete calculator;
+
+    calculator = new SampleEntropyCalculatorSamplingRKD<T, K>(
+        data.cbegin(), data.cend(), r_scaled, arg.sample_size, arg.sample_num,
+        precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM, 
+        arg.random_, arg.output_level);
+    SampleEntropySamplingExperiment(*calculator, n_computation);
+    delete calculator;
   }
   if (arg.swr) {
     // The sampling methods using kd tree contain bugs right now.

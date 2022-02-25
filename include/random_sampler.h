@@ -63,11 +63,6 @@ private:
   void init_state();
 };
 
-vector<vector<unsigned>> GetSampleIndices(RandomType rtype, unsigned count,
-                                          unsigned sample_size,
-                                          unsigned sample_num,
-                                          bool random_ = false);
-
 class RandomIndicesSamplerWR {
 public:
   /*
@@ -103,9 +98,10 @@ private:
   void _InitState();
 };
 
-vector<vector<unsigned>> GetSampleIndicesWR(RandomType random_type,
-                                            unsigned pop_size,
-                                            unsigned sample_size,
-                                            unsigned sample_num,
-                                            bool real_random = false);
+vector<vector<unsigned> > GetSampleIndices(RandomType rtype, unsigned count,
+                                           unsigned sample_size,
+                                           unsigned sample_num,
+                                           bool random_ = false);
+
+
 #endif // __RANDOM_SAMPLER_H__

@@ -3,6 +3,7 @@
 //
 
 #include "sample_entropy_calculator_kd.h"
+#include "utils.h"
 
 namespace sampen {
 
@@ -190,9 +191,7 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
   unsigned upperbound_prev = 0;
 
   const unsigned n_count = points_count.size();
-  assert(n_count == n - K + 1);
   int i_sample_indices = 0;
-  std::sort(sample_indices.begin(), sample_indices.end());
   for (size_t i = 0; i < sample_indices.size() - 1; ++i) {
     assert(sample_indices[i + 1] > sample_indices[i]);
   }
@@ -239,24 +238,22 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
   assert(i_sample_indices == static_cast<int>(sample_indices.size()));
 
   if (_output_level >= Info) {
-    std::cout << "[INFO] Time consumed in range counting: "
-              << timer.ElapsedSeconds() << " seconds\n";
+    MSG_INFO("Time consumed in range counting: %lf seconds\n",
+             timer.ElapsedSeconds());
   }
 
   if (_output_level == Debug) {
-    std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
-    std::cout << tree.num_nodes() << std::endl;
-    std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
-    std::cout << n_count << std::endl;
-    std::cout << "[DEBUG] The number of calls for CountRange(): ";
-    std::cout << num_countrange_called << std::endl;
-    std::cout << "[DEBUG] The number of times to open node: ";
-    std::cout << num_opened << std::endl;
-    std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
-    std::cout << num_nodes << std::endl;
+    MSG_DEBUG("The number of nodes (K = %u): %u\n", K, tree.num_nodes());
+    MSG_DEBUG("The number of leaf nodes (K = %u): %u\n", K, n_count);
+    MSG_DEBUG("The number of calls for CountRange(): %lld",
+              num_countrange_called);
+    MSG_DEBUG("The number of times to open node: %lld", num_opened);
+    MSG_DEBUG("The number of nodes visited: %lld", num_nodes);
   }
   return result;
 }
+
+
 vector<unsigned>
 MergeRepeatedIndices(typename vector<unsigned>::const_iterator first,
                      typename vector<unsigned>::const_iterator last) {
@@ -274,6 +271,7 @@ MergeRepeatedIndices(typename vector<unsigned>::const_iterator first,
   }
   return counts;
 }
+
 
 template <typename T, unsigned K>
 vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
@@ -602,7 +600,7 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
       points_count_indices.push_back(i);
     }
   }
-  RangeKDTree2K<unsigned, K - 1> tree(points_count, 0, _output_level);
+  RangeKDTree2K<unsigned, K - 1> tree(points_count, _output_level);
 
   // Perform counting.
   vector<long long> result({0, 0});
@@ -671,17 +669,16 @@ template <typename T, unsigned K>
 vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, unsigned sample_num,
-    const vector<unsigned> &indices, T r) {
+    const vector<unsigned> &sample_indices, T r) {
   const unsigned n = last - first;
   vector<T> data_(first, last);
-  const unsigned sample_size = indices.size() / sample_num;
   // Add K auxiliary points.
   T minimum = *std::min_element(first, last);
   for (size_t i = 0; i < K; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
   const vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend(), 0);
+      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend(), 1);
 
   vector<KDPoint<T, K + 1>> sorted_points(points);
   // The mapping p, from rank to original index
@@ -704,14 +701,8 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
   vector<KDPoint<unsigned, K>> points_grid =
-      Map2Grid(sorted_points, rank2index, false);
+      Map2Grid(sorted_points, rank2index);
 
-  vector<vector<unsigned>> sample_groups(n);
-  for (unsigned i = 0; i < sample_num * sample_size; ++i) {
-    unsigned index = indices[i];
-    points_grid[index].increase_count(1);
-    sample_groups[index].push_back(i / sample_size);
-  }
 
   // Construct kd tree.
   vector<KDPoint<unsigned, K>> points_count;
@@ -719,17 +710,12 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   vector<vector<unsigned>> indices_count(sample_num);
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
-      for (unsigned j = 0; j < sample_groups[i].size(); ++j) {
-        indices_count[sample_groups[i][j]].push_back(points_count.size());
-      }
       points_count.push_back(points_grid[i]);
       points_count_indices.push_back(i);
     }
   }
   KDTree2K<unsigned, K - 1> tree(points_count, _output_level);
 
-  // Perform counting.
-  vector<long long> results(2 * sample_num);
   // The number of nodes has been visited.
   long long num_nodes = 0;
   long long num_countrange_called = 0;
@@ -738,63 +724,54 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
 
   const unsigned n_count = points_count.size();
 
+
+  for (size_t i = 0; i < sample_indices.size() - 1; ++i) {
+    assert(sample_indices[i + 1] > sample_indices[i]);
+  }
   timer.SetStartingPointNow();
-  for (unsigned i = 0; i < n_count; ++i) {
-    points_count[i].set_count(0);
-  }
-  for (unsigned k = 0; k < sample_num; ++k) {
-    for (unsigned i = 0; i < indices_count[k].size(); ++i) {
-      points_count[indices_count[k][i]].increase_count(1);
-    }
-    long long result_a = 0;
-    long long result_b = 0;
-    for (unsigned i = 0; i < n_count - 1; ++i) {
-      if (points_count[i].count() == 0)
-        continue;
+  int i_sample_indices = 0;
+  long long result_a = 0;
+  long long result_b = 0;
+  for (unsigned i = 0; i < n_count - 1; ++i) {
+    const unsigned rank1 = points_count_indices[i];
+    unsigned upperbound = bounds.upper_bounds[rank1];
 
-      // Close current node.
-      tree.Close(i);
-
-      const unsigned rank1 = points_count_indices[i];
-      unsigned upperbound = bounds.upper_bounds[rank1];
-      long long count_repeated =
-          static_cast<long long>(points_count[i].count());
-      result_a += (count_repeated - 1) * count_repeated / 2;
-      result_b += (count_repeated - 1) * count_repeated / 2;
-
-      if (upperbound < points_count_indices[i + 1])
-        continue;
-
-      // Update tree.
-      if (upperbound_prev < rank1)
-        upperbound_prev = rank1;
-      unsigned j = i + 1;
-      while (j < n_count && points_count_indices[j] <= upperbound_prev)
-        ++j;
-      while (j < n_count && points_count_indices[j] <= upperbound) {
-        if (points_count[j].count()) {
-          tree.UpdateCount(j, points_count[j].count());
-          ++num_opened;
-        }
-        ++j;
+    // Close nodes whose value of the first dimension are outside bounds.
+    if (i_sample_indices > 0) {
+      for (unsigned k = sample_indices[i_sample_indices - 1] + 1; k <= i; ++k) {
+        tree.Close(k);
       }
-
-      const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
-      vector<long long> ab = tree.CountRange(range, num_nodes);
-
-      result_a += ab[0] * count_repeated;
-      result_b += ab[1] * count_repeated;
-      ++num_countrange_called;
-      upperbound_prev = upperbound;
     }
-    results[2 * k] = result_a;
-    results[2 * k + 1] = result_b;
-    tree.Close(n_count - 1);
 
-    for (unsigned i = 0; i < indices_count[k].size(); ++i) {
-      points_count[indices_count[k][i]].set_count(0);
+    if (sample_indices[i_sample_indices] != i) {
+      continue;
     }
+    if (upperbound < points_count_indices[i + 1]) {
+      ++i_sample_indices;
+      continue;
+    }
+
+    // Update tree.
+    if (upperbound_prev < rank1)
+      upperbound_prev = rank1;
+    unsigned j = i + 1;
+    while (j < n_count && points_count_indices[j] <= upperbound_prev)
+      ++j;
+    while (j < n_count && points_count_indices[j] <= upperbound) {
+      tree.UpdateCount(j, points_count[j].count());
+      ++num_opened;
+      ++j;
+    }
+
+    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const auto ab = tree.CountRange(range, num_nodes);
+    result_a += ab[0];
+    result_b += ab[1];
+    ++num_countrange_called;
+    upperbound_prev = upperbound;
+    ++i_sample_indices;
   }
+
   timer.StopTimer();
 
   if (_output_level >= Info) {
@@ -813,9 +790,148 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
     std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
     std::cout << num_nodes << std::endl;
   }
-
+  vector<long long> results(2);
+  results[0] = result_a;
+  results[1] = result_b;
   return results;
 }
+
+
+template <typename T, unsigned K>
+vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
+    typename vector<T>::const_iterator first,
+    typename vector<T>::const_iterator last, T r,
+    const vector<unsigned> &sample_indices) {
+  const unsigned n = last - first;
+  assert(n - K + 1 >= sample_indices.size());
+  vector<T> data_(first, last);
+  // Add K auxiliary points.
+  T minimum = *std::min_element(first, last);
+  for (size_t i = 0; i < K; i++)
+    data_.push_back(minimum);
+  // Construct Points and set the count of auxiliary point to 0.
+  vector<KDPoint<T, K + 1>> points =
+      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend(), 1);
+  for (size_t i = points.size() - K; i < points.size(); ++i) {
+    points[i].set_count(0);
+  }
+
+  vector<KDPoint<T, K + 1>> sorted_points(points);
+  // The mapping p, from rank to original index
+  vector<unsigned> rank2index(n);
+  for (size_t i = 0; i < n; i++)
+    rank2index.at(i) = i;
+
+  Timer timer;
+  std::sort(rank2index.begin(), rank2index.end(),
+            [&points](unsigned i1, unsigned i2) {
+              return (points[i1] < points[i2]);
+            });
+
+  timer.StopTimer();
+  if (_output_level >= Info) {
+    std::cout << "[INFO] Time consumed in presorting: "
+              << timer.ElapsedSeconds() << "s\n";
+  }
+
+  for (size_t i = 0; i < n; i++)
+    sorted_points[i] = points[rank2index[i]];
+
+  const Bounds bounds = GetRankBounds(sorted_points, r);
+  vector<KDPoint<unsigned, K>> points_grid =
+      Map2Grid(sorted_points, rank2index);
+
+  // Construct kd tree.
+  vector<KDPointRKD<unsigned, K> > points_count;
+  vector<unsigned> points_count_indices;
+  for (unsigned i = 0; i < n; i++) {
+    if (points_grid[i].count()) {
+      points_count.push_back(points_grid[i]);
+      points_count_indices.push_back(i);
+    }
+  }
+  RangeKDTree2K<unsigned, K - 1> tree(points_count, _output_level);
+
+  // Perform counting.
+  long long result_a = 0;
+  long long result_b = 0;
+  // The number of nodes has been visited.
+  long long num_nodes = 0;
+  long long num_countrange_called = 0;
+  long long num_opened = 0;
+  unsigned upperbound_prev = 0;
+
+  const unsigned n_count = points_count.size();
+  int i_sample_indices = 0;
+
+  for (size_t i = 0; i < sample_indices.size() - 1; ++i) {
+    assert(sample_indices[i + 1] > sample_indices[i]);
+  }
+  timer.SetStartingPointNow();
+  for (unsigned i = 0; i < n_count - 1; ++i) {
+    const unsigned rank1 = points_count_indices[i];
+    unsigned upperbound = bounds.upper_bounds[rank1];
+
+    // Close nodes whose value of the first dimension are outside bounds.
+    if (i_sample_indices > 0) {
+      for (unsigned k = sample_indices[i_sample_indices - 1] + 1; k <= i; ++k) {
+        tree.Close(k);
+      }
+    }
+
+    if (sample_indices[i_sample_indices] != i) {
+      continue;
+    }
+    if (upperbound < points_count_indices[i + 1]) {
+      ++i_sample_indices;
+      continue;
+    }
+
+    // Update tree.
+    if (upperbound_prev < rank1)
+      upperbound_prev = rank1;
+    unsigned j = i + 1;
+    while (j < n_count && points_count_indices[j] <= upperbound_prev)
+      ++j;
+    while (j < n_count && points_count_indices[j] <= upperbound) {
+      tree.UpdateCount(j, points_count[j].count());
+      ++num_opened;
+      ++j;
+    }
+
+    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const auto ab = tree.CountRange(range, num_nodes);
+    result_a += ab[0];
+    result_b += ab[1];
+    ++num_countrange_called;
+    upperbound_prev = upperbound;
+    ++i_sample_indices;
+  }
+
+  timer.StopTimer();
+
+  if (_output_level >= Info) {
+    std::cout << "[INFO] Time consumed in range counting: "
+              << timer.ElapsedSeconds() << " seconds\n";
+  }
+  if (_output_level == Debug) {
+    std::cout << "[DEBUG] The number of nodes (K = " << K << "): ";
+    std::cout << tree.num_nodes() << std::endl;
+    std::cout << "[DEBUG] The number of leaf nodes (K = " << K << "): ";
+    std::cout << n_count << std::endl;
+    std::cout << "[DEBUG] The number of calls for CountRange(): ";
+    std::cout << num_countrange_called << std::endl;
+    std::cout << "[DEBUG] The number times to open node: ";
+    std::cout << num_opened << std::endl;
+    std::cout << "[DEBUG] The number of nodes visited (K = " << K << "): ";
+    std::cout << num_nodes << std::endl;
+  }
+  vector<long long> results(2);
+  results[0] = result_a;
+  results[1] = result_b;
+  return results;
+}
+
 
 #define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(K) \
   INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(int, K) \
@@ -826,6 +942,7 @@ template class SampleEntropyCalculatorLiu<TYPE , K>; \
 template class SampleEntropyCalculatorRKD<TYPE , K>; \
 template class SampleEntropyCalculatorMao<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingLiu<TYPE , K>; \
+template class SampleEntropyCalculatorSamplingRKD<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingMao<TYPE , K>; \
 template class SampleEntropyCalculatorSamplingKDTree<TYPE , K>; \
 template class MatchedPairsCalculatorMao<TYPE, K>; \
@@ -833,7 +950,8 @@ template class MatchedPairsCalculatorSampling<TYPE, K>; \
 template class MatchedPairsCalculatorSampling2<TYPE, K>; \
 template class ABCalculatorLiu<TYPE, K>; \
 template class ABCalculatorRKD<TYPE, K>; \
-template class ABCalculatorSamplingLiu<TYPE, K>;
+template class ABCalculatorSamplingLiu<TYPE, K>; \
+template class ABCalculatorSamplingRKD<TYPE, K>;
 
 
 INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(2);

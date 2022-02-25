@@ -23,6 +23,7 @@ public:
                           OutputLevel output_level)
       : _data(first, last), _r(r), _n(last - first),
         _output_level(output_level) {}
+  virtual ~SampleEntropyCalculator() {}
   virtual std::string get_result_str() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -36,7 +37,7 @@ public:
        << "\n"
        << "\ttime: " << std::scientific << _elapsed_seconds << "\n";
     if (_output_level >= Info) {
-      std::cout << "[INFO] a: " << _a << ", b: " << _b << std::endl;
+      MSG_INFO("a: %lld, b: %lld\n", get_a(), get_b());
     }
     return ss.str();
   }
@@ -90,6 +91,17 @@ protected:
   double _elapsed_seconds;
 };
 
+#define USING_CALCULATOR_FIELDS \
+  using SampleEntropyCalculator<T, K>::_data; \
+  using SampleEntropyCalculator<T, K>::_r; \
+  using SampleEntropyCalculator<T, K>::_n; \
+  using SampleEntropyCalculator<T, K>::_computed; \
+  using SampleEntropyCalculator<T, K>::_a; \
+  using SampleEntropyCalculator<T, K>::_b; \
+  using SampleEntropyCalculator<T, K>::_output_level; \
+  using SampleEntropyCalculator<T, K>::_elapsed_seconds;
+
+
 template <typename T, unsigned K>
 class SampleEntropyCalculatorSampling : public SampleEntropyCalculator<T, K> {
 public:
@@ -104,6 +116,7 @@ public:
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
         _real_b_norm(real_b_norm) {}
+  virtual ~SampleEntropyCalculatorSampling() {}
   vector<long long> get_a_vec() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -149,27 +162,17 @@ public:
        << ", error (b): "
        << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n";
     if (this->_output_level >= Info) {
-      ss << "[INFO] sample_size: " << _sample_size
-         << ", sample_num: " << _sample_num << "\n";
       vector<long long> a_vec = get_a_vec();
       vector<long long> b_vec = get_b_vec();
       for (unsigned i = 0; i < _sample_num; ++i) {
-        ss << "[INFO] "
-           << "a: " << a_vec[i] << ", b: " << b_vec[i] << "\n";
+        MSG_INFO("a[%u]: %lld, b[%u]: %lld\n", i, a_vec[i], i, b_vec[i]);
       }
     }
     return ss.str();
   }
 
 protected:
-  using SampleEntropyCalculator<T, K>::_data;
-  using SampleEntropyCalculator<T, K>::_r;
-  using SampleEntropyCalculator<T, K>::_n;
-  using SampleEntropyCalculator<T, K>::_computed;
-  using SampleEntropyCalculator<T, K>::_a;
-  using SampleEntropyCalculator<T, K>::_b;
-  using SampleEntropyCalculator<T, K>::_output_level;
-  using SampleEntropyCalculator<T, K>::_elapsed_seconds;
+  USING_CALCULATOR_FIELDS
   const unsigned _sample_size;
   const unsigned _sample_num;
   const double _real_entropy;
@@ -178,6 +181,19 @@ protected:
   vector<long long> _a_vec, _b_vec;
 };
 
+#define USING_SAMPLING_FIELDS \
+  using SampleEntropyCalculatorSampling<T, K>::_data; \
+  using SampleEntropyCalculatorSampling<T, K>::_r; \
+  using SampleEntropyCalculatorSampling<T, K>::_n; \
+  using SampleEntropyCalculatorSampling<T, K>::_computed; \
+  using SampleEntropyCalculatorSampling<T, K>::_a; \
+  using SampleEntropyCalculatorSampling<T, K>::_b; \
+  using SampleEntropyCalculatorSampling<T, K>::_output_level; \
+  using SampleEntropyCalculatorSampling<T, K>::_elapsed_seconds; \
+  using SampleEntropyCalculatorSampling<T, K>::_sample_size; \
+  using SampleEntropyCalculatorSampling<T, K>::_sample_num; \
+  using SampleEntropyCalculatorSampling<T, K>::_a_vec; \
+  using SampleEntropyCalculatorSampling<T, K>::_b_vec;
 } // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR__

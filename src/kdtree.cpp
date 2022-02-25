@@ -466,8 +466,7 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     vector<RangeKDTree2KNode *> &leaves,
     typename vector<KDPointRKD<T, K + 1>>::iterator first,
     typename vector<KDPointRKD<T, K + 1>>::iterator last,
-    unsigned leaf_left,
-    unsigned last_axis_threshold)
+    unsigned leaf_left)
     : _father(father), _depth(depth), _count(last - first), _weighted_count(0),
       _leaf_left(leaf_left), _subtree(nullptr) {
   assert(_count > 0);
@@ -543,8 +542,7 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
           new RangeKDTree2KNode<T, K>(_depth + 1, this, leaves,
                                       first + splitter1,
                                       first + splitter2,
-                                      leaf_left + splitter1,
-                                      last_axis_threshold);
+                                      leaf_left + splitter1);
       _children.push_back(child);
       k++;
     }
@@ -559,8 +557,7 @@ vector<long long> RangeKDTree2KNode<T, K>::CountRange(
     const Range<T, K + 1> &range, long long &num_nodes,
     const vector<RangeKDTree2KNode *> &leaves,
     vector<const RangeKDTree2KNode *> &q1,
-    vector<const RangeKDTree2KNode *> &q2,
-    unsigned last_axis_threshold) const {
+    vector<const RangeKDTree2KNode *> &q2) const {
   vector<long long> result({0, 0});
   if (weighted_count() == 0)
     return result;
