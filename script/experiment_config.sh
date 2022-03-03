@@ -1,7 +1,5 @@
 output_level=1
 line_offset=100000
-m=5
-r=0.15
 INPUT_DIR=./data.PhysioNet
 input_files=(chfdb/chf01.txt\
              ltafdb/00.txt\
