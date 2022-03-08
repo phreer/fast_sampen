@@ -59,23 +59,31 @@ char usage[] =
     "    default value is `10,20,...,250`. Note that your command should not contain\n"
     "    `...`.\n"
     "Options:\n"
-    "--random                If this option is enabled, the random seed will be set\n"
-    "                        randomly.\n"
-    "-q                      If this option is enabled, the quasi-Monte Carlo based\n"
-    "                        method is conducted.\n"
-    "--variance              If this option is enabled, then the variance of the\n"
-    "                        results of sampling methods will be computed.\n"
-    "-u | --uniform          If this option is enabled, the Monte Carlo based\n"
-    "                        method using uniform distribution will be " "conducted.\n"
-    "--swr                   If this option is enabled, then the Monte Carlo based\n"
-    "                        method without placement will be performed.\n"
-    "--grid                  If this option is enabled, then the quasi-Monte Carlo\n"
-    "                        based method using grid (lattice) as sampling indexes\n"
-    "                        will be performed.\n"
-    "--presort               If this option is enabled, then a presorting operation\n"
-    "                        is conducted before sampling in quasi-Monte Carlo\n"
-    "                        based method.\n"
-    "--help -h               Show this message.\n";
+    "--random\n"
+    "    If this option is enabled, the random seed will be set randomly.\n"
+    "-q\n"
+    "    If this option is enabled, the quasi-Monte Carlo based method will be\n"
+    "    conducted.\n"
+    "-u | --uniform\n"
+    "    If this option is enabled, the Monte Carlo based method using uniform\n"
+    "    distribution will be conducted.\n"
+    "--kdtree-sample\n"
+    "    If this option is enabled, the kd tree based sampling method will be\n"
+    "    conducted.\n"
+    "--swr\n"
+    "    If this option is enabled, then the Monte Carlo based method without\n"
+    "    placement will be performed.\n"
+    "--grid\n"
+    "    If this option is enabled, then the quasi-Monte Carlo based method using\n"
+    "    grid (lattice) as sampling indexes will be performed.\n"
+    "--presort\n"
+    "    If this option is enabled, then a presorting operation is conducted\n"
+    "    before sampling in quasi-Monte Carlo based method.\n"
+    "--variance\n"
+    "    If this option is enabled, then the variance of the results of sampling\n"
+    "    methods will be computed.\n"
+    "--help | -h\n"
+    "    Show this message.\n";
 
 template <typename T>
 void PrintSampenSetting(unsigned line_offset, unsigned n, T r, unsigned K,
@@ -96,6 +104,7 @@ struct Argument {
   OutputLevel output_level;
   bool random_, variance;
   bool q, u, swr, presort, grid;
+  bool kdtree_sample;
   RandomType rtype;
   void PrintArguments() const;
 } arg;
@@ -198,6 +207,20 @@ void Argument::PrintArguments() const {
   std::cout << "\tthreshold: " << arg.r << std::endl;
   std::cout << "\trandom: " << arg.random_ << std::endl;
   std::cout << "\tquasi type: " << random_type_names[arg.rtype] << std::endl;
+  if (!arg.sample_sizes.empty()) {
+    std::cout << "\tsample size array: ";
+    for (auto sample_size : sample_sizes) {
+      std::cout << sample_size << " ";
+    }
+    std::cout << "\n";
+  }
+  if (!arg.sample_nums.empty()) {
+    std::cout << "\tsample num array: ";
+    for (auto sample_nums : sample_nums) {
+      std::cout << sample_nums << " ";
+    }
+    std::cout << "\n";
+  }
 }
 
 void ParseArgument(int argc, char *argv[]) {
@@ -273,8 +296,9 @@ void ParseArgument(int argc, char *argv[]) {
   arg.q = parser.isOption("-q");
   arg.u = parser.isOption("-u") || parser.isOption("--uniform");
   arg.swr = parser.isOption("--swr");
+  arg.kdtree_sample = parser.isOption("--kdtree-sample");
   arg.grid = parser.isOption("--grid");
-  if (arg.q || arg.u || arg.swr || arg.grid) {
+  if (arg.q || arg.u || arg.swr || arg.grid || arg.kdtree_sample) {
     vector<int> sample_sizes = parser.getArgIntArray("--sample-size-array");
     if (sample_sizes.empty()) {
       for (unsigned i = 1; i <= 20; ++i) {
@@ -372,6 +396,13 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
       cout << "sample_num: " << sample_num << endl;
       cout << "========================================";
       cout << "========================================\n";
+      if (arg.kdtree_sample) {
+        SampleEntropyCalculatorSamplingMao<T, K> secds(
+            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+            sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM,
+            arg.random_, arg.output_level);
+        SampleEntropySamplingExperiment(secds, n_computation);
+      }
       if (arg.u) {
         SampleEntropyCalculatorSamplingDirect<T, K> secds(
             data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,

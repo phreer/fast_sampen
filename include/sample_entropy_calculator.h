@@ -99,7 +99,9 @@ protected:
   using SampleEntropyCalculator<T, K>::_a; \
   using SampleEntropyCalculator<T, K>::_b; \
   using SampleEntropyCalculator<T, K>::_output_level; \
-  using SampleEntropyCalculator<T, K>::_elapsed_seconds;
+  using SampleEntropyCalculator<T, K>::_elapsed_seconds; \
+  using SampleEntropyCalculator<T, K>::get_a; \
+  using SampleEntropyCalculator<T, K>::get_b;
 
 
 template <typename T, unsigned K>
@@ -157,10 +159,12 @@ public:
     double rel_error = error / (entropy + 1e-8);
     ss << this->SampleEntropyCalculator<T, K>::get_result_str()
        << "\terror: " << error << ", error (relative): " << rel_error << "\n"
-       << "\terror (a): "
-       << (get_a_norm() - _real_a_norm) / (_real_a_norm + 1e-8)
-       << ", error (b): "
-       << (get_b_norm() - _real_b_norm) / (_real_b_norm + 1e-8) << "\n";
+       << "\terror_a_norm: " << get_err_a()
+       << ", error_a_norm (relative): " << get_err_a() / (_real_a_norm + 1e-8)
+       << "\n"
+       << "\terror_b_norm: " << get_err_b()
+       << ", error_b_norm (relative): " << get_err_b() / (_real_b_norm + 1e-8)
+       << std::endl;
     if (this->_output_level >= Info) {
       vector<long long> a_vec = get_a_vec();
       vector<long long> b_vec = get_b_vec();
@@ -193,7 +197,9 @@ protected:
   using SampleEntropyCalculatorSampling<T, K>::_sample_size; \
   using SampleEntropyCalculatorSampling<T, K>::_sample_num; \
   using SampleEntropyCalculatorSampling<T, K>::_a_vec; \
-  using SampleEntropyCalculatorSampling<T, K>::_b_vec;
+  using SampleEntropyCalculatorSampling<T, K>::_b_vec; \
+  using SampleEntropyCalculatorSampling<T, K>::get_b; \
+  using SampleEntropyCalculatorSampling<T, K>::get_a;
 } // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR__

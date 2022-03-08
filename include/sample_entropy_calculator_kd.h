@@ -155,6 +155,14 @@ public:
     return ss.str();
   }
 
+  double get_a_norm() override {
+    double norm = static_cast<double>(_n - K - 1) * _sample_size;
+    return get_a() / norm;
+  }
+  virtual double get_b_norm() override {
+    double norm = static_cast<double>(_n - K - 1) * _sample_size;
+    return get_b() / norm;
+  }
 protected:
   void _ComputeSampleEntropy() override {
     if (_n <= K) {
