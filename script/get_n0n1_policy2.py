@@ -17,7 +17,7 @@ def get_n0n1(n: int, policy: str):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print('Usage: %s <N>' % argv[0])
+        print('Usage: %s <N>' % sys.argv[0])
     try:
         n = int(sys.argv[-1])
     except:
