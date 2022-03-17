@@ -1,11 +1,5 @@
 #!/bin/bash
-# 方法: MCSampEn (with and without replacement),
-# 目标: 固定 N_0 和 N_1, N 变化的误差
-# 参数: N_1 = 150, N_0 = 2000, r = 0.15, m = 4
-# 数据集: chfdb/chf01.txt, ltafdb/00.txt, ltstdb/s20011.txt,
-#     mghdb/mgh001.txt, chbmit/chb07_01.txt,
-#     mit-bih-long-term-ecg-database-1.0.0/14046.txt,
-#     pink/pink-1m.txt, uniform/uniform-1m.txt, gaussian/gaussian-1m.txt
+
 set -o noclobber
 
 DoExperimentConvergenceN()
@@ -15,11 +9,15 @@ DoExperimentConvergenceN()
     local r=$3
     local line_offset=$4
     local output_file=$5
-    local sample_size=2000
-    local sample_num=150
-    n=2048
-    date >> $output_file
-    for i in `seq 0 9`; do
+    for i in `seq 0 10`; do
+        local n=$(python3 -c "print((2 ** $i) * 4096)")
+        local n0n1_str=$(python3 script/get_n0n1_policy2.py $n)
+        IFS=" " read -r -a n0n1_array <<< $n0n1_str
+        local sample_size=${n0n1_array[0]}
+        local sample_num=${n0n1_array[1]}
+        # echo "n: $n"
+        # echo "sample_size: $sample_size"
+        # echo "sample_num: $sample_num"
         ./build/bin/fast_sampen \
             --input $filename \
             --input-format multirecord \
@@ -28,16 +26,13 @@ DoExperimentConvergenceN()
             --sample-size $sample_size \
             --sample-num $sample_num \
             -n $n -m $m -r $r \
-            --swr -q --uniform --random \
-            --fast-direct --range-kdtree \
+            --swr --uniform -q --random \
             --variance --n-computation 50 \
             --output-level 0 >> $output_file
-        n=$(python -c "print(int($n * 2))")
     done
 }
 
 
-output_level=1
 m=5
 r=0.15
 line_offset=100000
@@ -54,12 +49,14 @@ input_files=(chfdb/chf01.txt\
              gaussian/gaussian-1m.txt\
              pink/pink-1m.txt\
              uniform/uniform-1m.txt)
-subdir=convergence_n_fixedn0n1_m${m}_r${r}_n02kn1150_220308
+subdir=convergence_n_policy2_qmc_uniform_220316
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
-echo $comment > result/${subdir}/convergence.txt
+
+date >> $output_file
+
 for f in ${input_files[@]}; do
     input_file="$INPUT_DIR"/$f
     echo "input_file: $input_file"
