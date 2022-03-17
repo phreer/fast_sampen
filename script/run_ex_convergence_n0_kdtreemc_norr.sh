@@ -28,7 +28,7 @@ DoExperimentConvergenceSampleSize()
             --sample-num-array $sample_num \
             --sample-size-array $sample_size_array \
             --kdtree-sample --random --variance \
-            --output-level 1 >> $output_file
+            --output-level 0 >> $output_file
 }
 
 INPUT_DIR=./data.PhysioNet
@@ -49,7 +49,7 @@ n=1000010
 sample_num=1 # N1
 sample_size_array=$(seq -s',' 2000 2000 100000)
 output_level=1
-subdir=convergence_n0_m${m}_r${r}_220308
+subdir=convergence_n0_kdtreemc_m${m}_r${r}_220308
 mkdir -p result/$subdir 2>/dev/null
 for f in ${input_files[@]}; do
     input_file=${INPUT_DIR}/$f
