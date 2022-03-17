@@ -11,14 +11,15 @@ DoExperimentTimeKDTree()
     local output_file=$5 
     date >> $output_file 
     for i in {0..11}; do
-        n=$(( $(python -c "print(2 ** $i)") * 2000 ))
+        base=100000
+        n=$(python3 -c "print(int((1.3 ** $i) * $base))")
         ./build/bin/fast_sampen \
             --input $filename \
             --input-format multirecord \
             --input-type double \
             --line-offset $line_offset \
             -m $m -r $r -n $n \
-            --fast-direct -rkd --simple-kdtree \
+            -rkd --simple-kdtree \
             --output-level 0 >> $output_file
     done 
 }
@@ -33,7 +34,7 @@ r=$1
 m=$2
 tag=$3
 l=100000
-subdir=time_kdtree/${tag}_r${r}-m${m}
+subdir=time_kdtree/${tag}_r${r}_m${m}
 
 if [ ! -e result/${subdir} ]; then
     mkdir -p result/$subdir
@@ -43,16 +44,15 @@ input_files=(chfdb/chf01.txt\
              ltafdb/00.txt\
              ltstdb/s20011.txt\
              mghdb/mgh001.txt\
-             chbmit/chb07_01.txt\
              mit-bih-long-term-ecg-database-1.0.0/14046.txt\
-             pink/pink-1m.txt\
-             gaussian/gaussian-1m.txt\
-             uniform/uniform-1m.txt\
-             chbmit/chb07_01.txt\
-             RRCHF/CHF_Filt-time-9643.rr_multirecord.txt\
-             RRHealth/Health_Filt-time-1583.01.rr_multirecord.txt\
-             RRAF/AF_fa002.rr_multirecord.txt)
+             chbmit/chb07_01.txt)
 
+#             pink/pink-1m.txt\
+#             gaussian/gaussian-1m.txt\
+#             uniform/uniform-1m.txt\
+#             RRCHF/CHF_Filt-time-9643.rr_multirecord.txt\
+#             RRHealth/Health_Filt-time-1583.01.rr_multirecord.txt\
+#             RRAF/AF_fa002.rr_multirecord.txt)
 for f in ${input_files[@]}; do
     input_file='./data.PhysioNet/'$f
     database=${input_file%/*}
