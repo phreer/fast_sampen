@@ -8,6 +8,7 @@
 #include "Magick++/Functions.h"
 #include "Magick++/Geometry.h"
 #include "Magick++/Image.h"
+#include "Magick++/Include.h"
 #include "MagickCore/image.h"
 
 #include "sample_entropy_calculator2d.h"
@@ -108,9 +109,10 @@ void ParseArgument(int argc, char *argv[]) {
 std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
                                               int m, int depth, bool sampling) {
   image.type(Magick::GrayscaleType);
+  image.channel(Magick::RedChannel);
+
   int width = image.columns();
   int height = image.rows();
-  int num_channels = image.channels();
   std::vector<double> result;
   PrintSeperator('-');
   for (int i = 0; i < depth; ++i) {
@@ -118,7 +120,7 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
     width = image.columns();
     height = image.rows();
     auto pixels = image.getConstPixels(0, 0, width, height);
-    std::vector<int> data(width * height * num_channels);
+    std::vector<int> data(width * height);
     for (size_t i = 0; i < data.size(); ++i) {
       data[i] = static_cast<int>(pixels[i]);
     }
@@ -154,6 +156,7 @@ int main(int argc, char *argv[]) {
   unsigned height = image.rows();
 
   image.type(Magick::GrayscaleType);
+  image.channel(Magick::RedChannel);
 
   if (arg.width == 0)
     arg.width = width;

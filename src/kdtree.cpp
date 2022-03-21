@@ -69,61 +69,61 @@ Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
 }
 
 
-template<typename T, unsigned K, unsigned D>
-Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
-                     typename vector<KDPointRKD<T, D>>::const_iterator last) {
-  const size_t n = last - first;
-  assert(n > 0);
-  Range<T, K> range;
-
-  T maximum[K];
-  T minimum[K];
-  for (unsigned i = 0; i < K; ++i) {
-    minimum[i] = (*first)[i];
-    maximum[i] = minimum[i];
-  }
-  for (size_t j = 0; j < (n - 1) / 2; ++j) {
-    const KDPointRKD<T, D> &point1 = *(first + 2 * j + 1);
-    const KDPointRKD<T, D> &point2 = *(first + 2 * (j + 1));
-    for (unsigned i = 0; i < K; ++i) {
-      T curr1 = point1[i];
-      T curr2 = point2[i];
-      if (curr1 < curr2) {
-        if (maximum[i] < curr2)
-          maximum[i] = curr2;
-        if (minimum[i] > curr1)
-          minimum[i] = curr1;
-      } else {
-        if (maximum[i] < curr1)
-          maximum[i] = curr1;
-        if (minimum[i] > curr2)
-          minimum[i] = curr2;
-      }
-    }
-  }
-
-// last one
-  if (n % 2 == 0) {
-    const KDPointRKD<T, D> &point = *(first + n - 1);
-    for (unsigned i = 0; i < K; ++i) {
-      T curr = point[i];
-      if (maximum[i] < curr)
-        maximum[i] = curr;
-      if (minimum[i] > curr)
-        minimum[i] = curr;
-    }
-  }
-  for (unsigned i = 0; i < K; ++i) {
-    range.lower_ranges[i] = minimum[i];
-    range.upper_ranges[i] = maximum[i];
-  }
-  return range;
-}
+// template<typename T, unsigned K, unsigned D>
+// Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
+//                      typename vector<KDPointRKD<T, D>>::const_iterator last) {
+//   const size_t n = last - first;
+//   assert(n > 0);
+//   Range<T, K> range;
+// 
+//   T maximum[K];
+//   T minimum[K];
+//   for (unsigned i = 0; i < K; ++i) {
+//     minimum[i] = (*first)[i];
+//     maximum[i] = minimum[i];
+//   }
+//   for (size_t j = 0; j < (n - 1) / 2; ++j) {
+//     const KDPointRKD<T, D> &point1 = *(first + 2 * j + 1);
+//     const KDPointRKD<T, D> &point2 = *(first + 2 * (j + 1));
+//     for (unsigned i = 0; i < K; ++i) {
+//       T curr1 = point1[i];
+//       T curr2 = point2[i];
+//       if (curr1 < curr2) {
+//         if (maximum[i] < curr2)
+//           maximum[i] = curr2;
+//         if (minimum[i] > curr1)
+//           minimum[i] = curr1;
+//       } else {
+//         if (maximum[i] < curr1)
+//           maximum[i] = curr1;
+//         if (minimum[i] > curr2)
+//           minimum[i] = curr2;
+//       }
+//     }
+//   }
+// 
+// // last one
+//   if (n % 2 == 0) {
+//     const KDPointRKD<T, D> &point = *(first + n - 1);
+//     for (unsigned i = 0; i < K; ++i) {
+//       T curr = point[i];
+//       if (maximum[i] < curr)
+//         maximum[i] = curr;
+//       if (minimum[i] > curr)
+//         minimum[i] = curr;
+//     }
+//   }
+//   for (unsigned i = 0; i < K; ++i) {
+//     range.lower_ranges[i] = minimum[i];
+//     range.upper_ranges[i] = maximum[i];
+//   }
+//   return range;
+// }
 
 
 template<typename T, unsigned K>
 long long KDCountingTree<T, K>::CountRange(const Range<T, K> &range,
-                                                  long long &num_nodes) const {
+                                           long long &num_nodes) const {
   if (!_root)
     return 0;
 

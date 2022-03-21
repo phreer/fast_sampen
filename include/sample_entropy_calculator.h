@@ -23,6 +23,8 @@ public:
                           OutputLevel output_level)
       : _data(first, last), _r(r), _n(last - first),
         _output_level(output_level) {}
+  SampleEntropyCalculator(const std::vector<T> &data, T r, OutputLevel level)
+      : SampleEntropyCalculator(data.cbegin(), data.cend(), r, level) {}
   virtual ~SampleEntropyCalculator() {}
   virtual std::string get_result_str() {
     if (!_computed)

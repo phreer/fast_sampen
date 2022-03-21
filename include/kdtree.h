@@ -22,9 +22,9 @@ template <typename T, unsigned K, unsigned D>
 Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
                      typename vector<KDPoint<T, D>>::const_iterator last);
 
-template<typename T, unsigned K, unsigned D>
-Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
-                     typename vector<KDPointRKD<T, D>>::const_iterator last);
+// template<typename T, unsigned K, unsigned D>
+// Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
+//                      typename vector<KDPointRKD<T, D>>::const_iterator last);
 
 template <typename T, unsigned K>
 class KDCountingTreeNode {

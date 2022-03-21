@@ -39,6 +39,7 @@ public:
     MSG_DEBUG("_num_steps_x: %u\n", _num_steps_x);
     MSG_DEBUG("_num_steps_y: %u\n", _num_steps_y);
   }
+  virtual ~SampleEntropyCalculator2D() {}
   virtual std::string get_result_str() {
     if (!_computed)
       ComputeSampleEntropy();
