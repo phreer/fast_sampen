@@ -11,24 +11,33 @@ using std::vector;
 template <typename T>
 class LastAxisTreeNode;
 
-template <typename T, unsigned K>
+template <typename T>
 class RangeKDTree2KNode;
 
-template <typename T, unsigned K> class KDPoint {
+template <typename T> class KDPoint {
 public:
-  KDPoint() = default;
+  KDPoint(unsigned m = 0): _count(0), _data(m), _value(0) {}
   KDPoint(KDPoint &&point) = default;
   KDPoint(const KDPoint &point) = default;
   KDPoint(typename vector<T>::const_iterator first,
-          typename vector<T>::const_iterator last, int count = 0);
-  KDPoint& operator=(const KDPoint<T, K> &point) = default;
+          typename vector<T>::const_iterator last,
+          unsigned m, int count = 0)
+      : _count(count), _value(0)  {
+    const unsigned n = last - first;
+    assert(m >= n);
+    _data = std::vector<T>(m, static_cast<T>(0));
+    for (unsigned i = 0; i < n; ++i) {
+      _data[i] = *(first + i);
+    }
+  }
+  KDPoint& operator=(const KDPoint<T> &point) = default;
   int count() const { return _count; }
   int value() const { return _value; }
   void set_value(int value) { _value = value; }
   void set_count(int count) { _count = count; }
   void increase_count(int count) { _count += count; }
-  unsigned dim() const { return K; }
-  bool Within(const KDPoint<T, K> &p, T r, unsigned m = K) const {
+  unsigned dim() const { return _data.size(); }
+  bool Within(const KDPoint<T> &p, T r, unsigned m) const {
     for (unsigned i = 0; i < m; i++) {
       T diff = _data[i] - p[i];
       if (diff > r || -diff > r)
@@ -38,6 +47,7 @@ public:
   }
   // Overloads operators.
   bool operator<(const KDPoint &p) const {
+    const unsigned K = dim();
     for (unsigned i = 0; i < K; i++) {
       if (_data[i] < p[i])
         return true;
@@ -47,15 +57,17 @@ public:
     return false;
   }
   bool operator==(const KDPoint &p) const {
+    const unsigned K = dim();
     for (unsigned i = 0; i < K; i++) {
       if (_data[i] != p[i])
         return false;
     }
     return true;
   }
-  T operator[](unsigned n) const { return _data[n]; }
-  T &operator[](unsigned n) { return _data[n]; }
+  const T& operator[](unsigned n) const { return _data[n]; }
+  T& operator[](unsigned n) { return _data[n]; }
   void Print() const {
+    const unsigned K = dim();
     std::cout << "(";
     for (unsigned i = 0; i < K; i++) {
       std::cout << _data[i] << ", ";
@@ -65,23 +77,24 @@ public:
 
 private:
   int _count;
-  T _data[K];
+  std::vector<T> _data;
   int _value;
 };
 
-template <typename T, unsigned K>
-class KDPointRKD: public KDPoint<T, K> {
+template <typename T>
+class KDPointRKD: public KDPoint<T> {
 public:
   KDPointRKD() = default;
   KDPointRKD(typename vector<T>::const_iterator first,
-             typename vector<T>::const_iterator last, int count = 0)
-      : KDPoint<T, K>(first, last, count), _rank_last_axis(-1),
+             typename vector<T>::const_iterator last,
+             unsigned m, int count = 0)
+      : KDPoint<T>(first, last, m, count), _rank_last_axis(-1),
       _subtree_nodes(0) {}
-  KDPointRKD(KDPoint<T, K> &&point)
-      : KDPoint<T, K>(std::move(point)), _rank_last_axis(-1),
+  KDPointRKD(KDPoint<T> &&point)
+      : KDPoint<T>(std::move(point)), _rank_last_axis(-1),
       _subtree_nodes(0) {}
-  KDPointRKD(const KDPoint<T, K> &point)
-      : KDPoint<T, K>(point), _rank_last_axis(-1), _subtree_nodes(0) {}
+  KDPointRKD(const KDPoint<T> &point)
+      : KDPoint<T>(point), _rank_last_axis(-1), _subtree_nodes(0) {}
 
   void AddSubtreeNode(LastAxisTreeNode<T> *node) {
     _subtree_nodes.push_back(node);
@@ -97,20 +110,6 @@ private:
   int _rank_last_axis;
   std::vector<LastAxisTreeNode<T> *> _subtree_nodes;
 };
-
-//////////////////////////////////////////////////////////////////////////
-// Implementations
-//////////////////////////////////////////////////////////////////////////
-
-template <typename T, unsigned K>
-KDPoint<T, K>::KDPoint(typename vector<T>::const_iterator first,
-                       typename vector<T>::const_iterator last,
-                       int count)
-    : _count(count) {
-  memset(_data, 0, K * sizeof(unsigned));
-  unsigned n = K < (last - first) ? K : (last - first);
-  std::copy(first, first + n, _data);
-}
 
 
 } // namespace sampen

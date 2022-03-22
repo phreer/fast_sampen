@@ -114,4 +114,16 @@ void PrintSeperator(char x) {
   }
   std::cout << std::endl;
 }
+
+Range<unsigned> GetHyperCube(const KDPoint<unsigned> &point,
+                             const Bounds &bounds) {
+  const unsigned K = point.dim();
+  Range<unsigned> result(K);
+  for (size_t i = 0; i < K; ++i) {
+    result.lower_ranges[i] = bounds.lower_bounds[point[i]];
+    result.upper_ranges[i] = bounds.upper_bounds[point[i]];
+  }
+  return result;
+}
+
 } // namespace sampen

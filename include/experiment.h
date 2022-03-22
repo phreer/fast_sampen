@@ -6,9 +6,9 @@
 
 namespace sampen {
 
-template <typename T, unsigned K>
+template <typename T>
 void SampleEntropySamplingExperiment(
-    SampleEntropyCalculatorSampling<T, K> &secds, unsigned n_computation) {
+    SampleEntropyCalculatorSampling<T> &secds, unsigned n_computation) {
   vector<double> errs_sampen(n_computation);
   vector<double> errs_a(n_computation);
   vector<double> errs_b(n_computation);

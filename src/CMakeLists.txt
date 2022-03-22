@@ -1,7 +1,12 @@
 find_package(GSL REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
-set(CPP_LIST utils.cpp sample_entropy_calculator.cpp random_sampler.cpp kdtree.cpp sampen_entropy_caculator_kd.cpp sample_entropy_calculator_direct.cpp)
+set(CPP_LIST utils.cpp 
+    sample_entropy_calculator.cpp
+    random_sampler.cpp
+    kdtree.cpp
+    sampen_entropy_caculator_kd.cpp
+    sample_entropy_calculator_direct.cpp)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_library(${LIB_NAME} ${CPP_LIST})

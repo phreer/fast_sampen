@@ -6,8 +6,8 @@
 #include <cstddef>
 namespace sampen {
 
-template<typename T, unsigned K>
-void KDCountingTree<T, K>::Print() {
+template<typename T>
+void KDCountingTree<T>::Print() {
   if (_root) {
     std::cout << "KD Counting Tree: " << std::endl;
     _root->Print();
@@ -17,12 +17,12 @@ void KDCountingTree<T, K>::Print() {
 }
 
 
-template<typename T, unsigned K, unsigned D>
-Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
-                     typename vector<KDPoint<T, D>>::const_iterator last) {
+template<typename T>
+Range<T> GetRange(typename vector<KDPoint<T>>::const_iterator first,
+                  typename vector<KDPoint<T>>::const_iterator last) {
   const size_t n = last - first;
-  assert(n > 0);
-  Range<T, K> range;
+  const unsigned K = first->dim();
+  Range<T> range(K);
 
   T maximum[K];
   T minimum[K];
@@ -31,8 +31,8 @@ Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
     maximum[i] = minimum[i];
   }
   for (size_t j = 0; j < (n - 1) / 2; ++j) {
-    const KDPoint<T, D> &point1 = *(first + 2 * j + 1);
-    const KDPoint<T, D> &point2 = *(first + 2 * (j + 1));
+    const KDPoint<T> &point1 = *(first + 2 * j + 1);
+    const KDPoint<T> &point2 = *(first + 2 * (j + 1));
     for (unsigned i = 0; i < K; ++i) {
       T curr1 = point1[i];
       T curr2 = point2[i];
@@ -50,9 +50,9 @@ Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
     }
   }
 
-// last one
+  // last one
   if (n % 2 == 0) {
-    const KDPoint<T, D> &point = *(first + n - 1);
+    const KDPoint<T> &point = *(first + n - 1);
     for (unsigned i = 0; i < K; ++i) {
       T curr = point[i];
       if (maximum[i] < curr)
@@ -69,77 +69,78 @@ Range<T, K> GetRange(typename vector<KDPoint<T, D>>::const_iterator first,
 }
 
 
-// template<typename T, unsigned K, unsigned D>
-// Range<T, K> GetRange(typename vector<KDPointRKD<T, D>>::const_iterator first,
-//                      typename vector<KDPointRKD<T, D>>::const_iterator last) {
-//   const size_t n = last - first;
-//   assert(n > 0);
-//   Range<T, K> range;
-// 
-//   T maximum[K];
-//   T minimum[K];
-//   for (unsigned i = 0; i < K; ++i) {
-//     minimum[i] = (*first)[i];
-//     maximum[i] = minimum[i];
-//   }
-//   for (size_t j = 0; j < (n - 1) / 2; ++j) {
-//     const KDPointRKD<T, D> &point1 = *(first + 2 * j + 1);
-//     const KDPointRKD<T, D> &point2 = *(first + 2 * (j + 1));
-//     for (unsigned i = 0; i < K; ++i) {
-//       T curr1 = point1[i];
-//       T curr2 = point2[i];
-//       if (curr1 < curr2) {
-//         if (maximum[i] < curr2)
-//           maximum[i] = curr2;
-//         if (minimum[i] > curr1)
-//           minimum[i] = curr1;
-//       } else {
-//         if (maximum[i] < curr1)
-//           maximum[i] = curr1;
-//         if (minimum[i] > curr2)
-//           minimum[i] = curr2;
-//       }
-//     }
-//   }
-// 
-// // last one
-//   if (n % 2 == 0) {
-//     const KDPointRKD<T, D> &point = *(first + n - 1);
-//     for (unsigned i = 0; i < K; ++i) {
-//       T curr = point[i];
-//       if (maximum[i] < curr)
-//         maximum[i] = curr;
-//       if (minimum[i] > curr)
-//         minimum[i] = curr;
-//     }
-//   }
-//   for (unsigned i = 0; i < K; ++i) {
-//     range.lower_ranges[i] = minimum[i];
-//     range.upper_ranges[i] = maximum[i];
-//   }
-//   return range;
-// }
+template<typename T>
+Range<T> GetRangeRKD(typename vector<KDPointRKD<T>>::const_iterator first,
+                     typename vector<KDPointRKD<T>>::const_iterator last) {
+  const size_t n = last - first;
+  const unsigned K = first->dim() - 1;
+  assert(n > 0);
+  Range<T> range(K);
+
+  T maximum[K];
+  T minimum[K];
+  for (unsigned i = 0; i < K; ++i) {
+    minimum[i] = (*first)[i];
+    maximum[i] = minimum[i];
+  }
+  for (size_t j = 0; j < (n - 1) / 2; ++j) {
+    const KDPointRKD<T> &point1 = *(first + 2 * j + 1);
+    const KDPointRKD<T> &point2 = *(first + 2 * (j + 1));
+    for (unsigned i = 0; i < K; ++i) {
+      T curr1 = point1[i];
+      T curr2 = point2[i];
+      if (curr1 < curr2) {
+        if (maximum[i] < curr2)
+          maximum[i] = curr2;
+        if (minimum[i] > curr1)
+          minimum[i] = curr1;
+      } else {
+        if (maximum[i] < curr1)
+          maximum[i] = curr1;
+        if (minimum[i] > curr2)
+          minimum[i] = curr2;
+      }
+    }
+  }
+
+  // last one
+  if (n % 2 == 0) {
+    const KDPointRKD<T> &point = *(first + n - 1);
+    for (unsigned i = 0; i < K; ++i) {
+      T curr = point[i];
+      if (maximum[i] < curr)
+        maximum[i] = curr;
+      if (minimum[i] > curr)
+        minimum[i] = curr;
+    }
+  }
+  for (unsigned i = 0; i < K; ++i) {
+    range.lower_ranges[i] = minimum[i];
+    range.upper_ranges[i] = maximum[i];
+  }
+  return range;
+}
 
 
-template<typename T, unsigned K>
-long long KDCountingTree<T, K>::CountRange(const Range<T, K> &range,
-                                           long long &num_nodes) const {
+template<typename T>
+long long KDCountingTree<T>::CountRange(const Range<T> &range,
+                                        long long &num_nodes) const {
   if (!_root)
     return 0;
 
   return _root->CountRange(range, num_nodes);
 }
 
-template<typename T, unsigned K>
-void KDCountingTree<T, K>::UpdateCount(unsigned position, int d) {
+template<typename T>
+void KDCountingTree<T>::UpdateCount(unsigned position, int d) {
   assert(position < count() && "position >= count()");
   position = _index2leaf[position];
   if (d)
     _leaves[position]->UpdateCount(d);
 }
 
-template<typename T, unsigned K>
-void KDCountingTree<T, K>::Close(unsigned position) {
+template<typename T>
+void KDCountingTree<T>::Close(unsigned position) {
   assert(position < count() && "position >= count()");
   position = _index2leaf[position];
   int w = _leaves[position]->weighted_count();
@@ -147,8 +148,8 @@ void KDCountingTree<T, K>::Close(unsigned position) {
     _leaves[position]->UpdateCount(-w);
 }
 
-template<typename T, unsigned K>
-void KDCountingTreeNode<T, K>::Print() {
+template<typename T>
+void KDCountingTreeNode<T>::Print() {
   std::cout << "Tree Node: " << std::endl;
   std::cout << "\tcount: " << _count << std::endl;
   std::cout << "\tweighted_count: " << _weighted_count << std::endl;
@@ -166,35 +167,35 @@ void KDCountingTreeNode<T, K>::Print() {
     _right_child->Print();
 }
 
-template<typename T, unsigned K>
-KDCountingTreeNode<T, K>::KDCountingTreeNode(
-    unsigned depth, KDCountingTreeNode *father,
+template<typename T>
+KDCountingTreeNode<T>::KDCountingTreeNode(
+    unsigned K, unsigned depth, KDCountingTreeNode *father,
     vector<KDCountingTreeNode *> &leaves,
-    typename vector<KDPoint<T, K>>::iterator first,
-    typename vector<KDPoint<T, K>>::iterator last)
-    : _depth(depth), _count(last - first), _weighted_count(0), _father(father),
-      _left_child(nullptr), _right_child(nullptr) {
-  _range = GetRange<T, K, K>(first, last);
+    typename vector<KDPoint<T>>::iterator first,
+    typename vector<KDPoint<T>>::iterator last)
+    : K(K), _depth(depth), _count(last - first), _weighted_count(0),
+        _father(father), _left_child(nullptr), _right_child(nullptr) {
+  _range = GetRange<T>(first, last);
   if (_count == 1) {
     leaves.push_back(this);
     return;
   }
 
   std::nth_element(first, first + _count / 2, last,
-                   [depth](const KDPoint<T, K> &p1, const KDPoint<T, K> &p2) {
+                   [depth, K](const KDPoint<T> &p1, const KDPoint<T> &p2) {
                      const unsigned dim = depth % K;
                      return p1[dim] < p2[dim];
                    });
 
-  _left_child = new KDCountingTreeNode<T, K>(_depth + 1, this, leaves, first,
-                                             first + _count / 2);
-  _right_child = new KDCountingTreeNode<T, K>(_depth + 1, this, leaves,
-                                              first + _count / 2, last);
+  _left_child = new KDCountingTreeNode<T>(K, _depth + 1, this, leaves, first,
+                                          first + _count / 2);
+  _right_child = new KDCountingTreeNode<T>(K, _depth + 1, this, leaves,
+                                           first + _count / 2, last);
 }
 
-template<typename T, unsigned K>
-long long KDCountingTreeNode<T, K>::CountRange(const Range<T, K> &range,
-                                               long long &num_nodes) const {
+template<typename T>
+long long KDCountingTreeNode<T>::CountRange(const Range<T> &range,
+                                            long long &num_nodes) const {
   if (_weighted_count == 0)
     return 0;
 
@@ -270,14 +271,15 @@ long long KDCountingTreeNode<T, K>::CountRange(const Range<T, K> &range,
   return result;
 }
 
-template<typename T, unsigned K>
-KDCountingTree2KNode<T, K>::KDCountingTree2KNode(
-    unsigned depth, KDCountingTree2KNode *father,
+template<typename T>
+KDCountingTree2KNode<T>::KDCountingTree2KNode(
+    unsigned K, unsigned depth, KDCountingTree2KNode *father,
     vector<KDCountingTree2KNode *> &leaves,
-    typename vector<KDPoint<T, K>>::iterator first,
-    typename vector<KDPoint<T, K>>::iterator last)
-    : _depth(depth), _count(last - first), _weighted_count(0), _father(father) {
-  _range = GetRange<T, K, K>(first, last);
+    typename vector<KDPoint<T> >::iterator first,
+    typename vector<KDPoint<T> >::iterator last)
+    : K(K), _depth(depth), _count(last - first), _weighted_count(0),
+        _father(father) {
+  _range = GetRange<T>(first, last);
   if (_count == 1) {
     _num_child = 0;
     leaves.push_back(this);
@@ -298,7 +300,7 @@ KDCountingTree2KNode<T, K>::KDCountingTree2KNode(
       median = splitter1 + (splitter2 - splitter1) / 2;
       splitters[j * spacing + spacing / 2] = median;
       std::nth_element(first + splitter1, first + median, first + splitter2,
-                       [&i](const KDPoint<T, K> &p1, const KDPoint<T, K> &p2) {
+                       [&i](const KDPoint<T> &p1, const KDPoint<T> &p2) {
                          return p1[i] < p2[i];
                        });
     }
@@ -309,8 +311,8 @@ KDCountingTree2KNode<T, K>::KDCountingTree2KNode(
     splitter1 = splitters[i];
     splitter2 = splitters[i + 1];
     if (splitter1 != splitter2) {
-      KDCountingTree2KNode<T, K> *child = new KDCountingTree2KNode<T, K>(
-          _depth + 1, this, leaves, first + splitter1, first + splitter2);
+      KDCountingTree2KNode<T> *child = new KDCountingTree2KNode<T>(
+          K, _depth + 1, this, leaves, first + splitter1, first + splitter2);
       _children.push_back(child);
       k++;
     }
@@ -319,9 +321,9 @@ KDCountingTree2KNode<T, K>::KDCountingTree2KNode(
 }
 
 
-template<typename T, unsigned K>
-long long KDCountingTree2KNode<T, K>::CountRange(
-    const Range<T, K> &range, long long &num_nodes,
+template<typename T>
+long long KDCountingTree2KNode<T>::CountRange(
+    const Range<T> &range, long long &num_nodes,
     vector<const KDCountingTree2KNode *> &q1,
     vector<const KDCountingTree2KNode *> &q2) const {
   if (weighted_count() == 0)
@@ -379,10 +381,11 @@ long long KDCountingTree2KNode<T, K>::CountRange(
   return result;
 }
 
-template<typename T, unsigned K>
-double InteractRatio(const Range<T, K>& current_range,
-                     const Range<T, K>& range) {
+template<typename T>
+double InteractRatio(const Range<T>& current_range,
+                     const Range<T>& range) {
   double result = 1.;
+  const unsigned K = range.K;
   T a, b;
   for (unsigned i = 0; i < K; ++i) {
     a = std::max(current_range.lower_ranges[i], range.lower_ranges[i]);
@@ -393,9 +396,9 @@ double InteractRatio(const Range<T, K>& current_range,
   return result;
 }
 
-template<typename T, unsigned K>
-double KDCountingTree2KNode<T, K>::CountRangeEstimate(
-    const Range<T, K> &range, long long &num_nodes,
+template<typename T>
+double KDCountingTree2KNode<T>::CountRangeEstimate(
+    const Range<T> &range, long long &num_nodes,
     vector<const KDCountingTree2KNode *> &q1,
     vector<const KDCountingTree2KNode *> &q2,
     unsigned max_depth) const {
@@ -460,17 +463,17 @@ double KDCountingTree2KNode<T, K>::CountRangeEstimate(
   return result;
 }
 
-template<typename T, unsigned K>
-RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
-    unsigned depth, RangeKDTree2KNode *father,
+template<typename T>
+RangeKDTree2KNode<T>::RangeKDTree2KNode(
+    unsigned K, unsigned depth, RangeKDTree2KNode *father,
     vector<RangeKDTree2KNode *> &leaves,
-    typename vector<KDPointRKD<T, K + 1>>::iterator first,
-    typename vector<KDPointRKD<T, K + 1>>::iterator last,
+    typename vector<KDPointRKD<T> >::iterator first,
+    typename vector<KDPointRKD<T> >::iterator last,
     unsigned leaf_left)
-    : _father(father), _depth(depth), _count(last - first), _weighted_count(0),
-      _leaf_left(leaf_left), _subtree(nullptr) {
+    : K(K), _father(father), _depth(depth), _count(last - first),
+        _weighted_count(0), _leaf_left(leaf_left), _subtree(nullptr) {
   assert(_count > 0);
-  _range = GetRange<T, K, K + 1>(first, last);
+  _range = GetRangeRKD<T>(first, last);
 
   if (_count == 1) {
     _num_child = 0;
@@ -496,7 +499,7 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
       splitters[j * spacing + spacing / 2] = median;
       std::nth_element(
           first + splitter1, first + median, first + splitter2,
-          [&i](const KDPoint<T, K + 1> &p1, const KDPoint<T, K + 1> &p2) {
+          [&i](const KDPoint<T> &p1, const KDPoint<T> &p2) {
             return p1[i] < p2[i];
           });
     }
@@ -538,11 +541,11 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
     splitter1 = splitters[i];
     splitter2 = splitters[i + 1];
     if (splitter1 != splitter2) {
-      RangeKDTree2KNode<T, K> *child =
-          new RangeKDTree2KNode<T, K>(_depth + 1, this, leaves,
-                                      first + splitter1,
-                                      first + splitter2,
-                                      leaf_left + splitter1);
+      RangeKDTree2KNode<T> *child =
+          new RangeKDTree2KNode<T>(K, _depth + 1, this, leaves,
+                                   first + splitter1,
+                                   first + splitter2,
+                                   leaf_left + splitter1);
       _children.push_back(child);
       k++;
     }
@@ -552,9 +555,9 @@ RangeKDTree2KNode<T, K>::RangeKDTree2KNode(
 
 
 // Non-recursive version.
-template<typename T, unsigned K>
-vector<long long> RangeKDTree2KNode<T, K>::CountRange(
-    const Range<T, K + 1> &range, long long &num_nodes,
+template<typename T>
+vector<long long> RangeKDTree2KNode<T>::CountRange(
+    const Range<T> &range, long long &num_nodes,
     const vector<RangeKDTree2KNode *> &leaves,
     vector<const RangeKDTree2KNode *> &q1,
     vector<const RangeKDTree2KNode *> &q2) const {
@@ -620,15 +623,16 @@ vector<long long> RangeKDTree2KNode<T, K>::CountRange(
   return result;
 }
 
-template<typename T, unsigned K>
-KDTree2KNode<T, K>::KDTree2KNode(
-    unsigned depth, KDTree2KNode *father, vector<KDTree2KNode *> &leaves,
-    typename vector<KDPoint<T, K + 1>>::iterator first,
-    typename vector<KDPoint<T, K + 1>>::iterator last, unsigned leaf_left)
-    : _father(father), _depth(depth), _count(last - first), _weighted_count(0),
-      _leaf_left(leaf_left) {
+template<typename T>
+KDTree2KNode<T>::KDTree2KNode(
+    unsigned K, unsigned depth, KDTree2KNode *father,
+    vector<KDTree2KNode *> &leaves,
+    typename vector<KDPoint<T>>::iterator first,
+    typename vector<KDPoint<T>>::iterator last, unsigned leaf_left)
+    : K(K), _father(father), _depth(depth), _count(last - first),
+        _weighted_count(0), _leaf_left(leaf_left) {
   assert(_count > 0);
-  _range = GetRange<T, K, K + 1>(first, last);
+  _range = GetRange<T>(first, last);
 
   if (_count == 1) {
     _num_child = 0;
@@ -652,7 +656,7 @@ KDTree2KNode<T, K>::KDTree2KNode(
       splitters[j * spacing + spacing / 2] = median;
       std::nth_element(
           first + splitter1, first + median, first + splitter2,
-          [&i](const KDPoint<T, K + 1> &p1, const KDPoint<T, K + 1> &p2) {
+          [&i](const KDPoint<T> &p1, const KDPoint<T> &p2) {
             return p1[i] < p2[i];
           });
     }
@@ -663,9 +667,11 @@ KDTree2KNode<T, K>::KDTree2KNode(
     splitter1 = splitters[i];
     splitter2 = splitters[i + 1];
     if (splitter1 != splitter2) {
-      KDTree2KNode<T, K> *child =
-          new KDTree2KNode<T, K>(_depth + 1, this, leaves, first + splitter1,
-                                 first + splitter2, leaf_left + splitter1);
+      KDTree2KNode<T> *child =
+          new KDTree2KNode<T>(K, _depth + 1, this, leaves,
+                              first + splitter1,
+                              first + splitter2,
+                              leaf_left + splitter1);
       _children.push_back(child);
       k++;
     }
@@ -674,9 +680,9 @@ KDTree2KNode<T, K>::KDTree2KNode(
 }
 
 // Non-recursive version.
-template<typename T, unsigned K>
-vector<long long> KDTree2KNode<T, K>::CountRange(
-    const Range<T, K + 1> &range, long long &num_nodes,
+template<typename T>
+vector<long long> KDTree2KNode<T>::CountRange(
+    const Range<T> &range, long long &num_nodes,
     const vector<KDTree2KNode *> &leaves, vector<const KDTree2KNode *> &q1,
     vector<const KDTree2KNode *> &q2) const {
   vector<long long> result({0, 0});
@@ -746,32 +752,18 @@ vector<long long> KDTree2KNode<T, K>::CountRange(
   return result;
 }
 
-#define INSTANTIATE_KDTREE(K) \
-  INSTANTIATE_KDTREE_TYPE_K(int, K) \
-  INSTANTIATE_KDTREE_TYPE_K(double, K) \
-  INSTANTIATE_KDTREE_TYPE_K(unsigned, K)
-
-#define INSTANTIATE_KDTREE_TYPE_K(TYPE, K) \
-template class KDCountingTree2K<TYPE, K>; \
-template class KDCountingTree<TYPE, K>; \
-template class KDTree2K<TYPE, K>; \
-template class RangeKDTree2K<TYPE, K>; \
-template class KDCountingTree2KNode<TYPE, K>; \
-template class KDCountingTreeNode<TYPE, K>; \
-template class KDTree2KNode<TYPE, K>; \
-template class RangeKDTree2KNode<TYPE, K>;
+#define INSTANTIATE_KDTREE(TYPE) \
+template class KDCountingTree2K<TYPE>; \
+template class KDCountingTree<TYPE>; \
+template class KDTree2K<TYPE>; \
+template class RangeKDTree2K<TYPE>; \
+template class KDCountingTree2KNode<TYPE>; \
+template class KDCountingTreeNode<TYPE>; \
+template class KDTree2KNode<TYPE>; \
+template class RangeKDTree2KNode<TYPE>;
 
 
-INSTANTIATE_KDTREE(1)
-INSTANTIATE_KDTREE(2)
-INSTANTIATE_KDTREE(3)
-INSTANTIATE_KDTREE(4)
-INSTANTIATE_KDTREE(5)
-INSTANTIATE_KDTREE(6)
-INSTANTIATE_KDTREE(7)
-INSTANTIATE_KDTREE(8)
-INSTANTIATE_KDTREE(9)
-INSTANTIATE_KDTREE(10)
-INSTANTIATE_KDTREE(11)
-INSTANTIATE_KDTREE(12)
+INSTANTIATE_KDTREE(double)
+INSTANTIATE_KDTREE(int)
+INSTANTIATE_KDTREE(unsigned)
 } // namespace sampen

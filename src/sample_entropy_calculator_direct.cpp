@@ -3,8 +3,8 @@
 #include "utils.h"
 
 namespace sampen {
-template <typename T, unsigned K>
-vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r) {
+template <typename T>
+vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r, unsigned K) {
   T p[K + 1];
   long long A[K + 1];
   long long B[K + 1];
@@ -53,10 +53,14 @@ vector<long long> _ComputeABFastDirect(const T *y, unsigned n, T r) {
 }
 
 
-template <typename T, unsigned K>
-vector<long long> ComputeABDirect(const vector<KDPoint<T, K + 1>> &points,
+template <typename T>
+vector<long long> ComputeABDirect(const vector<KDPoint<T> > &points,
                                   T r) {
   const unsigned n = points.size();
+  if (n == 0) {
+    return vector<long long>(2, 0ll);
+  }
+  const unsigned K = points[0].dim() - 1;
   vector<long long> results(2);
   long long a = 0LL, b = 0LL;
   for (unsigned i = 0; i < n; ++i) {
@@ -74,19 +78,18 @@ vector<long long> ComputeABDirect(const vector<KDPoint<T, K + 1>> &points,
   return results;
 }
 
-template <typename T, unsigned K>
-void SampleEntropyCalculatorDirect<T, K>::_ComputeSampleEntropy() {
-  vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(SampleEntropyCalculator<T, K>::_data.cbegin(),
-                            SampleEntropyCalculator<T, K>::_data.cend());
+template <typename T>
+void SampleEntropyCalculatorDirect<T>::_ComputeSampleEntropy() {
+  vector<KDPoint<T> > points =
+      GetKDPoints<T>(_data.cbegin(), _data.cend(), K + 1);
   vector<long long> ab =
-      ComputeABDirect<T, K>(points, SampleEntropyCalculator<T, K>::_r);
-  SampleEntropyCalculator<T, K>::_a = ab[0];
-  SampleEntropyCalculator<T, K>::_b = ab[1];
+      ComputeABDirect<T>(points, _r);
+  _a = ab[0];
+  _b = ab[1];
 }
 
-template <typename T, unsigned K>
-void SampleEntropyCalculatorFastDirect<T, K>::_ComputeSampleEntropy() {
+template <typename T>
+void SampleEntropyCalculatorFastDirect<T>::_ComputeSampleEntropy() {
   if (_n <= K) {
     std::cerr << "Data length is too short (n = " << _n;
     std::cerr << ", K = " << K << ")" << std::endl;
@@ -94,20 +97,20 @@ void SampleEntropyCalculatorFastDirect<T, K>::_ComputeSampleEntropy() {
   }
 
   vector<long long> ab =
-      _ComputeABFastDirect<T, K>(_data.data(), _data.size(), _r);
+      _ComputeABFastDirect<T>(_data.data(), _data.size(), _r, K);
   _a = ab[0], _b = ab[1];
 }
 
-template <typename T, unsigned K>
-void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy() {
+template <typename T>
+void SampleEntropyCalculatorSamplingDirect<T>::_ComputeSampleEntropy() {
   const vector<vector<unsigned>> indices =
       GetSampleIndices(_rtype, _n - K, _sample_size, _sample_num, _random);
   _a_vec = vector<long long>(_sample_num);
   _b_vec = vector<long long>(_sample_num);
   Timer timer;
   timer.SetStartingPointNow();
-  vector<vector<KDPoint<T, K + 1>>> points = GetKDPointsSample<T, K + 1>(
-      _data.cbegin(), _data.cend(), indices, 1, _presort);
+  vector<vector<KDPoint<T> > > points = GetKDPointsSample<T>(
+      _data.cbegin(), _data.cend(), K + 1, indices, 1, _presort);
   timer.StopTimer();
   if (_output_level == Debug) {
     std::cout << "[INFO] Time consumed in sampling: " << timer.ElapsedSeconds()
@@ -116,7 +119,7 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy() {
 
   timer.SetStartingPointNow();
   for (unsigned i = 0; i < _sample_num; ++i) {
-    vector<long long> ab = ComputeABDirect<T, K>(points[i], _r);
+    vector<long long> ab = ComputeABDirect<T>(points[i], _r);
     _a_vec[i] = ab[0], _b_vec[i] = ab[1];
     _a += ab[0];
     _b += ab[1];
@@ -128,24 +131,15 @@ void SampleEntropyCalculatorSamplingDirect<T, K>::_ComputeSampleEntropy() {
   }
 }
 
-#define INSTANTIATE_DIRECT(K) \
-  template class SampleEntropyCalculatorDirect<int, (K)>; \
-  template class SampleEntropyCalculatorDirect<double, (K)>; \
-  template class SampleEntropyCalculatorFastDirect<int, (K)>; \
-  template class SampleEntropyCalculatorFastDirect<double, (K)>; \
-  template class SampleEntropyCalculatorSamplingDirect<int, (K)>; \
-  template class SampleEntropyCalculatorSamplingDirect<double, (K)>;
+#define INSTANTIATE_DIRECT_CALCULATOR(TYPE) \
+template vector<long long> _ComputeABFastDirect<TYPE>( \
+    const TYPE *y, unsigned n, TYPE r, unsigned K); \
+template vector<long long> ComputeABDirect<TYPE>( \
+    const vector<KDPoint<TYPE> > &points, TYPE r); \
+template class SampleEntropyCalculatorDirect<TYPE>; \
+template class SampleEntropyCalculatorSamplingDirect<TYPE>; \
+template class SampleEntropyCalculatorFastDirect<TYPE>;
 
-INSTANTIATE_DIRECT(1)
-INSTANTIATE_DIRECT(2)
-INSTANTIATE_DIRECT(3)
-INSTANTIATE_DIRECT(4)
-INSTANTIATE_DIRECT(5)
-INSTANTIATE_DIRECT(6)
-INSTANTIATE_DIRECT(7)
-INSTANTIATE_DIRECT(8)
-INSTANTIATE_DIRECT(9)
-INSTANTIATE_DIRECT(10)
-INSTANTIATE_DIRECT(11)
-
+INSTANTIATE_DIRECT_CALCULATOR(int)
+INSTANTIATE_DIRECT_CALCULATOR(double)
 } // namespace sampen

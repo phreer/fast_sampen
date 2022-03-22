@@ -13,15 +13,14 @@ namespace sampen {
 using std::vector;
 
 
-template <typename T, unsigned K,
-          typename =
-              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template <typename T>
 class SampleEntropyCalculator {
 public:
   SampleEntropyCalculator(typename vector<T>::const_iterator first,
-                          typename vector<T>::const_iterator last, T r,
+                          typename vector<T>::const_iterator last,
+                          T r, unsigned m,
                           OutputLevel output_level)
-      : _data(first, last), _r(r), _n(last - first),
+      : _data(first, last), _r(r), K(m), _n(last - first),
         _output_level(output_level) {}
   SampleEntropyCalculator(const std::vector<T> &data, T r, OutputLevel level)
       : SampleEntropyCalculator(data.cbegin(), data.cend(), r, level) {}
@@ -86,6 +85,7 @@ protected:
   virtual std::string _Method() const = 0;
   const vector<T> _data;
   const T _r;
+  unsigned K;
   const unsigned _n;
   OutputLevel _output_level;
   long long _a, _b;
@@ -94,29 +94,31 @@ protected:
 };
 
 #define USING_CALCULATOR_FIELDS \
-  using SampleEntropyCalculator<T, K>::_data; \
-  using SampleEntropyCalculator<T, K>::_r; \
-  using SampleEntropyCalculator<T, K>::_n; \
-  using SampleEntropyCalculator<T, K>::_computed; \
-  using SampleEntropyCalculator<T, K>::_a; \
-  using SampleEntropyCalculator<T, K>::_b; \
-  using SampleEntropyCalculator<T, K>::_output_level; \
-  using SampleEntropyCalculator<T, K>::_elapsed_seconds; \
-  using SampleEntropyCalculator<T, K>::get_a; \
-  using SampleEntropyCalculator<T, K>::get_b;
+  using SampleEntropyCalculator<T>::_data; \
+  using SampleEntropyCalculator<T>::_r; \
+  using SampleEntropyCalculator<T>::K; \
+  using SampleEntropyCalculator<T>::_n; \
+  using SampleEntropyCalculator<T>::_computed; \
+  using SampleEntropyCalculator<T>::_a; \
+  using SampleEntropyCalculator<T>::_b; \
+  using SampleEntropyCalculator<T>::_output_level; \
+  using SampleEntropyCalculator<T>::_elapsed_seconds; \
+  using SampleEntropyCalculator<T>::get_a; \
+  using SampleEntropyCalculator<T>::get_b;
 
 
-template <typename T, unsigned K>
-class SampleEntropyCalculatorSampling : public SampleEntropyCalculator<T, K> {
+template <typename T>
+class SampleEntropyCalculatorSampling : public SampleEntropyCalculator<T> {
 public:
-  using SampleEntropyCalculator<T, K>::ComputeSampleEntropy;
-  using SampleEntropyCalculator<T, K>::get_entropy;
+  using SampleEntropyCalculator<T>::ComputeSampleEntropy;
+  using SampleEntropyCalculator<T>::get_entropy;
   SampleEntropyCalculatorSampling(typename vector<T>::const_iterator first,
-                                  typename vector<T>::const_iterator last, T r,
+                                  typename vector<T>::const_iterator last,
+                                  T r, unsigned m,
                                   unsigned sample_size, unsigned sample_num,
                                   double real_entropy, double real_a_norm,
                                   double real_b_norm, OutputLevel output_level)
-      : SampleEntropyCalculator<T, K>(first, last, r, output_level),
+      : SampleEntropyCalculator<T>(first, last, r, m, output_level),
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
         _real_b_norm(real_b_norm) {}
@@ -159,7 +161,7 @@ public:
     double entropy = get_entropy();
     double error = entropy - _real_entropy;
     double rel_error = error / (entropy + 1e-8);
-    ss << this->SampleEntropyCalculator<T, K>::get_result_str()
+    ss << this->SampleEntropyCalculator<T>::get_result_str()
        << "\terror: " << error << ", error (relative): " << rel_error << "\n"
        << "\terror_a_norm: " << get_err_a()
        << ", error_a_norm (relative): " << get_err_a() / (_real_a_norm + 1e-8)
@@ -188,20 +190,21 @@ protected:
 };
 
 #define USING_SAMPLING_FIELDS \
-  using SampleEntropyCalculatorSampling<T, K>::_data; \
-  using SampleEntropyCalculatorSampling<T, K>::_r; \
-  using SampleEntropyCalculatorSampling<T, K>::_n; \
-  using SampleEntropyCalculatorSampling<T, K>::_computed; \
-  using SampleEntropyCalculatorSampling<T, K>::_a; \
-  using SampleEntropyCalculatorSampling<T, K>::_b; \
-  using SampleEntropyCalculatorSampling<T, K>::_output_level; \
-  using SampleEntropyCalculatorSampling<T, K>::_elapsed_seconds; \
-  using SampleEntropyCalculatorSampling<T, K>::_sample_size; \
-  using SampleEntropyCalculatorSampling<T, K>::_sample_num; \
-  using SampleEntropyCalculatorSampling<T, K>::_a_vec; \
-  using SampleEntropyCalculatorSampling<T, K>::_b_vec; \
-  using SampleEntropyCalculatorSampling<T, K>::get_b; \
-  using SampleEntropyCalculatorSampling<T, K>::get_a;
+  using SampleEntropyCalculatorSampling<T>::_data; \
+  using SampleEntropyCalculatorSampling<T>::_r; \
+  using SampleEntropyCalculatorSampling<T>::_n; \
+  using SampleEntropyCalculatorSampling<T>::K; \
+  using SampleEntropyCalculatorSampling<T>::_computed; \
+  using SampleEntropyCalculatorSampling<T>::_a; \
+  using SampleEntropyCalculatorSampling<T>::_b; \
+  using SampleEntropyCalculatorSampling<T>::_output_level; \
+  using SampleEntropyCalculatorSampling<T>::_elapsed_seconds; \
+  using SampleEntropyCalculatorSampling<T>::_sample_size; \
+  using SampleEntropyCalculatorSampling<T>::_sample_num; \
+  using SampleEntropyCalculatorSampling<T>::_a_vec; \
+  using SampleEntropyCalculatorSampling<T>::_b_vec; \
+  using SampleEntropyCalculatorSampling<T>::get_b; \
+  using SampleEntropyCalculatorSampling<T>::get_a;
 } // namespace sampen
 
 #endif // !__SAMPLE_ENTROPY_CALCULATOR__

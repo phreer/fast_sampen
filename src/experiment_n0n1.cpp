@@ -109,7 +109,7 @@ struct Argument {
   void PrintArguments() const;
 } arg;
 
-template <typename T, unsigned K> void SampleEntropyN0N1();
+template <typename T> void SampleEntropyN0N1();
 
 int main(int argc, char *argv[]) {
 #ifdef DEBUG
@@ -119,81 +119,15 @@ int main(int argc, char *argv[]) {
 
   if (arg.input_type == "double") {
     using Type = double;
-    switch (arg.template_length) {
-    case 2:
-      SampleEntropyN0N1<Type, 2>();
-      break;
-    case 3:
-      SampleEntropyN0N1<Type, 3>();
-      break;
-    case 4:
-      SampleEntropyN0N1<Type, 4>();
-      break;
-    case 5:
-      SampleEntropyN0N1<Type, 5>();
-      break;
-    case 6:
-      SampleEntropyN0N1<Type, 6>();
-      break;
-    case 7:
-      SampleEntropyN0N1<Type, 7>();
-      break;
-    case 8:
-      SampleEntropyN0N1<Type, 8>();
-      break;
-    case 9:
-      SampleEntropyN0N1<Type, 9>();
-      break;
-    case 10:
-      SampleEntropyN0N1<Type, 10>();
-      break;
-    default:
-      cerr << "Invalid argument: --input-type " << arg.template_length
-           << ". \n";
-      cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
-      exit(-1);
-    }
+    SampleEntropyN0N1<Type>();
   } else if (arg.input_type == "int") {
     using Type = int;
-    switch (arg.template_length) {
-    case 2:
-      SampleEntropyN0N1<Type, 2>();
-      break;
-    case 3:
-      SampleEntropyN0N1<Type, 3>();
-      break;
-    case 4:
-      SampleEntropyN0N1<Type, 4>();
-      break;
-    case 5:
-      SampleEntropyN0N1<Type, 5>();
-      break;
-    case 6:
-      SampleEntropyN0N1<Type, 6>();
-      break;
-    case 7:
-      SampleEntropyN0N1<Type, 7>();
-      break;
-    case 8:
-      SampleEntropyN0N1<Type, 8>();
-      break;
-    case 9:
-      SampleEntropyN0N1<Type, 9>();
-      break;
-    case 10:
-      SampleEntropyN0N1<Type, 10>();
-      break;
-    default:
-      cerr << "Invalid argument: --input-type " << arg.input_type << ". \n";
-      cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
-      exit(-1);
-    }
+    SampleEntropyN0N1<Type>();
   } else {
     cerr << "Invalid argument: -type " << arg.input_type << ".\n";
     cerr << "File: " << __FILE__ << ", Line: " << __LINE__ << std::endl;
     exit(-1);
   }
-
   return 0;
 }
 
@@ -351,9 +285,11 @@ void ParseArgument(int argc, char *argv[]) {
   }
 }
 
-template <typename T, unsigned K> void SampleEntropyN0N1() {
+template <typename T> void SampleEntropyN0N1() {
+  const unsigned K = arg.template_length;
   vector<T> data = ReadData<T>(arg.filename, arg.input_format, arg.data_length,
                                arg.line_offset);
+
   unsigned n = data.size();
   if (n <= K) {
     std::cerr << "Data length n " << n << " is too short (K = " << K;
@@ -378,8 +314,8 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
   std::cout << "\tr (scaled): " << r_scaled << std::endl;
 
   // Compute sample entropy.
-  SampleEntropyCalculatorMao<T, K> sec(data.cbegin(), data.cend(), r_scaled,
-                                       arg.output_level);
+  SampleEntropyCalculatorMao<T> sec(data.cbegin(), data.cend(), r_scaled, K,
+                                    arg.output_level);
   sec.ComputeSampleEntropy();
   cout << sec.get_result_str();
 
@@ -397,37 +333,37 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
       cout << "========================================";
       cout << "========================================\n";
       if (arg.kdtree_sample) {
-        SampleEntropyCalculatorSamplingMao<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+        SampleEntropyCalculatorSamplingMao<T> secds(
+            data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM,
             arg.random_, arg.output_level);
         SampleEntropySamplingExperiment(secds, n_computation);
       }
       if (arg.u) {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+        SampleEntropyCalculatorSamplingDirect<T> secds(
+            data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
             arg.random_, false, arg.output_level);
         SampleEntropySamplingExperiment(secds, n_computation);
       }
 
       if (arg.swr) {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+        SampleEntropyCalculatorSamplingDirect<T> secds(
+            data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM,
             arg.random_, false, arg.output_level);
         SampleEntropySamplingExperiment(secds, n_computation);
       }
       if (arg.q) {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+        SampleEntropyCalculatorSamplingDirect<T> secds(
+            data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype,
             arg.random_, false, arg.output_level);
 
         SampleEntropySamplingExperiment(secds, n_computation);
         if (arg.presort) {
-          SampleEntropyCalculatorSamplingDirect<T, K> secds(
-              data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+          SampleEntropyCalculatorSamplingDirect<T> secds(
+              data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
               sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype,
               arg.random_, true, arg.output_level);
           SampleEntropySamplingExperiment(secds, n_computation);
@@ -435,14 +371,14 @@ template <typename T, unsigned K> void SampleEntropyN0N1() {
       }
 
       if (arg.grid) {
-        SampleEntropyCalculatorSamplingDirect<T, K> secds(
-            data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+        SampleEntropyCalculatorSamplingDirect<T> secds(
+            data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
             sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID,
             arg.random_, false, arg.output_level);
         SampleEntropySamplingExperiment(secds, n_computation);
         if (arg.presort) {
-          SampleEntropyCalculatorSamplingDirect<T, K> secds(
-              data.cbegin(), data.cend(), r_scaled, sample_size, sample_num,
+          SampleEntropyCalculatorSamplingDirect<T> secds(
+              data.cbegin(), data.cend(), r_scaled, K, sample_size, sample_num,
               sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID,
               arg.random_, true, arg.output_level);
           SampleEntropySamplingExperiment(secds, n_computation);

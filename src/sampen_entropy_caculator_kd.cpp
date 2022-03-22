@@ -7,16 +7,16 @@
 
 namespace sampen {
 
-template <typename T, unsigned K>
-long long MatchedPairsCalculatorSimpleKD<T, K>::ComputeA(
+template <typename T>
+long long MatchedPairsCalculatorSimpleKD<T>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, T r) {
   vector<T> data_(first, last);
   // Construct Points and merge repeated points.
-  vector<KDPoint<T, K> > points =
-      GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 1);
+  vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K, 1);
 
-  KDCountingTree2K<T, K> tree(points, _output_level);
+  KDCountingTree2K<T> tree(K, points, _output_level);
 
   // Perform counting.
   long long result = 0;
@@ -29,7 +29,7 @@ long long MatchedPairsCalculatorSimpleKD<T, K>::ComputeA(
   timer.SetStartingPointNow();
   for (unsigned i = 1; i < n_count; i++) {
     tree.UpdateCount(i - 1, points[i].count());
-    const Range<T, K> range = GetHyperCubeR<T, K>(points[i], r);
+    const Range<T> range = GetHyperCubeR<T>(points[i], r);
     long long current_count = tree.CountRange(range, num_nodes);
     result += current_count;
   }
@@ -51,8 +51,8 @@ long long MatchedPairsCalculatorSimpleKD<T, K>::ComputeA(
 }
 
 
-template <typename T, unsigned K>
-long long MatchedPairsCalculatorMao<T, K>::ComputeA(
+template <typename T>
+long long MatchedPairsCalculatorMao<T>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, T r) {
   const size_t n = last - first;
@@ -62,12 +62,12 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
   for (size_t i = 0; i < K - 1; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
-  vector<KDPoint<T, K>> points =
-      GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 1);
+  vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K, 1);
   for (size_t i = points.size() - K + 1; i < points.size(); ++i) {
     points[i].set_count(0);
   }
-  vector<KDPoint<T, K>> sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -90,11 +90,11 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
   // MergeRepeatedPoints(sorted_points, rank2index);
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  const vector<KDPoint<unsigned, K - 1>> points_grid =
+  const vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K - 1>> points_count;
+  vector<KDPoint<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
@@ -102,7 +102,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
       points_count_indices.push_back(i);
     }
   }
-  KDCountingTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  KDCountingTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   long long result = 0;
@@ -140,7 +140,7 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
       ++j;
     }
 
-    const Range<unsigned, K - 1> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     long long current_count =
         tree.CountRange(range, num_nodes) * count_repeated;
     result += current_count;
@@ -169,8 +169,8 @@ long long MatchedPairsCalculatorMao<T, K>::ComputeA(
 }
 
 
-template <typename T, unsigned K>
-long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
+template <typename T>
+long long MatchedPairsCalculatorSampling2<T>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, T r,
     std::vector<unsigned> &sample_indices) {
@@ -183,13 +183,13 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
     data_.push_back(minimum);
 
   // Construct points in k-dimensional space and merge repeated points.
-  vector<KDPoint<T, K> > points =
-      GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 1);
+  vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K, 1);
   for (size_t i = points.size() - K + 1; i < points.size(); ++i) {
     points[i].set_count(0);
   }
 
-  vector<KDPoint<T, K> > sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -212,11 +212,11 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
   // Map values of each coordinate to the rank given by sorting.
   // Since the value at first dimension equal to the index of that point
   // in the sorted array, we can reduce the dimension of the points by 1.
-  const vector<KDPoint<unsigned, K - 1>> points_grid =
+  const vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K - 1>> points_count;
+  vector<KDPoint<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   // Only use points with positive count to construct the kd tree.
   for (unsigned i = 0; i < n; i++) {
@@ -225,7 +225,7 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
       points_count_indices.push_back(i);
     }
   }
-  KDCountingTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  KDCountingTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   long long result = 0;
@@ -272,7 +272,7 @@ long long MatchedPairsCalculatorSampling2<T, K>::ComputeA(
       ++j;
     }
 
-    const Range<unsigned, K - 1> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     result += tree.CountRange(range, num_nodes);
     ++num_countrange_called;
     upperbound_prev = upperbound;
@@ -318,8 +318,8 @@ MergeRepeatedIndices(typename vector<unsigned>::const_iterator first,
 }
 
 
-template <typename T, unsigned K>
-vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
+template <typename T>
+vector<long long> MatchedPairsCalculatorSampling<T>::ComputeA(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, unsigned sample_num,
     const vector<unsigned> &indices, T r) {
@@ -332,8 +332,8 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
   for (size_t i = 0; i < K - 1; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
-  vector<KDPoint<T, K>> points =
-      GetKDPoints<T, K>(data_.cbegin(), data_.cend(), 0);
+  vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K, 0);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -350,14 +350,14 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
               << timer.ElapsedSeconds() << "s\n";
   }
 
-  vector<KDPoint<T, K>> sorted_points(points.cbegin(), points.cend());
+  vector<KDPoint<T> > sorted_points(points.cbegin(), points.cend());
   for (size_t i = 0; i < n; i++)
     sorted_points[i] = points[rank2index[i]];
 
   // MergeRepeatedPoints(sorted_points, rank2index);
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  vector<KDPoint<unsigned, K - 1>> points_grid =
+  vector<KDPoint<unsigned>> points_grid =
       Map2Grid(sorted_points, rank2index, false);
 
   vector<vector<unsigned>> sample_groups(n);
@@ -368,7 +368,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
   }
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K - 1>> points_count;
+  vector<KDPoint<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   vector<vector<unsigned>> indices_count(sample_num);
   for (unsigned i = 0; i < n; i++) {
@@ -381,7 +381,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
     }
   }
 
-  KDCountingTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  KDCountingTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   // The number of nodes has been visited.
@@ -432,7 +432,7 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
         ++j;
       }
 
-      const Range<unsigned, K - 1> range =
+      const Range<unsigned> range =
           GetHyperCube(points_count[i], bounds);
       result += tree.CountRange(range, num_nodes) * count_repeated;
       ++num_countrange_called;
@@ -482,10 +482,10 @@ vector<long long> MatchedPairsCalculatorSampling<T, K>::ComputeA(
   return results;
 }
 
-template <typename T, unsigned K>
+template <typename T>
 inline vector<long long>
-ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
-                                 typename vector<T>::const_iterator last, T r) {
+ABCalculatorLiu<T>::ComputeAB(typename vector<T>::const_iterator first,
+                              typename vector<T>::const_iterator last, T r) {
   const unsigned n = last - first;
   vector<T> data_(first, last);
   // Add K - 1 auxiliary points.
@@ -493,10 +493,10 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   for (size_t i = 0; i < K; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
-  const vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend());
+  const vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K + 1, 1);
 
-  vector<KDPoint<T, K + 1>> sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -519,11 +519,11 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   CloseAuxiliaryPoints(sorted_points, rank2index);
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  const vector<KDPoint<unsigned, K>> points_grid =
+  const vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K>> points_count;
+  vector<KDPoint<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
@@ -531,7 +531,7 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
       points_count_indices.push_back(i);
     }
   }
-  KDTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  KDTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   vector<long long> result({0, 0});
@@ -565,7 +565,7 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
       ++j;
     }
 
-    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     vector<long long> ab = tree.CountRange(range, num_nodes);
 
     result[0] += ab[0];
@@ -596,10 +596,10 @@ ABCalculatorLiu<T, K>::ComputeAB(typename vector<T>::const_iterator first,
 }
 
 
-template <typename T, unsigned K>
+template <typename T>
 inline vector<long long>
-ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
-                                 typename vector<T>::const_iterator last, T r) {
+ABCalculatorRKD<T>::ComputeAB(typename vector<T>::const_iterator first,
+                              typename vector<T>::const_iterator last, T r) {
   const unsigned n = last - first;
   vector<T> data_(first, last);
   // Add K - 1 auxiliary points.
@@ -607,10 +607,10 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   for (size_t i = 0; i < K; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
-  const vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend());
+  const vector<KDPoint<T> > points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K + 1, 1);
 
-  vector<KDPoint<T, K + 1>> sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points.size());
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -633,19 +633,19 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
   CloseAuxiliaryPoints(sorted_points, rank2index);
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  const vector<KDPoint<unsigned, K>> points_grid =
+  const vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPointRKD<unsigned, K> > points_count;
+  vector<KDPointRKD<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
-      points_count.push_back(KDPointRKD<unsigned, K>(points_grid[i]));
+      points_count.push_back(KDPointRKD<unsigned>(points_grid[i]));
       points_count_indices.push_back(i);
     }
   }
-  RangeKDTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  RangeKDTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   vector<long long> result({0, 0});
@@ -679,7 +679,7 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
       ++j;
     }
 
-    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     vector<long long> ab = tree.CountRange(range, num_nodes);
 
     result[0] += ab[0];
@@ -710,8 +710,8 @@ ABCalculatorRKD<T, K>::ComputeAB(typename vector<T>::const_iterator first,
 }
 
 
-template <typename T, unsigned K>
-vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
+template <typename T>
+vector<long long> ABCalculatorSamplingLiu<T>::ComputeAB(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, unsigned sample_num,
     const vector<unsigned> &sample_indices, T r) {
@@ -722,10 +722,10 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   for (size_t i = 0; i < K; i++)
     data_.push_back(minimum);
   // Construct Points and merge repeated points.
-  const vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend(), 1);
+  const vector<KDPoint<T>> points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K + 1, 1);
 
-  vector<KDPoint<T, K + 1>> sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -745,12 +745,12 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
   }
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  vector<KDPoint<unsigned, K>> points_grid =
+  vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
 
   // Construct kd tree.
-  vector<KDPoint<unsigned, K>> points_count;
+  vector<KDPoint<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   vector<vector<unsigned>> indices_count(sample_num);
   for (unsigned i = 0; i < n; i++) {
@@ -759,7 +759,7 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
       points_count_indices.push_back(i);
     }
   }
-  KDTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  KDTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // The number of nodes has been visited.
   long long num_nodes = 0;
@@ -808,7 +808,7 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
       ++j;
     }
 
-    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     const auto ab = tree.CountRange(range, num_nodes);
     result_a += ab[0];
     result_b += ab[1];
@@ -842,8 +842,8 @@ vector<long long> ABCalculatorSamplingLiu<T, K>::ComputeAB(
 }
 
 
-template <typename T, unsigned K>
-vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
+template <typename T>
+vector<long long> ABCalculatorSamplingRKD<T>::ComputeAB(
     typename vector<T>::const_iterator first,
     typename vector<T>::const_iterator last, T r,
     const vector<unsigned> &sample_indices) {
@@ -855,13 +855,13 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
   for (size_t i = 0; i < K; i++)
     data_.push_back(minimum);
   // Construct Points and set the count of auxiliary point to 0.
-  vector<KDPoint<T, K + 1>> points =
-      GetKDPoints<T, K + 1>(data_.cbegin(), data_.cend(), 1);
+  vector<KDPoint<T>> points =
+      GetKDPoints<T>(data_.cbegin(), data_.cend(), K + 1, 1);
   for (size_t i = points.size() - K; i < points.size(); ++i) {
     points[i].set_count(0);
   }
 
-  vector<KDPoint<T, K + 1>> sorted_points(points);
+  vector<KDPoint<T> > sorted_points(points);
   // The mapping p, from rank to original index
   vector<unsigned> rank2index(n);
   for (size_t i = 0; i < n; i++)
@@ -883,11 +883,11 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
     sorted_points[i] = points[rank2index[i]];
 
   const Bounds bounds = GetRankBounds(sorted_points, r);
-  vector<KDPoint<unsigned, K>> points_grid =
+  vector<KDPoint<unsigned> > points_grid =
       Map2Grid(sorted_points, rank2index);
 
   // Construct kd tree.
-  vector<KDPointRKD<unsigned, K> > points_count;
+  vector<KDPointRKD<unsigned> > points_count;
   vector<unsigned> points_count_indices;
   for (unsigned i = 0; i < n; i++) {
     if (points_grid[i].count()) {
@@ -895,7 +895,7 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
       points_count_indices.push_back(i);
     }
   }
-  RangeKDTree2K<unsigned, K - 1> tree(points_count, _output_level);
+  RangeKDTree2K<unsigned> tree(K - 1, points_count, _output_level);
 
   // Perform counting.
   long long result_a = 0;
@@ -944,7 +944,7 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
       ++j;
     }
 
-    const Range<unsigned, K> range = GetHyperCube(points_count[i], bounds);
+    const Range<unsigned> range = GetHyperCube(points_count[i], bounds);
     const auto ab = tree.CountRange(range, num_nodes);
     result_a += ab[0];
     result_b += ab[1];
@@ -978,37 +978,25 @@ vector<long long> ABCalculatorSamplingRKD<T, K>::ComputeAB(
 }
 
 
-#define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(K) \
-  INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(int, K) \
-  INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(double, K)
-  
-#define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR_TYPE_K(TYPE, K) \
-template class SampleEntropyCalculatorLiu<TYPE , K>; \
-template class SampleEntropyCalculatorRKD<TYPE , K>; \
-template class SampleEntropyCalculatorMao<TYPE , K>; \
-template class SampleEntropyCalculatorSimpleKD<TYPE , K>; \
-template class SampleEntropyCalculatorSamplingLiu<TYPE , K>; \
-template class SampleEntropyCalculatorSamplingRKD<TYPE , K>; \
-template class SampleEntropyCalculatorSamplingMao<TYPE , K>; \
-template class SampleEntropyCalculatorSamplingKDTree<TYPE , K>; \
-template class MatchedPairsCalculatorMao<TYPE, K>; \
-template class MatchedPairsCalculatorSimpleKD<TYPE, K>; \
-template class MatchedPairsCalculatorSampling<TYPE, K>; \
-template class MatchedPairsCalculatorSampling2<TYPE, K>; \
-template class ABCalculatorLiu<TYPE, K>; \
-template class ABCalculatorRKD<TYPE, K>; \
-template class ABCalculatorSamplingLiu<TYPE, K>; \
-template class ABCalculatorSamplingRKD<TYPE, K>;
+#define INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(TYPE) \
+template class SampleEntropyCalculatorLiu<TYPE>; \
+template class SampleEntropyCalculatorRKD<TYPE>; \
+template class SampleEntropyCalculatorMao<TYPE>; \
+template class SampleEntropyCalculatorSimpleKD<TYPE>; \
+template class SampleEntropyCalculatorSamplingLiu<TYPE>; \
+template class SampleEntropyCalculatorSamplingRKD<TYPE>; \
+template class SampleEntropyCalculatorSamplingMao<TYPE>; \
+template class SampleEntropyCalculatorSamplingKDTree<TYPE>; \
+template class MatchedPairsCalculatorMao<TYPE>; \
+template class MatchedPairsCalculatorSimpleKD<TYPE>; \
+template class MatchedPairsCalculatorSampling<TYPE>; \
+template class MatchedPairsCalculatorSampling2<TYPE>; \
+template class ABCalculatorLiu<TYPE>; \
+template class ABCalculatorRKD<TYPE>; \
+template class ABCalculatorSamplingLiu<TYPE>; \
+template class ABCalculatorSamplingRKD<TYPE>;
 
 
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(2);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(3);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(4);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(5);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(6);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(7);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(8);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(9);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(10);
-INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(11);
+INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(double);
+INSTANTIATE_SAMPLE_ENTROPY_CALCULATOR(int);
 } // namespace sampen

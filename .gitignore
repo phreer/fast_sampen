@@ -1,4 +1,5 @@
 build/
+build-vscode/
 build-deb/
 .vscode/
 data.PhysioNet

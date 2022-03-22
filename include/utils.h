@@ -66,9 +66,11 @@ struct Bounds {
   vector<unsigned> upper_bounds;
 };
 
-template <typename T, unsigned K> struct Range {
-  T lower_ranges[K];
-  T upper_ranges[K];
+template <typename T> struct Range {
+  Range(unsigned m = 0): K(m), lower_ranges(m), upper_ranges(m) {}
+  unsigned K;
+  std::vector<T> lower_ranges;
+  std::vector<T> upper_ranges;
 };
 
 vector<unsigned> GetInverseMap(const vector<unsigned> &map);
@@ -96,28 +98,29 @@ template <typename T> T ComputeSum(const vector<T> &data);
  * @note Auxiliary points will be disabled.
  */
 
-template <typename T, unsigned K>
-void MergeRepeatedPoints(vector<KDPoint<T, K>> &points,
+template <typename T>
+void MergeRepeatedPoints(vector<KDPoint<T> > &points,
                          const vector<unsigned> &rank2index);
 
-template <typename T, unsigned K>
-vector<KDPoint<T, K>> GetKDPoints(typename vector<T>::const_iterator first,
-                                  typename vector<T>::const_iterator last,
-                                  int count = 1);
+template <typename T>
+vector<KDPoint<T> > GetKDPoints(typename vector<T>::const_iterator first,
+                                typename vector<T>::const_iterator last,
+                                unsigned K, int count = 1);
 
-template <typename T, unsigned K>
-vector<vector<KDPoint<T, K>>>
+template <typename T>
+vector<vector<KDPoint<T> > >
 GetKDPointsSample(typename vector<T>::const_iterator first,
                   typename vector<T>::const_iterator last,
+                  unsigned K,
                   const vector<vector<unsigned>> &indices, int count,
                   bool presort = false, OutputLevel output_level = Silent);
 
-template <typename T, unsigned K>
-void MergeRepeatedPoints(vector<KDPoint<T, K>> &points,
+template <typename T>
+void MergeRepeatedPoints(vector<KDPoint<T> > &points,
                          const vector<unsigned> &rank2index);
 
-template <typename T, unsigned K>
-void CloseAuxiliaryPoints(vector<KDPoint<T, K>> &points,
+template <typename T>
+void CloseAuxiliaryPoints(vector<KDPoint<T> > &points,
                           const vector<unsigned> &rank2index);
 
 /*
@@ -125,10 +128,10 @@ void CloseAuxiliaryPoints(vector<KDPoint<T, K>> &points,
  *
  * For each point p, p[i] is mapped to the rank of p[i] for i = 1, 2, ..., K-1
  */
-template <typename T, unsigned K>
-vector<KDPoint<unsigned, K - 1>> Map2Grid(const vector<KDPoint<T, K>> &points,
-                                          const vector<unsigned> &rank2index,
-                                          bool skip_nocount = true);
+template <typename T>
+vector<KDPoint<unsigned> > Map2Grid(const vector<KDPoint<T> > &points,
+                                    const vector<unsigned> &rank2index,
+                                    bool skip_nocount = true);
 
 /**
  * @brief Get the bounds of indices such that within the bound the values
@@ -139,15 +142,14 @@ vector<KDPoint<unsigned, K - 1>> Map2Grid(const vector<KDPoint<T, K>> &points,
  * @param r: The threshold.
  * @return The bounds of the indices.
  */
-template <typename T, unsigned K>
-Bounds GetRankBounds(const vector<KDPoint<T, K>> &points, T r);
+template <typename T>
+Bounds GetRankBounds(const vector<KDPoint<T> > &points, T r);
 
 /*
  * @brief Given a point (in grid), get the bound.
  */
-template <unsigned K>
-Range<unsigned, K> GetHyperCube(const KDPoint<unsigned, K> &point,
-                                const Bounds &bounds);
+Range<unsigned> GetHyperCube(const KDPoint<unsigned> &point,
+                             const Bounds &bounds);
 
 class ArgumentParser {
 public:
@@ -346,30 +348,30 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
   return result;
 }
 
-template <typename T, unsigned K>
-vector<KDPoint<T, K>> GetKDPoints(typename vector<T>::const_iterator first,
-                                  typename vector<T>::const_iterator last,
-                                  int count) {
+template <typename T>
+vector<KDPoint<T> > GetKDPoints(typename vector<T>::const_iterator first,
+                                typename vector<T>::const_iterator last,
+                                unsigned K, int count) {
   const size_t n = last - first;
-
   if (n <= K) {
     std::cerr << "GetKDPoints(): Data length is too short (n = " << n;
     std::cerr << ", K = " << K << ")" << std::endl;
-    return vector<KDPoint<T, K>>();
+    return vector<KDPoint<T> >();
   } else {
-    vector<KDPoint<T, K>> points(n - K + 1);
+    vector<KDPoint<T> > points(n - K + 1);
     for (size_t i = 0; i < n - K + 1; i++) {
-      points[i] = KDPoint<T, K>(first + i, first + i + K, count);
+      points[i] = KDPoint<T>(first + i, first + i + K, K, count);
     }
     return points;
   }
 }
 
-template <typename T, unsigned K>
-vector<vector<KDPoint<T, K> > >
+template <typename T>
+vector<vector<KDPoint<T> > >
 GetKDPointsSample(typename vector<T>::const_iterator first,
                   typename vector<T>::const_iterator last,
-                  const vector<vector<unsigned>> &indices, int count,
+                  unsigned K,
+                  const vector<vector<unsigned> > &indices, int count,
                   bool presort, OutputLevel output_level) {
   const size_t n = last - first;
 
@@ -379,8 +381,8 @@ GetKDPointsSample(typename vector<T>::const_iterator first,
     exit(-1);
   } else {
     const unsigned sample_num = indices.size();
-    vector<vector<KDPoint<T, K>>> points(sample_num);
-    vector<KDPoint<T, K>> orig_points = GetKDPoints<T, K>(first, last, count);
+    vector<vector<KDPoint<T> > > points(sample_num);
+    vector<KDPoint<T> > orig_points = GetKDPoints<T>(first, last, K, count);
     vector<unsigned> rank2index(orig_points.size());
     for (size_t i = 0; i < orig_points.size(); i++)
       rank2index.at(i) = i;
@@ -440,10 +442,14 @@ template <typename T> double ComputeVariance(const vector<T> &data) {
   return static_cast<double>(sum);
 }
 
-template <typename T, unsigned K>
-void CloseAuxiliaryPoints(vector<KDPoint<T, K>> &points,
+template <typename T>
+void CloseAuxiliaryPoints(vector<KDPoint<T> > &points,
                           const vector<unsigned> &rank2index) {
   const unsigned n = points.size();
+  if (n == 0) {
+    return;
+  }
+  const unsigned K = points[0].dim();
 
   for (unsigned i = 0; i < n; i++) {
     if (rank2index[i] >= n - K + 1)
@@ -453,13 +459,15 @@ void CloseAuxiliaryPoints(vector<KDPoint<T, K>> &points,
   }
 }
 
-template <typename T, unsigned K>
-void MergeRepeatedPoints(vector<KDPoint<T, K>> &points,
+template <typename T>
+void MergeRepeatedPoints(vector<KDPoint<T> > &points,
                          const vector<unsigned> &rank2index) {
   const unsigned n = points.size();
-
+  if (n == 0) {
+    return;
+  }
+  const unsigned K = points[0].dim();
   unsigned k = 0, i = 0;
-  ;
   while (i < n) {
     int count_auxiliary = 0;
     int count = 0;
@@ -476,14 +484,16 @@ void MergeRepeatedPoints(vector<KDPoint<T, K>> &points,
   }
 }
 
-template <typename T, unsigned K>
-vector<KDPoint<unsigned, K - 1>> Map2Grid(const vector<KDPoint<T, K>> &points,
-                                          const vector<unsigned> &rank2index,
-                                          bool skip_nocount) {
+template <typename T>
+vector<KDPoint<unsigned> > Map2Grid(const vector<KDPoint<T> > &points,
+                                    const vector<unsigned> &rank2index,
+                                    bool skip_nocount) {
   const unsigned n = points.size();
-
+  if (n == 0) return vector<KDPoint<unsigned> >();
+  const unsigned K = points[0].dim();
+  assert (K > 1);
   assert(n == rank2index.size());
-  vector<KDPoint<unsigned, K - 1>> result(n);
+  vector<KDPoint<unsigned> > result(n, KDPoint<unsigned>(K - 1));
 
   vector<unsigned> index2rank = GetInverseMap(rank2index);
   // Mapping q in the paper.
@@ -516,8 +526,8 @@ vector<KDPoint<unsigned, K - 1>> Map2Grid(const vector<KDPoint<T, K>> &points,
   return result;
 }
 
-template <typename T, unsigned K>
-Bounds GetRankBounds(const vector<KDPoint<T, K>> &points, T r) {
+template <typename T>
+Bounds GetRankBounds(const vector<KDPoint<T> > &points, T r) {
   size_t n = points.size();
   Bounds bounds(n);
   vector<T> data(n);
@@ -539,21 +549,12 @@ Bounds GetRankBounds(const vector<KDPoint<T, K>> &points, T r) {
   return bounds;
 }
 
-template <unsigned K>
-Range<unsigned, K> GetHyperCube(const KDPoint<unsigned, K> &point,
-                                const Bounds &bounds) {
-  Range<unsigned, K> result;
-  for (size_t i = 0; i < K; ++i) {
-    result.lower_ranges[i] = bounds.lower_bounds[point[i]];
-    result.upper_ranges[i] = bounds.upper_bounds[point[i]];
-  }
-  return result;
-}
 
 
-template <typename T, unsigned K>
-Range<T, K> GetHyperCubeR(const KDPoint<T, K> &point, T r) {
-  Range<T, K> result;
+template <typename T>
+Range<T> GetHyperCubeR(const KDPoint<T> &point, T r) {
+  const unsigned K = point.dim();
+  Range<T> result(K);
   for (size_t i = 0; i < K; ++i) {
     result.lower_ranges[i] = point[i] - r;
     result.upper_ranges[i] = point[i] + r;
