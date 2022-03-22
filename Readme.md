@@ -1,13 +1,14 @@
 # fast_sampen: Fast Computation of Sample Entropy
 
-This repository includes a library and a program for fast computation of Sample Entropy, based on kd tree and randomly
-sample (Monte Carlo and quasi-Monte Carlo) method.
+This repository includes a library and a program for fast computation of Sample Entropy, based on kd tree, Range-kd tree and randomly sample (Monte Carlo and quasi-Monte Carlo) method.
 
 ## Requirements
 
 - Linux, macOS or other UNIX-like OS
 - C++ compiler supporting C++11
 - CMake (version >= 3.5)
+- GSL (for quasi-random number generation)
+- Magick++7 (for image manipulation such as io and resize)
 
 ## Compile
 
@@ -71,44 +72,4 @@ The built binary will be located in `bin` directory in the building directory.
 
 ## Usage
 
-```
-Usage: build/fast_sampen --input <INPUT> --input-type {simple, multirecord}\
-                   -r <THRESHOLD> -m <TEMPLATE_LENGTH>\
-                   -n <N> [-output-level {1,2,3}]\
-                   --sample-size <SAMPLE_SIZE> --sample-num <SAMPLE_NUM>
-
-Options and arguments:
---input <INPUT>         The file name of the input file.
---input-format <FORMAT> The format of the input file. Should be either simple
-                        or multirecord. If set to simple, then each line of the
-                        input file contains exactly one column; if set to
-                        multirecord, then each line contains <NUM_RECORD> + 1
-                        columns, of which the first indicates the line number
-                        and the remaining columns are instances of the records.
-                        The default value is simple.
---input-type <TYPE>     The data type of the input data, either int or float.
-                        Default: double.
--r <R>                  The threshold argument in sample entropy.
--m <M>                  The template length argument of sample entropy. Note
-                        that this program only supports 2 <= m <= 10.
--n <N>                  If the length of the signal specified by <FILENAME> is
-                        greater than <N>, then it would be truncated to be of
-                        length <N>. If <N> is 0, then the the original length
-                        is employed. The default value is 0.
---sample-size <N0>      The number of points to sample.
---sample-num <N1>       The number of computations where the average is taken.
---random                If this option is enabled, the random seed will be set
-                        randomly.
--q                      If this option is enabled, the quasi-Monte Carlo based
-                        method is conducted.
---variance              If this option is enabled, then the variance of the
-                        results of sampling methods will be computed.
---quasi-type <TYPE>     The type of the quasi-random sequence for sampling,
-                        can be one of the following: sobol, halton,
-                        reversehalton, niederreiter_2 or grid. Default: sobol.
--u                      If this option is enabled, the Monte Carlo based
-                        using uniform distribution is conducted.
---output-level <LEVEL>  The amount of information printed. Should be one of
-                        {0,1,2}. Level 0 is most silent while level 2 is for
-                        debugging.
-```
+Run programs with `--help` for usage.

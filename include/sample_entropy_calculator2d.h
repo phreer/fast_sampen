@@ -30,7 +30,7 @@ public:
         _dilation_factor(dilation_factor),
         _window_size(_dilation_factor * K + 1),
         _num_steps_x((_width - _window_size + 1) / _moving_step_size),
-        _num_steps_y((_width - _window_size + 1) / _moving_step_size),
+        _num_steps_y((_height - _window_size + 1) / _moving_step_size),
         _num_templates(_num_steps_x * _num_steps_y),
         _output_level(output_level) {
     if (K == 0) {

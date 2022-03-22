@@ -212,20 +212,19 @@ int main(int argc, char *argv[]) {
     data[i] = static_cast<int>(pixels[i * num_channels]);
   }
   auto var = sampen::ComputeVariance(data);
-  std::cout << "\n\tstandard deviation: " << sqrt(var) << std::endl;
   arg.r = sqrt(var) * arg.r;
 
+  sampen::SampleEntropyCalculator2DDirect<int> sec2dd(
+      data.begin(), data.end(), arg.m, arg.r, arg.width, arg.height,
+      arg.moving_step_size, arg.dilation_factor, arg.output_level);
+  sec2dd.ComputeSampleEntropy();
+  std::cout << sec2dd.get_result_str();
+
+  double sampen2d = sec2dd.get_entropy();
+  double a_norm = sec2dd.get_a_norm();
+  double b_norm = sec2dd.get_b_norm();
 
   if (arg.sampling1) {
-    sampen::SampleEntropyCalculator2DDirect<int> sec2dd(
-        data.begin(), data.end(), arg.m, arg.r, arg.width, arg.height,
-        arg.moving_step_size, arg.dilation_factor, arg.output_level);
-    sec2dd.ComputeSampleEntropy();
-    std::cout << sec2dd.get_result_str();
-
-    double sampen2d = sec2dd.get_entropy();
-    double a_norm = sec2dd.get_a_norm();
-    double b_norm = sec2dd.get_b_norm();
     sampen::SampleEntropyCalculator2DSamplingDirect<int> sec2dds(
         data.cbegin(), data.cend(), arg.m, arg.r, arg.width, arg.height,
         arg.moving_step_size, arg.dilation_factor, arg.sample_size,
