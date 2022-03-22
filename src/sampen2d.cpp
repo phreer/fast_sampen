@@ -29,6 +29,7 @@ struct Argument {
   unsigned dilation_factor;
   bool sampling1;
   bool sampling2;
+  bool multiscale;
   unsigned multiscale_depth;
   double multiscale_factor;
   unsigned sample_size;
@@ -64,12 +65,19 @@ char usage[] =
     "        The number of experiments conducted for sampling based methods.\n"
     "    --dilation-factor <FACTOR> (default = 1)\n"
     "        This implementation allows holes in the sliding window, as like dilated\n"
-    "        convolution in deep learning.\n\n"
+    "        convolution in deep learning.\n"
+    "    --multiscale-depth <DEPTH>\n"
+    "        This argument affects the number of scales we use to compute SampEn2D\n"
+    "        when option --multiscale is on.\n"
+    "    --multiscale-factor <FACTOR>\n"
+    "        The scaling factor of resizing when computing multiscale SampEn2D.\n\n"
     "Options:\n"
     "    --sampling1\n"
     "        Use sampling method (approach 1).\n"
     "    --sampling2\n"
     "        Use sampling method (approach 2).\n"
+    "    --multiscale\n"
+    "        Compute multiscale SampEn2D.\n"
     "    --help\n"
     "        Display this message.\n";
 // clang-format on
@@ -93,6 +101,7 @@ void ParseArgument(int argc, char *argv[]) {
       static_cast<sampen::OutputLevel>(parser.getArgLong("--output-level", 0));
   arg.sampling1 = parser.isOption("--sampling1");
   arg.sampling2 = parser.isOption("--sampling2");
+  arg.multiscale = parser.isOption("--multiscale");
   arg.multiscale_depth = parser.getArgLong("--multiscale-depth", 1);
   arg.multiscale_factor = parser.getArgDouble("--multiscale-factor", 0.5);
   if (arg.multiscale_depth <= 0) {
@@ -121,6 +130,8 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
   std::vector<double> result;
   PrintSeperator('-');
   for (int i = 0; i < depth; ++i) {
+    width = static_cast<int>(static_cast<double>(width) * factor);
+    height = static_cast<int>(static_cast<double>(height) * factor);
     image.resize(Magick::Geometry(width, height));
     width = image.columns();
     height = image.rows();
@@ -149,13 +160,6 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
         << calculator->get_entropy()
         << std::endl;
     result.push_back(calculator->get_entropy());
-    if (factor - 0.5 < 1e-8 && factor - 0.5 > -1e-8) {
-        width /= 2;
-        height /= 2;
-    } else {
-        width = static_cast<int>(static_cast<double>(width) * factor);
-        height = static_cast<int>(static_cast<double>(height) * factor);
-    }
   }
   return result;
 }
@@ -228,7 +232,9 @@ int main(int argc, char *argv[]) {
         arg.sample_num, sampen2d, a_norm, b_norm, arg.output_level);
     std::cout << sec2dds.get_result_str();
   }
-  ComputeMultiscaleSampEn2D(image, arg.r, arg.m, arg.multiscale_depth,
-                            arg.multiscale_factor, false);
+  if (arg.multiscale) {
+    ComputeMultiscaleSampEn2D(image, arg.r, arg.m, arg.multiscale_depth,
+                              arg.multiscale_factor, false);
+  }
   PrintSeperator('=');
 }
