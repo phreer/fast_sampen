@@ -32,7 +32,7 @@ source $CONFIG
 set -x
 n=500000
 r=0.15
-m=4
+m=5
 subdir=convergence_n0n1_grid/m${m}_r${r}_220308
 
 if [ ! -e result/$subdir ]; then

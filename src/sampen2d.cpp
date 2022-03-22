@@ -2,6 +2,7 @@
 #include <math.h>
 #include <memory>
 #include <ostream>
+#include <fstream>
 #include <vector>
 
 #include "Magick++.h"
@@ -11,6 +12,7 @@
 #include "Magick++/Include.h"
 #include "MagickCore/image.h"
 
+#include "MagickCore/pixel.h"
 #include "sample_entropy_calculator2d.h"
 #include "utils.h"
 
@@ -28,6 +30,7 @@ struct Argument {
   bool sampling1;
   bool sampling2;
   unsigned multiscale_depth;
+  double multiscale_factor;
   unsigned sample_size;
   unsigned sample_num;
   std::string image_filename;
@@ -91,6 +94,7 @@ void ParseArgument(int argc, char *argv[]) {
   arg.sampling1 = parser.isOption("--sampling1");
   arg.sampling2 = parser.isOption("--sampling2");
   arg.multiscale_depth = parser.getArgLong("--multiscale-depth", 1);
+  arg.multiscale_factor = parser.getArgDouble("--multiscale-factor", 0.5);
   if (arg.multiscale_depth <= 0) {
     MSG_ERROR(-1, "Invalid argument for --multiscale-depth, positive integer "
                   "required.\n");
@@ -107,7 +111,8 @@ void ParseArgument(int argc, char *argv[]) {
 }
 
 std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
-                                              int m, int depth, bool sampling) {
+                                              int m, int depth, double factor,
+                                              bool sampling) {
   image.type(Magick::GrayscaleType);
   image.channel(Magick::RedChannel);
 
@@ -119,6 +124,9 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
     image.resize(Magick::Geometry(width, height));
     width = image.columns();
     height = image.rows();
+    if (height <= m + 2 || width <= m + 2) {
+        break;
+    }
     auto pixels = image.getConstPixels(0, 0, width, height);
     std::vector<int> data(width * height);
     for (size_t i = 0; i < data.size(); ++i) {
@@ -136,11 +144,18 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
           data.cbegin(), data.cend(), m, r, width, height, 1, 1,
           arg.output_level);
     }
-    std::cout << "SampEn2D (Scale " << i << "): " << calculator->get_entropy()
+    std::cout << "SampEn2D (Scale " << i
+        << ", h: " << height << ", w: " << width << "): "
+        << calculator->get_entropy()
         << std::endl;
-    width /= 2;
-    height /= 2;
     result.push_back(calculator->get_entropy());
+    if (factor - 0.5 < 1e-8 && factor - 0.5 > -1e-8) {
+        width /= 2;
+        height /= 2;
+    } else {
+        width = static_cast<int>(static_cast<double>(width) * factor);
+        height = static_cast<int>(static_cast<double>(height) * factor);
+    }
   }
   return result;
 }
@@ -171,6 +186,7 @@ int main(int argc, char *argv[]) {
   std::cout << "\tfilename: " << image.fileName() << std::endl;
   std::cout << "\twidth: " << image.columns() << std::endl;
   std::cout << "\theight: " << image.rows() << std::endl;
+  std::cout << "\tnum_channels: " << image.channels() << std::endl;
   std::cout << "\tr: " << arg.r << std::endl;
   std::cout << "\tm: " << arg.m << std::endl;
   std::cout << "\tx: " << arg.x << std::endl;
@@ -179,34 +195,40 @@ int main(int argc, char *argv[]) {
   std::cout << "\th: " << arg.height << std::endl;
   std::cout << "\tmoving-step-size: " << arg.moving_step_size << std::endl;
   std::cout << "\tdilation-factor: " << arg.dilation_factor << std::endl;
+  std::cout << "\tmultiscale-depth: " << arg.multiscale_depth << std::endl;
+  if (arg.multiscale_depth) {
+      std::cout << "\tmultiscale-factor: " << arg.multiscale_factor << std::endl;
+  }
+
 
   auto num_channels = image.channels();
   auto pixels = image.getConstPixels(arg.x, arg.y, arg.width, arg.height);
-
-  std::vector<int> data(arg.width * arg.height * num_channels);
+  std::vector<int> data(arg.width * arg.height * 1);
   for (size_t i = 0; i < data.size(); ++i) {
-    data[i] = static_cast<int>(pixels[i]);
+    data[i] = static_cast<int>(pixels[i * num_channels]);
   }
   auto var = sampen::ComputeVariance(data);
+  std::cout << "\n\tstandard deviation: " << sqrt(var) << std::endl;
   arg.r = sqrt(var) * arg.r;
 
 
-  sampen::SampleEntropyCalculator2DDirect<int> sec2dd(
-      data.begin(), data.end(), arg.m, arg.r, arg.width, arg.height,
-      arg.moving_step_size, arg.dilation_factor, arg.output_level);
-  sec2dd.ComputeSampleEntropy();
-  std::cout << sec2dd.get_result_str();
-
-  double sampen2d = sec2dd.get_entropy();
-  double a_norm = sec2dd.get_a_norm();
-  double b_norm = sec2dd.get_b_norm();
   if (arg.sampling1) {
+    sampen::SampleEntropyCalculator2DDirect<int> sec2dd(
+        data.begin(), data.end(), arg.m, arg.r, arg.width, arg.height,
+        arg.moving_step_size, arg.dilation_factor, arg.output_level);
+    sec2dd.ComputeSampleEntropy();
+    std::cout << sec2dd.get_result_str();
+
+    double sampen2d = sec2dd.get_entropy();
+    double a_norm = sec2dd.get_a_norm();
+    double b_norm = sec2dd.get_b_norm();
     sampen::SampleEntropyCalculator2DSamplingDirect<int> sec2dds(
         data.cbegin(), data.cend(), arg.m, arg.r, arg.width, arg.height,
         arg.moving_step_size, arg.dilation_factor, arg.sample_size,
         arg.sample_num, sampen2d, a_norm, b_norm, arg.output_level);
     std::cout << sec2dds.get_result_str();
   }
-  ComputeMultiscaleSampEn2D(image, arg.r, arg.m, arg.multiscale_depth, false);
+  ComputeMultiscaleSampEn2D(image, arg.r, arg.m, arg.multiscale_depth,
+                            arg.multiscale_factor, false);
   PrintSeperator('=');
 }

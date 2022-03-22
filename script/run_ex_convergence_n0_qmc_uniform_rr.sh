@@ -24,9 +24,8 @@ DoExperimentConvergenceSampleSize()
             -m $m -r $r -n $n \
             --sample-num-array $sample_num \
             --fast-direct \
-            --swr --random --variance \
+            --swr -q -u --quasi-type sobol --random --variance \
             --output-level 1 >> $output_file
-            # --grid -q -u --random --quasi-type sobol --variance \
 }
 
 m=4
@@ -34,7 +33,6 @@ r=0.15
 line_offset=0
 INPUT_DIR=./data.PhysioNet
 sample_num=250 # N1
-output_level=1
 
 subdir=convergence_n0_m${m}_r${r}_220308
 mkdir -p result/$subdir 2>/dev/null
