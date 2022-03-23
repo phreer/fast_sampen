@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "random_sampler.h"
+#include "sample_entropy_calculator.h"
 #include "utils.h"
 
 namespace sampen {
@@ -22,7 +23,7 @@ class SampleEntropyCalculator2D {
 public:
   SampleEntropyCalculator2D(typename vector<T>::const_iterator first,
                             typename vector<T>::const_iterator last,
-                            unsigned m, T r, unsigned width, unsigned height,
+                            T r, unsigned m, unsigned width, unsigned height,
                             unsigned moving_step_size, unsigned dilation_factor,
                             OutputLevel output_level)
       : _data(first, last), K(m), _r(r), _width(width),
@@ -39,6 +40,13 @@ public:
     MSG_DEBUG("_num_steps_x: %u\n", _num_steps_x);
     MSG_DEBUG("_num_steps_y: %u\n", _num_steps_y);
   }
+  SampleEntropyCalculator2D(const std::vector<T> &data,
+                            T r, unsigned m, unsigned width, unsigned height,
+                            unsigned moving_step_size, unsigned dilation_factor,
+                            OutputLevel output_level)
+      : SampleEntropyCalculator2D(data.cbegin(), data.cend(), r, m,
+                                  width, height, moving_step_size,
+                                  dilation_factor, output_level) {}
   virtual ~SampleEntropyCalculator2D() {}
   virtual std::string get_result_str() {
     if (!_computed)
@@ -162,33 +170,37 @@ protected:
 };
 
 
+#define USING_CALCULATOR2D_FIELDS \
+  using SampleEntropyCalculator2D<T>::SampleEntropyCalculator2D;\
+  using SampleEntropyCalculator2D<T>::ComputeSampleEntropy;\
+  using SampleEntropyCalculator2D<T>::_ComputeSampleEntropy;\
+  using SampleEntropyCalculator2D<T>::get_entropy;\
+  using SampleEntropyCalculator2D<T>::_data;\
+  using SampleEntropyCalculator2D<T>::K;\
+  using SampleEntropyCalculator2D<T>::_r;\
+  using SampleEntropyCalculator2D<T>::_width;\
+  using SampleEntropyCalculator2D<T>::_height;\
+  using SampleEntropyCalculator2D<T>::_window_size;\
+  using SampleEntropyCalculator2D<T>::_moving_step_size;\
+  using SampleEntropyCalculator2D<T>::_dilation_factor;\
+  using SampleEntropyCalculator2D<T>::_num_steps_x;\
+  using SampleEntropyCalculator2D<T>::_num_steps_y;\
+  using SampleEntropyCalculator2D<T>::_computed;\
+  using SampleEntropyCalculator2D<T>::_a;\
+  using SampleEntropyCalculator2D<T>::_b;\
+  using SampleEntropyCalculator2D<T>::_output_level;\
+  using SampleEntropyCalculator2D<T>::_elapsed_seconds;\
+  using SampleEntropyCalculator2D<T>::_num_templates;\
+  using SampleEntropyCalculator2D<T>::_IsMatchedK;\
+  using SampleEntropyCalculator2D<T>::_IsMatchedNext;
+
 template <typename T>
 class SampleEntropyCalculator2DSampling : public SampleEntropyCalculator2D<T> {
 public:
-  using SampleEntropyCalculator2D<T>::ComputeSampleEntropy;
-  using SampleEntropyCalculator2D<T>::_ComputeSampleEntropy;
-  using SampleEntropyCalculator2D<T>::get_entropy;
-  using SampleEntropyCalculator2D<T>::_data;
-  using SampleEntropyCalculator2D<T>::K;
-  using SampleEntropyCalculator2D<T>::_r;
-  using SampleEntropyCalculator2D<T>::_width;
-  using SampleEntropyCalculator2D<T>::_height;
-  using SampleEntropyCalculator2D<T>::_window_size;
-  using SampleEntropyCalculator2D<T>::_moving_step_size;
-  using SampleEntropyCalculator2D<T>::_dilation_factor;
-  using SampleEntropyCalculator2D<T>::_num_steps_x;
-  using SampleEntropyCalculator2D<T>::_num_steps_y;
-  using SampleEntropyCalculator2D<T>::_computed;
-  using SampleEntropyCalculator2D<T>::_a;
-  using SampleEntropyCalculator2D<T>::_b;
-  using SampleEntropyCalculator2D<T>::_output_level;
-  using SampleEntropyCalculator2D<T>::_elapsed_seconds;
-  using SampleEntropyCalculator2D<T>::_num_templates;
-  using SampleEntropyCalculator2D<T>::_IsMatchedK;
-  using SampleEntropyCalculator2D<T>::_IsMatchedNext;
+  USING_CALCULATOR2D_FIELDS
   SampleEntropyCalculator2DSampling(typename vector<T>::const_iterator first,
                                     typename vector<T>::const_iterator last,
-                                    unsigned m, T r,
+                                    T r, unsigned m,
                                     unsigned width, unsigned height,
                                     unsigned moving_step_size,
                                     unsigned dilation_factor,
@@ -205,6 +217,20 @@ public:
       MSG_ERROR(-1, "Sample size (N0) exceeds the number of templates.\n");
     }
   }
+  SampleEntropyCalculator2DSampling(const std::vector<T> &data,
+                                    T r, unsigned m,
+                                    unsigned width, unsigned height,
+                                    unsigned moving_step_size,
+                                    unsigned dilation_factor,
+                                    unsigned sample_size, unsigned sample_num,
+                                    double real_entropy, double real_a_norm,
+                                    double real_b_norm, OutputLevel output_level)
+      : SampleEntropyCalculator2DSampling(data.cbegin(), data.cend(), m, r,
+                                          width, height, moving_step_size,
+                                          dilation_factor,
+                                          sample_size, sample_num,
+                                          real_entropy, real_a_norm,
+                                          real_b_norm, output_level) {}
   vector<long long> get_a_vec() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -272,51 +298,41 @@ protected:
 };
 
 
+#define USING_SAMPLING2D_FIELDS \
+  using SampleEntropyCalculator2DSampling<T>::SampleEntropyCalculator2DSampling;\
+  using SampleEntropyCalculator2DSampling<T>::ComputeSampleEntropy;\
+  using SampleEntropyCalculator2DSampling<T>::get_entropy;\
+  using SampleEntropyCalculator2DSampling<T>::_data;\
+  using SampleEntropyCalculator2DSampling<T>::K;\
+  using SampleEntropyCalculator2DSampling<T>::_r;\
+  using SampleEntropyCalculator2DSampling<T>::_width;\
+  using SampleEntropyCalculator2DSampling<T>::_height;\
+  using SampleEntropyCalculator2DSampling<T>::_moving_step_size;\
+  using SampleEntropyCalculator2DSampling<T>::_window_size;\
+  using SampleEntropyCalculator2DSampling<T>::_dilation_factor;\
+  using SampleEntropyCalculator2DSampling<T>::_num_steps_x;\
+  using SampleEntropyCalculator2DSampling<T>::_num_steps_y;\
+  using SampleEntropyCalculator2DSampling<T>::_computed;\
+  using SampleEntropyCalculator2DSampling<T>::_a;\
+  using SampleEntropyCalculator2DSampling<T>::_b;\
+  using SampleEntropyCalculator2DSampling<T>::_output_level;\
+  using SampleEntropyCalculator2DSampling<T>::_elapsed_seconds;\
+  using SampleEntropyCalculator2DSampling<T>::_sample_size;\
+  using SampleEntropyCalculator2DSampling<T>::_sample_num;\
+  using SampleEntropyCalculator2DSampling<T>::_real_entropy;\
+  using SampleEntropyCalculator2DSampling<T>::_real_a_norm;\
+  using SampleEntropyCalculator2DSampling<T>::_real_b_norm;\
+  using SampleEntropyCalculator2DSampling<T>::_a_vec;\
+  using SampleEntropyCalculator2DSampling<T>::_b_vec;\
+  using SampleEntropyCalculator2DSampling<T>::_IsMatchedK;\
+  using SampleEntropyCalculator2DSampling<T>::_IsMatchedNext;
+
+
 template <typename T>
 class SampleEntropyCalculator2DSamplingDirect :
     public SampleEntropyCalculator2DSampling<T> {
-  using SampleEntropyCalculator2DSampling<T>::ComputeSampleEntropy;
-  using SampleEntropyCalculator2DSampling<T>::get_entropy;
-  using SampleEntropyCalculator2DSampling<T>::_data;
-  using SampleEntropyCalculator2DSampling<T>::K;
-  using SampleEntropyCalculator2DSampling<T>::_r;
-  using SampleEntropyCalculator2DSampling<T>::_width;
-  using SampleEntropyCalculator2DSampling<T>::_height;
-  using SampleEntropyCalculator2DSampling<T>::_moving_step_size;
-  using SampleEntropyCalculator2DSampling<T>::_window_size;
-  using SampleEntropyCalculator2DSampling<T>::_dilation_factor;
-  using SampleEntropyCalculator2DSampling<T>::_num_steps_x;
-  using SampleEntropyCalculator2DSampling<T>::_num_steps_y;
-  using SampleEntropyCalculator2DSampling<T>::_computed;
-  using SampleEntropyCalculator2DSampling<T>::_a;
-  using SampleEntropyCalculator2DSampling<T>::_b;
-  using SampleEntropyCalculator2DSampling<T>::_output_level;
-  using SampleEntropyCalculator2DSampling<T>::_elapsed_seconds;
-  using SampleEntropyCalculator2DSampling<T>::_sample_size;
-  using SampleEntropyCalculator2DSampling<T>::_sample_num;
-  using SampleEntropyCalculator2DSampling<T>::_real_entropy;
-  using SampleEntropyCalculator2DSampling<T>::_real_a_norm;
-  using SampleEntropyCalculator2DSampling<T>::_real_b_norm;
-  using SampleEntropyCalculator2DSampling<T>::_a_vec;
-  using SampleEntropyCalculator2DSampling<T>::_b_vec;
-  using SampleEntropyCalculator2DSampling<T>::_IsMatchedK;
-  using SampleEntropyCalculator2DSampling<T>::_IsMatchedNext;
 public:
-  SampleEntropyCalculator2DSamplingDirect(
-      typename vector<T>::const_iterator first,
-      typename vector<T>::const_iterator last,
-      unsigned m, T r,
-      unsigned width, unsigned height,
-      unsigned moving_step_size,
-      unsigned dilation_factor,
-      unsigned sample_size, unsigned sample_num,
-      double real_entropy, double real_a_norm,
-      double real_b_norm, OutputLevel output_level):
-      SampleEntropyCalculator2DSampling<T>(first, last, m, r, width, height,
-                                           moving_step_size, dilation_factor,
-                                           sample_size, sample_num,
-                                           real_entropy, real_a_norm,
-                                           real_b_norm, output_level) {}
+  USING_SAMPLING2D_FIELDS
 protected:
   virtual std::string _Method() const override { return "sampling direct"; }
   virtual void _ComputeSampleEntropy() override;
@@ -324,29 +340,8 @@ protected:
 
 template <typename T>
 class SampleEntropyCalculator2DDirect : public SampleEntropyCalculator2D<T> {
-  using SampleEntropyCalculator2D<T>::_data;
-  using SampleEntropyCalculator2D<T>::K;
-  using SampleEntropyCalculator2D<T>::_a;
-  using SampleEntropyCalculator2D<T>::_b;
-  using SampleEntropyCalculator2D<T>::_r;
-  using SampleEntropyCalculator2D<T>::_width;
-  using SampleEntropyCalculator2D<T>::_height;;
-  using SampleEntropyCalculator2D<T>::_num_steps_x;
-  using SampleEntropyCalculator2D<T>::_num_steps_y;
-  using SampleEntropyCalculator2D<T>::_moving_step_size;
-  using SampleEntropyCalculator2D<T>::_dilation_factor;;
-  using SampleEntropyCalculator2D<T>::_window_size;;
-  using SampleEntropyCalculator2D<T>::_IsMatchedK;
-  using SampleEntropyCalculator2D<T>::_IsMatchedNext;
 public:
-  SampleEntropyCalculator2DDirect(typename vector<T>::const_iterator first,
-                            typename vector<T>::const_iterator last,
-                            unsigned m, T r, unsigned width, unsigned height,
-                            unsigned moving_step_size, unsigned dilation_factor,
-                            OutputLevel output_level)
-      : SampleEntropyCalculator2D<T>(first, last, m, r, width, height,
-                                     moving_step_size, dilation_factor,
-                                     output_level) {}
+  USING_CALCULATOR2D_FIELDS
 protected:
   virtual std::string _Method() const override { return "direct"; }
   virtual void _ComputeSampleEntropy() override;

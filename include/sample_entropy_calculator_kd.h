@@ -70,7 +70,6 @@ private:
 template <typename T>
 class SampleEntropyCalculatorSimpleKD : public SampleEntropyCalculator<T> {
 public:
-  using SampleEntropyCalculator<T>::SampleEntropyCalculator;
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -101,7 +100,6 @@ protected:
 template <typename T>
 class SampleEntropyCalculatorMao : public SampleEntropyCalculator<T> {
 public:
-  using SampleEntropyCalculator<T>::SampleEntropyCalculator;
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -110,6 +108,7 @@ public:
     return ss.str();
   }
 
+  USING_CALCULATOR_FIELDS
 protected:
   void _ComputeSampleEntropy() override {
     if (_n <= K) {
@@ -125,7 +124,6 @@ protected:
   }
   std::string _Method() const override { return std::string("kd tree (Mao)"); }
   
-  USING_CALCULATOR_FIELDS
 };
 
 
@@ -260,7 +258,6 @@ private:
 template <typename T>
 class SampleEntropyCalculatorLiu : public SampleEntropyCalculator<T> {
 public:
-  using SampleEntropyCalculator<T>::SampleEntropyCalculator;
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -427,7 +424,6 @@ protected:
 template <typename T>
 class SampleEntropyCalculatorRKD : public SampleEntropyCalculator<T> {
 public:
-  using SampleEntropyCalculator<T>::SampleEntropyCalculator;
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -436,6 +432,7 @@ public:
     return ss.str();
   }
 
+  USING_CALCULATOR_FIELDS
 protected:
   void _ComputeSampleEntropy() override {
     if (_n <= K) {
@@ -450,7 +447,6 @@ protected:
   }
   std::string _Method() const override { return std::string("range kd tree"); }
 
-  USING_CALCULATOR_FIELDS
 };
 
 
