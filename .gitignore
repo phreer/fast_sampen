@@ -1,4 +1,6 @@
+*.so
 build/
+python/*.cpp
 build-vscode/
 build-deb/
 .vscode/

@@ -148,11 +148,11 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
     if (sampling) {
       calculator =
           std::make_shared<SampleEntropyCalculator2DSamplingDirect<int>>(
-              data.cbegin(), data.cend(), m, r, width, height, 1, 1,
+              data.cbegin(), data.cend(), r, m, width, height, 1, 1,
               arg.sample_size, arg.sample_num, 0., 0., 0., arg.output_level);
     } else {
       calculator = std::make_shared<SampleEntropyCalculator2DDirect<int>>(
-          data.cbegin(), data.cend(), m, r, width, height, 1, 1,
+          data.cbegin(), data.cend(), r, m, width, height, 1, 1,
           arg.output_level);
     }
     std::cout << "SampEn2D (Scale " << i
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
   arg.r = sqrt(var) * arg.r;
 
   sampen::SampleEntropyCalculator2DDirect<int> sec2dd(
-      data.begin(), data.end(), arg.m, arg.r, arg.width, arg.height,
+      data.begin(), data.end(), arg.r, arg.m, arg.width, arg.height,
       arg.moving_step_size, arg.dilation_factor, arg.output_level);
   sec2dd.ComputeSampleEntropy();
   std::cout << sec2dd.get_result_str();
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 
   if (arg.sampling1) {
     sampen::SampleEntropyCalculator2DSamplingDirect<int> sec2dds(
-        data.cbegin(), data.cend(), arg.m, arg.r, arg.width, arg.height,
+        data.cbegin(), data.cend(), arg.r, arg.m, arg.width, arg.height,
         arg.moving_step_size, arg.dilation_factor, arg.sample_size,
         arg.sample_num, sampen2d, a_norm, b_norm, arg.output_level);
     std::cout << sec2dds.get_result_str();

@@ -28,11 +28,6 @@ vector<long long> ComputeABDirect(const vector<KDPoint<T> > &points, T r);
 template <typename T>
 class SampleEntropyCalculatorDirect : public SampleEntropyCalculator<T> {
 public:
-  SampleEntropyCalculatorDirect(typename vector<T>::const_iterator first,
-                                typename vector<T>::const_iterator last,
-                                T r, unsigned m,
-                                OutputLevel output_level)
-      : SampleEntropyCalculator<T>(first, last, r, m, output_level) {}
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -41,20 +36,15 @@ public:
     return ss.str();
   }
 
+  USING_CALCULATOR_FIELDS
 protected:
   void _ComputeSampleEntropy() override;
   std::string _Method() const override { return std::string("plain direct"); }
-  USING_CALCULATOR_FIELDS
 };
 
 template <typename T>
 class SampleEntropyCalculatorFastDirect : public SampleEntropyCalculator<T> {
 public:
-  SampleEntropyCalculatorFastDirect(typename vector<T>::const_iterator first,
-                                    typename vector<T>::const_iterator last,
-                                    T r, unsigned m,
-                                    OutputLevel output_level)
-      : SampleEntropyCalculator<T>(first, last, r, m, output_level) {}
   std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculator<T>::get_result_str();
@@ -63,10 +53,10 @@ public:
     return ss.str();
   }
 
+  USING_CALCULATOR_FIELDS
 protected:
   void _ComputeSampleEntropy() override;
   std::string _Method() const override { return std::string("fast direct"); }
-  USING_CALCULATOR_FIELDS
 };
 
 template <typename T>
@@ -85,6 +75,17 @@ public:
             first, last, r, m, sample_size, sample_num, real_entropy,
             real_a_norm, real_b_norm, output_level),
         _rtype(rtype), _random(random_), _presort(presort) {}
+  SampleEntropyCalculatorSamplingDirect(
+      const vector<T> &data,
+      T r, unsigned m,
+      unsigned sample_size, unsigned sample_num,
+      double real_entropy, double real_a_norm,
+      double real_b_norm, RandomType rtype, bool random_, bool presort,
+      OutputLevel output_level)
+      : SampleEntropyCalculatorSampling<T>(
+            data.cbegin(), data.cend(), r, m, sample_size, sample_num,
+            real_entropy, real_a_norm, real_b_norm, output_level),
+        _rtype(rtype), _random(random_), _presort(presort) {}
   virtual std::string get_result_str() override {
     std::stringstream ss;
     ss << this->SampleEntropyCalculatorSampling<T>::get_result_str();
@@ -99,6 +100,7 @@ public:
     return SampleEntropyCalculatorSampling<T>::get_b_norm() - 1. / (_n - K);
   }
 
+  USING_SAMPLING_FIELDS
 protected:
   void _ComputeSampleEntropy() override;
   std::string _Method() const override {
@@ -110,7 +112,6 @@ protected:
     return method_name;
   }
 
-  USING_SAMPLING_FIELDS
   RandomType _rtype;
   bool _random;
   bool _presort;

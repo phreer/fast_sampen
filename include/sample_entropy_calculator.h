@@ -13,7 +13,9 @@ namespace sampen {
 using std::vector;
 
 
-template <typename T>
+template <typename T,
+          typename =
+              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 class SampleEntropyCalculator {
 public:
   SampleEntropyCalculator(typename vector<T>::const_iterator first,
@@ -22,8 +24,9 @@ public:
                           OutputLevel output_level)
       : _data(first, last), _r(r), K(m), _n(last - first),
         _output_level(output_level) {}
-  SampleEntropyCalculator(const std::vector<T> &data, T r, OutputLevel level)
-      : SampleEntropyCalculator(data.cbegin(), data.cend(), r, level) {}
+  SampleEntropyCalculator(const std::vector<T> &data, T r, unsigned m,
+                          OutputLevel level)
+      : SampleEntropyCalculator(data.cbegin(), data.cend(), r, m, level) {}
   virtual ~SampleEntropyCalculator() {}
   virtual std::string get_result_str() {
     if (!_computed)
@@ -94,6 +97,7 @@ protected:
 };
 
 #define USING_CALCULATOR_FIELDS \
+  using SampleEntropyCalculator<T>::SampleEntropyCalculator;\
   using SampleEntropyCalculator<T>::_data; \
   using SampleEntropyCalculator<T>::_r; \
   using SampleEntropyCalculator<T>::K; \
@@ -119,6 +123,16 @@ public:
                                   double real_entropy, double real_a_norm,
                                   double real_b_norm, OutputLevel output_level)
       : SampleEntropyCalculator<T>(first, last, r, m, output_level),
+        _sample_size(sample_size), _sample_num(sample_num),
+        _real_entropy(real_entropy), _real_a_norm(real_a_norm),
+        _real_b_norm(real_b_norm) {}
+  SampleEntropyCalculatorSampling(const std::vector<T> &data,
+                                  T r, unsigned m,
+                                  unsigned sample_size, unsigned sample_num,
+                                  double real_entropy, double real_a_norm,
+                                  double real_b_norm, OutputLevel output_level)
+      : SampleEntropyCalculator<T>(data.cbegin(), data.cend(),
+                                   r, m, output_level),
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
         _real_b_norm(real_b_norm) {}
