@@ -11,10 +11,7 @@ DoExperimentConvergenceN()
     local output_file=$5
     for i in `seq 0 8`; do
         local n=$(python3 -c "print((2 ** $i) * 4096)")
-        local n0n1_str=$(python3 script/get_n0n1_policy2.py $n)
-        IFS=" " read -r -a n0n1_array <<< $n0n1_str
-        local sample_size=${n0n1_array[0]}
-        local sample_num=${n0n1_array[1]}
+        local sample_size=$(python3 script/get_n0_policy2_kdtreemc.py $n)
         # echo "n: $n"
         # echo "sample_size: $sample_size"
         # echo "sample_num: $sample_num"
@@ -24,19 +21,18 @@ DoExperimentConvergenceN()
             --input-type double \
             --line-offset $line_offset \
             --sample-size $sample_size \
-            --sample-num $sample_num \
+            --sample-num 1 \
             -n $n -m $m -r $r \
+            --kdtree-sample --random \
             -rkd \
             --variance --n-computation 50 \
             --output-level 0 >> $output_file
-#             --swr --uniform -q --random \
     done
 }
 
 
-m=5
+m=6
 r=0.15
-line_offset=100000
 INPUT_DIR=./data.PhysioNet
 input_files=(chfdb/chf01.txt\
              ltafdb/00.txt\
@@ -50,7 +46,8 @@ input_files=(chfdb/chf01.txt\
              gaussian/gaussian-1m.txt\
              pink/pink-1m.txt\
              uniform/uniform-1m.txt)
-subdir=policy2_rkd_220322/r"$r"_m"$m"
+
+subdir=convergence_n_100log2n_kdtreemc_220316/r"$r"_m"$m"
 
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
@@ -60,12 +57,13 @@ date >> $output_file
 
 for f in ${input_files[@]}; do
     input_file="$INPUT_DIR"/$f
-    echo "input_file: $input_file"
     if [[ "$f" == "RR"* ]]; then
         line_offset=0
     else
         line_offset=100000
     fi
+    echo "input_file: $input_file"
+    echo "line_offset: $line_offset"
     database=${input_file%/*}
     database=${input_file##*/}
     output_file=result/${subdir}/convergence_r${r}_m${m}_${database}_$(date +%Y-%m-%d).txt 
