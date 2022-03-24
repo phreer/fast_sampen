@@ -47,9 +47,9 @@ r=0.15
 line_offset=100000
 n=1000010
 sample_num=1 # N1
-sample_size_array=$(seq -s',' 2000 2000 100000)
+sample_size_array=$(seq -s',' 5000 5000 50000)
 output_level=1
-subdir=convergence_n0_kdtreemc_m${m}_r${r}_220308
+subdir=convergence_n0_kdtreemc/m${m}_r${r}_220322
 mkdir -p result/$subdir 2>/dev/null
 for f in ${input_files[@]}; do
     input_file=${INPUT_DIR}/$f

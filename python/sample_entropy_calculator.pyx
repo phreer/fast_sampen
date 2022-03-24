@@ -32,7 +32,11 @@ cdef class SampEnSKD:
   def __cinit__(self, const vector[double] &data, double r, unsigned m,
                 OutputLevel level):
     self.c_ = new SampleEntropyCalculatorMao[double](data, r, m, level)
-  
+
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
@@ -65,6 +69,10 @@ cdef class SampEnRKD:
                 OutputLevel level):
     self.c_ = new SampleEntropyCalculatorRKD[double](data, r, m, level)
   
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
@@ -97,6 +105,10 @@ cdef class SampEnFD:
                 OutputLevel level):
     self.c_ = new SampleEntropyCalculatorFastDirect[double](data, r, m, level)
   
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
@@ -129,6 +141,10 @@ cdef class SampEnD:
                 OutputLevel level):
     self.c_ = new SampleEntropyCalculatorDirect[double](data, r, m, level)
   
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
@@ -168,6 +184,10 @@ cdef class SampEnSamplingD:
         real_entropy, real_a_norm, real_b_norm,
         random_type, random_, presort, level)
   
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
