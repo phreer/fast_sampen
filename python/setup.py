@@ -11,6 +11,8 @@ if platform.system() == 'Darwin':
 setup(name='sampen',
       description=description,
       version='1.0.0',
+      author='Phree Liu',
+      author_email='iphreeliu@gmail.com',
       ext_modules=cythonize([Extension('sampen',
                                        sources=[
                                          'sample_entropy_calculator.pyx',

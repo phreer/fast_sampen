@@ -25,6 +25,10 @@ cdef class SampEn2DD:
     self.c_ = new SampleEntropyCalculator2DDirect[int](
         data, r, m, width, height, moving_step_size, dilation_factor, level)
   
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
+
   def method_name(self):
     return self.c_.get_method_name()
 
@@ -62,6 +66,10 @@ cdef class SampEn2DSamplingD:
     self.c_ = new SampleEntropyCalculator2DSamplingDirect[int](
         data, r, m, width, height, moving_step_size, dilation_factor,
         sample_size, sample_num, real_entropy, real_a_norm, real_b_norm, level)
+
+  def __dealloc__(self):
+    if self.c_ != NULL:
+      del self.c_  
   
   def method_name(self):
     return self.c_.get_method_name()
