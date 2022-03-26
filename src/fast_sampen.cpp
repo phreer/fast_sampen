@@ -1,3 +1,5 @@
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -52,6 +54,8 @@ char usage[] =
     "                        conducted.\n"
     "-fd | --fast-direct     If this option is on, then fast direct method will be\n"
     "                        conducted.\n"
+    "-skd | --sliding-kdtree If this option is on, then sliding-kd tree method will be\n"
+    "                        conducted.\n"
     "-rkd | --range-kdtree   If this option is on, then the range kd tree will be run.\n"
     "--simple-kdtree         If this option is on, then trivial kd tree based method\n"
     "                        (without sliding window of the first component) will be\n"
@@ -99,6 +103,7 @@ struct Argument {
   bool kdtree_sample;
   bool simple_kdtree;
   bool rkd;
+  bool skd;
   bool random_, variance;
   bool q, u, swr, presort, grid;
   unsigned n_computation;
@@ -218,6 +223,7 @@ void ParseArgument(int argc, char *argv[]) {
   arg.fast_direct = parser.isOption("--fast-direct") || parser.isOption("-fd");
   arg.simple_kdtree = parser.isOption("--simple-kdtree");
   arg.rkd = parser.isOption("-rkd") || parser.isOption("--range-kdtree");
+  arg.skd = parser.isOption("-skd") || parser.isOption("--sliding-kdtree");
   arg.q = parser.isOption("-q");
   arg.u = parser.isOption("-u") || parser.isOption("--uniform");
   arg.swr = parser.isOption("--swr");
@@ -291,32 +297,78 @@ template <typename T> void SampleEntropyN0N1() {
   cout << "========================================";
   cout << "========================================\n";
   arg.PrintArguments();
-  std::cout << "\tvariance: " << var << std::endl;
+  std::cout << "\tstd: " << sqrt(var) << std::endl;
   std::cout << "\tr (scaled): " << r_scaled << std::endl;
 
+  double precise_entropy = 0.;
+  double precise_a_norm = 0.;
+  double precise_b_norm = 0.;
   // Compute sample entropy.
-  SampleEntropyCalculatorMao<T> sec(data.cbegin(), data.cend(), r_scaled, K,
-                                    arg.output_level);
-  sec.ComputeSampleEntropy();
-  cout << sec.get_result_str();
+  if (arg.skd) {
+    SampleEntropyCalculatorMao<T> sec(data.cbegin(), data.cend(), r_scaled, K,
+                                      arg.output_level);
+    sec.ComputeSampleEntropy();
+    cout << sec.get_result_str();
+    precise_entropy = sec.get_entropy();
+    precise_a_norm = sec.get_a_norm();
+    precise_b_norm = sec.get_b_norm();
+  }
+
+  if (arg.fast_direct) {
+    SampleEntropyCalculatorFastDirect<T> secfd(data.cbegin(), data.cend(),
+                                               r_scaled, K, arg.output_level);
+    secfd.ComputeSampleEntropy();
+    cout << secfd.get_result_str();
+    precise_entropy = secfd.get_entropy();
+    precise_a_norm = secfd.get_a_norm();
+    precise_b_norm = secfd.get_b_norm();
+  }
+  
+  if (arg.direct) {
+    SampleEntropyCalculatorDirect<T> secd(data.cbegin(), data.cend(),
+                                          r_scaled, K, arg.output_level);
+    secd.ComputeSampleEntropy();
+    cout << secd.get_result_str();
+    precise_entropy = secd.get_entropy();
+    precise_a_norm = secd.get_a_norm();
+    precise_b_norm = secd.get_b_norm();
+  }
+  
+  if (arg.rkd) {
+    SampleEntropyCalculatorRKD<T> secd(data.cbegin(), data.cend(),
+                                       r_scaled, K, arg.output_level);
+    secd.ComputeSampleEntropy();
+    cout << secd.get_result_str();
+    precise_entropy = secd.get_entropy();
+    precise_a_norm = secd.get_a_norm();
+    precise_b_norm = secd.get_b_norm();
+  }
+  if (arg.simple_kdtree) {
+    SampleEntropyCalculatorSimpleKD<T> secd(data.cbegin(), data.cend(),
+                                            r_scaled, K, arg.output_level);
+    secd.ComputeSampleEntropy();
+    cout << secd.get_result_str();
+    precise_entropy = secd.get_entropy();
+    precise_a_norm = secd.get_a_norm();
+    precise_b_norm = secd.get_b_norm();
+  }
 
   unsigned n_computation = 1;
   if (arg.variance)
     n_computation = arg.n_computation;
   if (arg.u) {
     SampleEntropyCalculatorSamplingDirect<T> secds(
-        data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), UNIFORM,
+        data.cbegin(), data.cend(), r_scaled, K,
+        arg.sample_size, arg.sample_num,
+        precise_entropy, precise_a_norm, precise_b_norm, UNIFORM,
         arg.random_, false, arg.output_level);
     SampleEntropySamplingExperiment(secds, n_computation);
   }
-  const auto precise_entropy = sec.get_entropy();
-  const auto precise_a_norm = sec.get_a_norm();
-  const auto precise_b_norm = sec.get_b_norm();
   if (arg.kdtree_sample) {
     SampleEntropyCalculatorSampling<T> *calculator = nullptr;
     calculator = new SampleEntropyCalculatorSamplingMao<T>(
-        data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
+        data.cbegin(), data.cend(), r_scaled, K,
+        arg.sample_size, arg.sample_num,
         precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM,
         arg.random_, arg.output_level);
     SampleEntropySamplingExperiment(*calculator, n_computation);
@@ -333,21 +385,21 @@ template <typename T> void SampleEntropyN0N1() {
     // cout << secs.get_result_str();
     SampleEntropyCalculatorSamplingDirect<T> secds(
         data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), SWR_UNIFORM,
+        precise_entropy, precise_a_norm, precise_b_norm, SWR_UNIFORM,
         arg.random_, false, arg.output_level);
     SampleEntropySamplingExperiment(secds, n_computation);
   }
   if (arg.q) {
     SampleEntropyCalculatorSamplingDirect<T> secds(
         data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype,
+        precise_entropy, precise_a_norm, precise_b_norm, arg.rtype,
         arg.random_, false, arg.output_level);
 
     SampleEntropySamplingExperiment(secds, n_computation);
     if (arg.presort) {
       SampleEntropyCalculatorSamplingDirect<T> secds(
           data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-          sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), arg.rtype,
+          precise_entropy, precise_a_norm, precise_b_norm, arg.rtype,
           arg.random_, true, arg.output_level);
       SampleEntropySamplingExperiment(secds, n_computation);
     }
@@ -356,42 +408,19 @@ template <typename T> void SampleEntropyN0N1() {
   if (arg.grid) {
     SampleEntropyCalculatorSamplingDirect<T> secds(
         data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-        sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID,
+        precise_entropy, precise_a_norm, precise_b_norm, GRID,
         arg.random_, false, arg.output_level);
     SampleEntropySamplingExperiment(secds, n_computation);
     if (arg.presort) {
       SampleEntropyCalculatorSamplingDirect<T> secds(
           data.cbegin(), data.cend(), r_scaled, K, arg.sample_size, arg.sample_num,
-          sec.get_entropy(), sec.get_a_norm(), sec.get_b_norm(), GRID,
+          precise_entropy, precise_a_norm, precise_b_norm, GRID,
           arg.random_, true, arg.output_level);
       SampleEntropySamplingExperiment(secds, n_computation);
     }
   }
-  if (arg.fast_direct) {
-    SampleEntropyCalculatorFastDirect<T> secfd(data.cbegin(), data.cend(),
-                                               r_scaled, K, arg.output_level);
-    secfd.ComputeSampleEntropy();
-    cout << secfd.get_result_str();
-  }
-  
-  if (arg.direct) {
-    SampleEntropyCalculatorDirect<T> secd(data.cbegin(), data.cend(),
-                                          r_scaled, K, arg.output_level);
-    secd.ComputeSampleEntropy();
-    cout << secd.get_result_str();
-  }
-  
-  if (arg.rkd) {
-    SampleEntropyCalculatorRKD<T> secd(data.cbegin(), data.cend(),
-                                       r_scaled, K, arg.output_level);
-    secd.ComputeSampleEntropy();
-    cout << secd.get_result_str();
-  }
-  if (arg.simple_kdtree) {
-    SampleEntropyCalculatorSimpleKD<T> secd(data.cbegin(), data.cend(),
-                                            r_scaled, K, arg.output_level);
-    secd.ComputeSampleEntropy();
-    cout << secd.get_result_str();
+  if (arg.output_level > sampen::Silent) {
+    ReportVmPeak();
   }
   cout << "========================================";
   cout << "========================================\n";

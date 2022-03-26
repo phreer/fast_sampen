@@ -18,6 +18,21 @@
 namespace sampen {
 using namespace std;
 
+void ReportVmPeak() {
+#ifdef __linux__
+    std::ifstream ifs("/proc/self/status");
+    if (ifs.is_open()) {
+      char buffer[1024];
+      while (ifs.getline(buffer, sizeof(buffer))) {
+        std::string line = std::string(buffer);
+        if (line.substr(0, 6) == "VmPeak") {
+          MSG_INFO("%s\n", buffer);
+        }
+      }
+    }
+#endif
+}
+
 double ComputeSampen(double A, double B, unsigned N, unsigned m) {
   if (A > 0 && B > 0) {
     return -log(A / B);

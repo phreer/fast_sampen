@@ -73,6 +73,9 @@ template <typename T> struct Range {
   std::vector<T> upper_ranges;
 };
 
+void ReportVmPeak();
+
+
 vector<unsigned> GetInverseMap(const vector<unsigned> &map);
 
 double ComputeSampen(double A, double B, unsigned N, unsigned m);
