@@ -206,13 +206,14 @@ public:
                                     unsigned dilation_factor,
                                     unsigned sample_size, unsigned sample_num,
                                     double real_entropy, double real_a_norm,
-                                    double real_b_norm, OutputLevel output_level)
+                                    double real_b_norm, bool random_,
+                                    OutputLevel output_level)
       : SampleEntropyCalculator2D<T>(first, last, m, r, width, height,
                                      moving_step_size, dilation_factor,
                                      output_level),
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
-        _real_b_norm(real_b_norm) {
+        _real_b_norm(real_b_norm), _random(random_) {
     if (_num_templates < _sample_size) {
       MSG_ERROR(-1, "Sample size (N0) exceeds the number of templates.\n");
     }
@@ -224,13 +225,15 @@ public:
                                     unsigned dilation_factor,
                                     unsigned sample_size, unsigned sample_num,
                                     double real_entropy, double real_a_norm,
-                                    double real_b_norm, OutputLevel output_level)
+                                    double real_b_norm, bool random_,
+                                    OutputLevel output_level)
       : SampleEntropyCalculator2DSampling(data.cbegin(), data.cend(), m, r,
                                           width, height, moving_step_size,
                                           dilation_factor,
                                           sample_size, sample_num,
                                           real_entropy, real_a_norm,
-                                          real_b_norm, output_level) {}
+                                          real_b_norm, random_,
+                                          output_level) {}
   vector<long long> get_a_vec() {
     if (!_computed)
       ComputeSampleEntropy();
@@ -294,6 +297,7 @@ protected:
   const double _real_entropy;
   const double _real_a_norm;
   const double _real_b_norm;
+  const bool _random;
   vector<long long> _a_vec, _b_vec;
 };
 
@@ -322,6 +326,7 @@ protected:
   using SampleEntropyCalculator2DSampling<T>::_real_entropy;\
   using SampleEntropyCalculator2DSampling<T>::_real_a_norm;\
   using SampleEntropyCalculator2DSampling<T>::_real_b_norm;\
+  using SampleEntropyCalculator2DSampling<T>::_random;\
   using SampleEntropyCalculator2DSampling<T>::_a_vec;\
   using SampleEntropyCalculator2DSampling<T>::_b_vec;\
   using SampleEntropyCalculator2DSampling<T>::_IsMatchedK;\
@@ -389,7 +394,7 @@ template <typename T>
 void SampleEntropyCalculator2DSamplingDirect<T>::_ComputeSampleEntropy() {
   unsigned num_templates = _num_steps_x * _num_steps_y;
   RandomIndicesSamplerWR sampler(num_templates, _sample_size, _sample_num,
-                                 RandomType::SWR_UNIFORM);
+                                 RandomType::SWR_UNIFORM, _random);
   const auto random_indices_array = sampler.GetSampleArrays();
   _a_vec.clear();
   _b_vec.clear();

@@ -29,6 +29,7 @@ void ReportVmPeak() {
           MSG_INFO("%s\n", buffer);
         }
       }
+      ifs.close();
     }
 #endif
 }

@@ -45,6 +45,7 @@ cdef extern from "sample_entropy_calculator2d.h" namespace "sampen":
                                             double real_entropy,
                                             double real_a_norm,
                                             double real_b_norm,
+                                            bool random_,
                                             OutputLevel output_level) except +
     double get_computation_time()
     double get_entropy()

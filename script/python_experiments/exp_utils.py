@@ -84,29 +84,33 @@ def estimate_sampen2d_and_save_statistics(sig, r: float, m: int,
       r_e = s.entropy()
       r_a = s.a_norm()
       r_b = s.b_norm()
+      t = s.time()
     else:
       r_e, r_a, r_b = groundtruth
+      t = 0
     print(f'output_filename [{output_filename}]', file=f)
     print(f'n0 [{n0}] n1 [{n1}] m [{m}] r [{r}] n [{n}]', file=f)
-    print(f'[Direct] sampen2d [{r_e:.6f}] a [{r_a:.6f}] b [{r_b:.6f}]', file=f)
+    print(f'[Direct] sampen2d [{r_e:.6f}] a [{r_a:.6f}] b [{r_b:.6f}] t [{t:.4e}]', file=f)
     list_err_e = np.zeros(n_computations)
     list_err_a = np.zeros(n_computations)
     list_err_b = np.zeros(n_computations)
+    list_time = np.zeros(n_computations)
     for i in range(n_computations):
       s = sampen2d.SampEn2DSamplingD(sig, r_scaled, m, width, height, 1, 1,
-                                     n0, n1, r_e, r_a, r_b, 0)
+                                     n0, n1, r_e, r_a, r_b, True, 0)
       err_e = s.entropy() - r_e
       err_a = s.a_norm() - r_a
       err_b = s.b_norm() - r_b
       list_err_e[i] = err_e
       list_err_a[i] = err_a
       list_err_b[i] = err_b
-      print(f'[SWR] sampen2d [{s.entropy():.6f}] a [{s.a_norm():.6f}] b [{s.b_norm():.6f}]', file=f)
+      list_time[i] = s.time()
+      print(f'[SWR] sampen2d [{s.entropy():.6f}] a [{s.a_norm():.6f}] b [{s.b_norm():.6f}] t [{s.time():.4e}]', file=f)
       print(f'[SWR] err_sampen2d [{err_e :.4e}] err_a [{err_a:.4e}] err_b [{err_b:.4e}]', file=f)
     m_e, std_e, m_abs_err_e, r_m_e, r_std_e, r_m_abs_err_e = get_statistics(list_err_e, r_e)
     m_a, std_a, m_abs_err_a, r_m_a, r_std_a, r_m_abs_err_a = get_statistics(list_err_a, r_a)
     m_b, std_b, m_abs_err_b, r_m_b, r_std_b, r_m_abs_err_b = get_statistics(list_err_b, r_b)
-    print(f'[SWR] m_e [{m_e:.4e}] std_e [{std_e:.4e}] m_abs_err_e [{m_abs_err_e:.4e}]', file=f)    
+    print(f'[SWR] m_e [{m_e:.4e}] std_e [{std_e:.4e}] m_abs_err_e [{m_abs_err_e:.4e}] m_t [{np.mean(list_time):.4e}]', file=f)    
     print(f'[SWR] r_m_e [{r_m_e:.4e}] r_std_e [{r_std_e:.4e}] r_m_abs_err_e [{r_m_abs_err_e:.4e}]', file=f)    
     print(f'[SWR] m_a [{m_a:.4e}] std_a [{std_a:.4e}] m_abs_err_a [{m_abs_err_a:.4e}]', file=f)    
     print(f'[SWR] r_m_a [{r_m_a:.4e}] r_std_a [{r_std_a:.4e}] r_m_abs_err_a [{r_m_abs_err_a:.4e}]', file=f)    

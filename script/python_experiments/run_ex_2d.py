@@ -21,13 +21,13 @@ input_dir = pjoin(os.environ['HOME'], 'workspace/entropy/2d')
 script_dir = os.path.dirname(sys.argv[0])
 
 def estimate_sampen2d_and_save_task(db_name, record_name, r, m):
-  output_dir = pjoin(script_dir, '../../result/2d_err', db_name)
+  output_dir = pjoin(script_dir, '../../result/2d_err/m%d_r%.2f' % (m, r), db_name)
   output_filename = os.path.splitext(record_name)[0] + '.txt'
   input_path = pjoin(input_dir, db_name, record_name)
   image = Image.open(input_path)
   image = np.array(ImageOps.grayscale(image))
   height, width = image.shape
-  print('start estimating...')
+  print('start %s %s %.2f %d...' % (db_name, record_name, r, m))
   estimate_sampen2d_and_save_statistics(image.flatten(), r, m,
                                         width=width, height=height,
                                         n0=n0, n1=n1, outputdir=output_dir,

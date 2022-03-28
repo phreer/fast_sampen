@@ -27,8 +27,8 @@ struct Argument {
   unsigned height;
   unsigned moving_step_size;
   unsigned dilation_factor;
-  bool sampling1;
-  bool sampling2;
+  bool sampling;
+  bool random_;
   bool multiscale;
   unsigned multiscale_depth;
   double multiscale_factor;
@@ -72,13 +72,13 @@ char usage[] =
     "    --multiscale-factor <FACTOR>\n"
     "        The scaling factor of resizing when computing multiscale SampEn2D.\n\n"
     "Options:\n"
-    "    --sampling1\n"
-    "        Use sampling method (approach 1).\n"
-    "    --sampling2\n"
-    "        Use sampling method (approach 2).\n"
+    "    --sampling\n"
+    "        Use sampling method to estimate SampEn2D.\n"
     "    --multiscale\n"
     "        Compute multiscale SampEn2D.\n"
-    "    --help\n"
+    "    -r | --random\n"
+    "        Set seed randomly.\n"
+    "    -h | --help\n"
     "        Display this message.\n";
 // clang-format on
 
@@ -99,8 +99,7 @@ void ParseArgument(int argc, char *argv[]) {
   arg.image_filename = parser.getArg("--input");
   arg.output_level =
       static_cast<sampen::OutputLevel>(parser.getArgLong("--output-level", 0));
-  arg.sampling1 = parser.isOption("--sampling1");
-  arg.sampling2 = parser.isOption("--sampling2");
+  arg.sampling = parser.isOption("--sampling");
   arg.multiscale = parser.isOption("--multiscale");
   arg.multiscale_depth = parser.getArgLong("--multiscale-depth", 1);
   arg.multiscale_factor = parser.getArgDouble("--multiscale-factor", 0.5);
@@ -113,9 +112,10 @@ void ParseArgument(int argc, char *argv[]) {
     std::cerr << "Usage: " << argv[0] << usage;
     exit(-1);
   }
-  if (arg.sampling1 || arg.sampling2) {
+  if (arg.sampling) {
     arg.sample_size = parser.getArgLong("--sample-size", 1024);
     arg.sample_num = parser.getArgLong("--sample-num", 20);
+    arg.random_ = parser.isOption("--random") || parser.isOption("-r");
   }
 }
 
@@ -149,7 +149,8 @@ std::vector<double> ComputeMultiscaleSampEn2D(Magick::Image image, double r,
       calculator =
           std::make_shared<SampleEntropyCalculator2DSamplingDirect<int>>(
               data.cbegin(), data.cend(), r, m, width, height, 1, 1,
-              arg.sample_size, arg.sample_num, 0., 0., 0., arg.output_level);
+              arg.sample_size, arg.sample_num, 0., 0., 0., arg.random_,
+              arg.output_level);
     } else {
       calculator = std::make_shared<SampleEntropyCalculator2DDirect<int>>(
           data.cbegin(), data.cend(), r, m, width, height, 1, 1,
@@ -224,11 +225,12 @@ int main(int argc, char *argv[]) {
   double a_norm = sec2dd.get_a_norm();
   double b_norm = sec2dd.get_b_norm();
 
-  if (arg.sampling1) {
+  if (arg.sampling) {
     sampen::SampleEntropyCalculator2DSamplingDirect<int> sec2dds(
         data.cbegin(), data.cend(), arg.r, arg.m, arg.width, arg.height,
         arg.moving_step_size, arg.dilation_factor, arg.sample_size,
-        arg.sample_num, sampen2d, a_norm, b_norm, arg.output_level);
+        arg.sample_num, sampen2d, a_norm, b_norm, arg.random_,
+        arg.output_level);
     std::cout << sec2dds.get_result_str();
   }
   if (arg.multiscale) {

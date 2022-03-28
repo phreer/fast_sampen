@@ -62,10 +62,11 @@ cdef class SampEn2DSamplingD:
                 unsigned dilation_factor,
                 unsigned sample_size, unsigned sample_num,
                 double real_entropy, double real_a_norm, double real_b_norm, 
-                OutputLevel level):
+                bool random_, OutputLevel level):
     self.c_ = new SampleEntropyCalculator2DSamplingDirect[int](
         data, r, m, width, height, moving_step_size, dilation_factor,
-        sample_size, sample_num, real_entropy, real_a_norm, real_b_norm, level)
+        sample_size, sample_num, real_entropy, real_a_norm, real_b_norm,
+        random_, level)
 
   def __dealloc__(self):
     if self.c_ != NULL:
