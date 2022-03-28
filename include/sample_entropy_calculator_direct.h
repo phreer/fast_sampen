@@ -63,18 +63,18 @@ template <typename T>
 class SampleEntropyCalculatorSamplingDirect
     : public SampleEntropyCalculatorSampling<T> {
 public:
-  SampleEntropyCalculatorSamplingDirect(
-      typename vector<T>::const_iterator first,
-      typename vector<T>::const_iterator last,
-      T r, unsigned m,
-      unsigned sample_size, unsigned sample_num,
-      double real_entropy, double real_a_norm,
-      double real_b_norm, RandomType rtype, bool random_, bool presort,
-      OutputLevel output_level)
-      : SampleEntropyCalculatorSampling<T>(
-            first, last, r, m, sample_size, sample_num, real_entropy,
-            real_a_norm, real_b_norm, output_level),
-        _rtype(rtype), _random(random_), _presort(presort) {}
+  // SampleEntropyCalculatorSamplingDirect(
+  //     typename vector<T>::const_iterator first,
+  //     typename vector<T>::const_iterator last,
+  //     T r, unsigned m,
+  //     unsigned sample_size, unsigned sample_num,
+  //     double real_entropy, double real_a_norm,
+  //     double real_b_norm, RandomType rtype, bool random_, bool presort,
+  //     OutputLevel output_level)
+  //     : SampleEntropyCalculatorSampling<T>(
+  //           first, last, r, m, sample_size, sample_num, real_entropy,
+  //           real_a_norm, real_b_norm, output_level),
+  //       _rtype(rtype), _random(random_), _presort(presort) {}
   SampleEntropyCalculatorSamplingDirect(
       const vector<T> &data,
       T r, unsigned m,
@@ -83,7 +83,7 @@ public:
       double real_b_norm, RandomType rtype, bool random_, bool presort,
       OutputLevel output_level)
       : SampleEntropyCalculatorSampling<T>(
-            data.cbegin(), data.cend(), r, m, sample_size, sample_num,
+            data, r, m, sample_size, sample_num,
             real_entropy, real_a_norm, real_b_norm, output_level),
         _rtype(rtype), _random(random_), _presort(presort) {}
   virtual std::string get_result_str() override {

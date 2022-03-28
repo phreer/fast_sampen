@@ -1,6 +1,7 @@
 #include "sample_entropy_calculator_direct.h"
 
 #include "utils.h"
+#include <vector>
 
 namespace sampen {
 template <typename T>
@@ -82,8 +83,7 @@ template <typename T>
 void SampleEntropyCalculatorDirect<T>::_ComputeSampleEntropy() {
   vector<KDPoint<T> > points =
       GetKDPoints<T>(_data.cbegin(), _data.cend(), K + 1);
-  vector<long long> ab =
-      ComputeABDirect<T>(points, _r);
+  vector<long long> ab = ComputeABDirect<T>(points, _r);
   _a = ab[0];
   _b = ab[1];
 }
@@ -101,29 +101,65 @@ void SampleEntropyCalculatorFastDirect<T>::_ComputeSampleEntropy() {
   _a = ab[0], _b = ab[1];
 }
 
+
+template <typename T>
+std::vector<long long> ComputeABSample(
+    const std::vector<T> &data, const std::vector<unsigned> &sample_indices,
+    const unsigned m, const T r) {
+  const unsigned n0 = sample_indices.size();
+  long long a = 0;
+  long long b = 0;
+  for (unsigned i = 0; i < n0 - 1; ++i) {
+    const unsigned ii = sample_indices[i];
+    for (unsigned j = i + 1; j < n0; ++j) {
+      const unsigned jj = sample_indices[j];
+      bool in = true;
+      for (unsigned k = 0; k < m; ++k) {
+        const unsigned ik = ii + k;
+        const unsigned jk = jj + k;
+        if (data[jk] > data[ik] + r || data[ik] > data[jk] + r) {
+          in = false;
+          break;
+        }
+      }
+      if (in) {
+        ++b;
+        if (data[jj + m] <= data[ii + m] + r
+            && data[ii + m] <= data[jj + m] + r) {
+          ++a;
+        }
+      }
+    }
+  }
+  std::vector<long long> result(2);
+  result[0] = a;
+  result[1] = b;
+  return result;
+}
+
+
 template <typename T>
 void SampleEntropyCalculatorSamplingDirect<T>::_ComputeSampleEntropy() {
-  const vector<vector<unsigned>> indices =
+  const vector<vector<unsigned> > indices =
       GetSampleIndices(_rtype, _n - K, _sample_size, _sample_num, _random);
   _a_vec = vector<long long>(_sample_num);
   _b_vec = vector<long long>(_sample_num);
   Timer timer;
   timer.SetStartingPointNow();
-  vector<vector<KDPoint<T> > > points = GetKDPointsSample<T>(
-      _data.cbegin(), _data.cend(), K + 1, indices, 1, _presort);
   timer.StopTimer();
   if (_output_level == Debug) {
     std::cout << "[INFO] Time consumed in sampling: " << timer.ElapsedSeconds()
-              << " seconds. \n";
+              << " seconds.\n";
   }
 
   timer.SetStartingPointNow();
   for (unsigned i = 0; i < _sample_num; ++i) {
-    vector<long long> ab = ComputeABDirect<T>(points[i], _r);
+    auto ab = ComputeABSample(_data, indices[i], K, _r);
     _a_vec[i] = ab[0], _b_vec[i] = ab[1];
     _a += ab[0];
     _b += ab[1];
   }
+
   timer.StopTimer();
   if (_output_level == Debug) {
     std::cout << "[INFO] Time consumed in range counting: "

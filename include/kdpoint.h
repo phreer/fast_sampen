@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
+#include <assert.h>
 
 namespace sampen {
 using std::vector;
@@ -80,6 +81,7 @@ private:
   std::vector<T> _data;
   int _value;
 };
+
 
 template <typename T>
 class KDPointRKD: public KDPoint<T> {

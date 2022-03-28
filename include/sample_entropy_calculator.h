@@ -18,15 +18,16 @@ template <typename T,
               typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 class SampleEntropyCalculator {
 public:
-  SampleEntropyCalculator(typename vector<T>::const_iterator first,
-                          typename vector<T>::const_iterator last,
-                          T r, unsigned m,
+  // SampleEntropyCalculator(typename vector<T>::const_iterator first,
+  //                         typename vector<T>::const_iterator last,
+  //                         T r, unsigned m,
+  //                         OutputLevel output_level)
+  //     : _data(first, last), _r(r), K(m), _n(last - first),
+  //       _output_level(output_level) {}
+  SampleEntropyCalculator(const vector<T> &data, T r, unsigned m,
                           OutputLevel output_level)
-      : _data(first, last), _r(r), K(m), _n(last - first),
+      : _data(data), _r(r), K(m), _n(data.size()),
         _output_level(output_level) {}
-  SampleEntropyCalculator(const std::vector<T> &data, T r, unsigned m,
-                          OutputLevel level)
-      : SampleEntropyCalculator(data.cbegin(), data.cend(), r, m, level) {}
   virtual ~SampleEntropyCalculator() {}
   virtual std::string get_result_str() {
     if (!_computed)
@@ -116,23 +117,22 @@ class SampleEntropyCalculatorSampling : public SampleEntropyCalculator<T> {
 public:
   using SampleEntropyCalculator<T>::ComputeSampleEntropy;
   using SampleEntropyCalculator<T>::get_entropy;
-  SampleEntropyCalculatorSampling(typename vector<T>::const_iterator first,
-                                  typename vector<T>::const_iterator last,
-                                  T r, unsigned m,
-                                  unsigned sample_size, unsigned sample_num,
-                                  double real_entropy, double real_a_norm,
-                                  double real_b_norm, OutputLevel output_level)
-      : SampleEntropyCalculator<T>(first, last, r, m, output_level),
-        _sample_size(sample_size), _sample_num(sample_num),
-        _real_entropy(real_entropy), _real_a_norm(real_a_norm),
-        _real_b_norm(real_b_norm) {}
+  // SampleEntropyCalculatorSampling(typename vector<T>::const_iterator first,
+  //                                 typename vector<T>::const_iterator last,
+  //                                 T r, unsigned m,
+  //                                 unsigned sample_size, unsigned sample_num,
+  //                                 double real_entropy, double real_a_norm,
+  //                                 double real_b_norm, OutputLevel output_level)
+  //     : SampleEntropyCalculator<T>(first, last, r, m, output_level),
+  //       _sample_size(sample_size), _sample_num(sample_num),
+  //       _real_entropy(real_entropy), _real_a_norm(real_a_norm),
+  //       _real_b_norm(real_b_norm) {}
   SampleEntropyCalculatorSampling(const std::vector<T> &data,
                                   T r, unsigned m,
                                   unsigned sample_size, unsigned sample_num,
                                   double real_entropy, double real_a_norm,
                                   double real_b_norm, OutputLevel output_level)
-      : SampleEntropyCalculator<T>(data.cbegin(), data.cend(),
-                                   r, m, output_level),
+      : SampleEntropyCalculator<T>(data, r, m, output_level),
         _sample_size(sample_size), _sample_num(sample_num),
         _real_entropy(real_entropy), _real_a_norm(real_a_norm),
         _real_b_norm(real_b_norm) {}
@@ -175,14 +175,16 @@ public:
     double entropy = get_entropy();
     double error = entropy - _real_entropy;
     double rel_error = error / (entropy + 1e-8);
-    ss << this->SampleEntropyCalculator<T>::get_result_str()
-       << "\terror: " << error << ", error (relative): " << rel_error << "\n"
-       << "\terror_a_norm: " << get_err_a()
-       << ", error_a_norm (relative): " << get_err_a() / (_real_a_norm + 1e-8)
-       << "\n"
-       << "\terror_b_norm: " << get_err_b()
-       << ", error_b_norm (relative): " << get_err_b() / (_real_b_norm + 1e-8)
-       << std::endl;
+    ss << this->SampleEntropyCalculator<T>::get_result_str();
+    if (_real_entropy >= 0. && _real_a_norm >= 0. && _real_b_norm >= 0.) {
+       ss << "\terror: " << error << ", error (relative): " << rel_error << "\n"
+          << "\terror_a_norm: " << get_err_a()
+          << ", error_a_norm (relative): " << get_err_a() / (_real_a_norm + 1e-8)
+          << "\n"
+          << "\terror_b_norm: " << get_err_b()
+          << ", error_b_norm (relative): " << get_err_b() / (_real_b_norm + 1e-8)
+          << std::endl;
+    }
     if (this->_output_level >= Info) {
       vector<long long> a_vec = get_a_vec();
       vector<long long> b_vec = get_b_vec();

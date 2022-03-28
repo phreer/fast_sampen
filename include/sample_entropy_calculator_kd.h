@@ -132,9 +132,25 @@ template <typename T>
 class SampleEntropyCalculatorSamplingMao
     : public SampleEntropyCalculatorSampling<T> {
 public:
-  using SampleEntropyCalculatorSampling<T>::SampleEntropyCalculatorSampling;
-  SampleEntropyCalculatorSamplingMao(typename vector<T>::const_iterator first,
-                                     typename vector<T>::const_iterator last,
+  USING_SAMPLING_FIELDS
+  // SampleEntropyCalculatorSamplingMao(typename vector<T>::const_iterator first,
+  //                                    typename vector<T>::const_iterator last,
+  //                                    T r, unsigned m, 
+  //                                    unsigned sample_size, unsigned sample_num,
+  //                                    double real_entropy,
+  //                                    double real_a_norm, double real_b_norm,
+  //                                    RandomType rtype, bool random_,
+  //                                    OutputLevel output_level)
+  //     : SampleEntropyCalculatorSampling<T>(
+  //           first, last, r, m, sample_size, sample_num, real_entropy,
+  //           real_a_norm, real_b_norm, output_level),
+  //       _rtype(rtype), _random(random_) {
+  //   if (sample_num != 1) {
+  //     std::cerr << "Only support the parameter sample_num == 1.\n" << std::endl;
+  //     exit(-1);
+  //   }
+  // }
+  SampleEntropyCalculatorSamplingMao(const std::vector<T> &data,
                                      T r, unsigned m, 
                                      unsigned sample_size, unsigned sample_num,
                                      double real_entropy,
@@ -142,7 +158,7 @@ public:
                                      RandomType rtype, bool random_,
                                      OutputLevel output_level)
       : SampleEntropyCalculatorSampling<T>(
-            first, last, r, m, sample_size, sample_num, real_entropy,
+            data, r, m, sample_size, sample_num, real_entropy,
             real_a_norm, real_b_norm, output_level),
         _rtype(rtype), _random(random_) {
     if (sample_num != 1) {
@@ -187,7 +203,6 @@ protected:
     return std::string("kd tree (Mao) sampling");
   }
 
-  USING_SAMPLING_FIELDS
   RandomType _rtype;
   bool _random;
 };
@@ -289,15 +304,25 @@ template <typename T>
 class SampleEntropyCalculatorSamplingKDTree
     : public SampleEntropyCalculatorSampling<T> {
 public:
+  // SampleEntropyCalculatorSamplingKDTree(
+  //     typename vector<T>::const_iterator first,
+  //     typename vector<T>::const_iterator last, T r, unsigned m,
+  //     unsigned sample_size, unsigned sample_num,
+  //     double real_entropy, double real_a_norm,
+  //     double real_b_norm, RandomType rtype, bool random_,
+  //     OutputLevel output_level)
+  //     : SampleEntropyCalculatorSampling<T>(
+  //           first, last, r, m, sample_size, sample_num, real_entropy,
+  //           real_a_norm, real_b_norm, output_level),
+  //       _rtype(rtype), _random(random_) {}
   SampleEntropyCalculatorSamplingKDTree(
-      typename vector<T>::const_iterator first,
-      typename vector<T>::const_iterator last, T r, unsigned m,
+      const std::vector<T> &data, T r, unsigned m,
       unsigned sample_size, unsigned sample_num,
       double real_entropy, double real_a_norm,
       double real_b_norm, RandomType rtype, bool random_,
       OutputLevel output_level)
       : SampleEntropyCalculatorSampling<T>(
-            first, last, r, m, sample_size, sample_num, real_entropy,
+            data, r, m, sample_size, sample_num, real_entropy,
             real_a_norm, real_b_norm, output_level),
         _rtype(rtype), _random(random_) {}
   std::string get_result_str() override {
@@ -350,8 +375,25 @@ template <typename T>
 class SampleEntropyCalculatorSamplingLiu
     : public SampleEntropyCalculatorSampling<T> {
 public:
-  SampleEntropyCalculatorSamplingLiu(typename vector<T>::const_iterator first,
-                                     typename vector<T>::const_iterator last,
+  // SampleEntropyCalculatorSamplingLiu(typename vector<T>::const_iterator first,
+  //                                    typename vector<T>::const_iterator last,
+  //                                    T r, unsigned m,
+  //                                    unsigned sample_size, unsigned sample_num,
+  //                                    double real_entropy,
+  //                                    double real_a_norm, double real_b_norm,
+  //                                    RandomType rtype, bool random_,
+  //                                    OutputLevel output_level)
+  //     : SampleEntropyCalculatorSampling<T>(
+  //           first, last, r, m, sample_size, sample_num, real_entropy, real_a_norm,
+  //           real_b_norm, output_level),
+  //       _rtype(rtype), _random(random_) {
+  //         
+  //   if (sample_num != 1) {
+  //     std::cerr << "Only support the parameter sample_num == 1.\n" << std::endl;
+  //     exit(-1);
+  //   }
+  // }
+  SampleEntropyCalculatorSamplingLiu(const std::vector<T> &data,
                                      T r, unsigned m,
                                      unsigned sample_size, unsigned sample_num,
                                      double real_entropy,
@@ -359,7 +401,7 @@ public:
                                      RandomType rtype, bool random_,
                                      OutputLevel output_level)
       : SampleEntropyCalculatorSampling<T>(
-            first, last, r, m, sample_size, sample_num, real_entropy, real_a_norm,
+            data, r, m, sample_size, sample_num, real_entropy, real_a_norm,
             real_b_norm, output_level),
         _rtype(rtype), _random(random_) {
           
@@ -455,8 +497,24 @@ template <typename T>
 class SampleEntropyCalculatorSamplingRKD
     : public SampleEntropyCalculatorSampling<T> {
 public:
-  SampleEntropyCalculatorSamplingRKD(typename vector<T>::const_iterator first,
-                                     typename vector<T>::const_iterator last,
+  // SampleEntropyCalculatorSamplingRKD(typename vector<T>::const_iterator first,
+  //                                    typename vector<T>::const_iterator last,
+  //                                    T r, unsigned m,
+  //                                    unsigned sample_size, unsigned sample_num,
+  //                                    double real_entropy,
+  //                                    double real_a_norm, double real_b_norm,
+  //                                    RandomType rtype, bool random_,
+  //                                    OutputLevel output_level)
+  //     : SampleEntropyCalculatorSampling<T>(
+  //           first, last, r, m, sample_size, sample_num, real_entropy,
+  //           real_a_norm, real_b_norm, output_level),
+  //       _rtype(rtype), _random(random_) {
+  //   if (sample_num != 1) {
+  //     std::cerr << "Only support the parameter sample_num == 1.\n" << std::endl;
+  //     exit(-1);
+  //   }
+  // }
+  SampleEntropyCalculatorSamplingRKD(const std::vector<T> &data,
                                      T r, unsigned m,
                                      unsigned sample_size, unsigned sample_num,
                                      double real_entropy,
@@ -464,7 +522,7 @@ public:
                                      RandomType rtype, bool random_,
                                      OutputLevel output_level)
       : SampleEntropyCalculatorSampling<T>(
-            first, last, r, m, sample_size, sample_num, real_entropy,
+            data, r, m, sample_size, sample_num, real_entropy,
             real_a_norm, real_b_norm, output_level),
         _rtype(rtype), _random(random_) {
     if (sample_num != 1) {
