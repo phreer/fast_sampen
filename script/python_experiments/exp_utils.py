@@ -1,20 +1,70 @@
-from genericpath import exists
 import os
+import sys
+from enum import Enum
 import numpy as np
+import wfdb
+from scipy.io import loadmat
 import sampen
 import sampen2d
 
-def read_record(input: str, input_format: str, n: int):
+class RecordType(Enum):
+  MAT = 1
+  WFDB = 2
+  TABLE = 3
+
+try:
+  input_dir = os.environ['SAMPEN_DATA_DIR']
+except KeyError as e:
+  print('please set environment variable SAMPEN_DATA_DIR')
+
+all_db_records = [
+  ('kmni_climate', 'uurgeg_t', RecordType.MAT),
+  ('gearbox', 'Miss_30_2_1', RecordType.MAT),
+  ('rolling_bearing', 'X110_DE_time', RecordType.MAT),
+  ('chfdb', 'chf01', RecordType.WFDB),
+  ('ltafdb', '00', RecordType.WFDB),
+  ('ltstdb', 's20011', RecordType.WFDB),
+  ('mghdb', 'mgh001', RecordType.WFDB),
+  ('mit-bih-long-term-ecg-database-1.0.0', '14046', RecordType.WFDB),
+  ('pink', 'pink-1m.txt', RecordType.TABLE),
+  ('gaussian', 'gaussian-1m.txt', RecordType.TABLE),
+  ('uniform', 'uniform-1m.txt', RecordType.TABLE),
+  ('chbmit', 'chb07_01.txt', RecordType.TABLE),
+  ('RRHealth', 'Health_Filt-time-1583.01.rr_multirecord.txt', RecordType.TABLE),
+  ('RRCHF', 'CHF_Filt-time-9643.rr_multirecord.txt', RecordType.TABLE),
+  ('RRAF', 'AF_fa002.rr_multirecord.txt', RecordType.TABLE),
+]
+
+def read_record(db_name, record_name, record_type, n):
+  if record_type == RecordType.MAT:
+    d = read_mat_record(db_name, record_name, 0, n)
+  elif record_type == RecordType.WFDB:
+    d = read_wfdb_record(db_name, record_name, 100000, n)
+  else:
+    d = read_table_record(db_name, record_name, 1, 0, n)
+  return d
+
+def read_wfdb_record(db_name: str, record_name: str, sig_offset: int, n: int):
+  record_path = os.path.join(input_dir, db_name, record_name)
+  sigs = wfdb.rdsamp(record_path, sig_offset, sig_offset + n)[0][:, 0]
+  return sigs
+
+def read_mat_record(db_name: str, record_name: str, sig_offset: int, n: int):
+  input_path = os.path.join(input_dir, '%s.mat' % db_name)
+  d = loadmat(input_path)
+  if not record_name in d.keys():
+    raise ValueError('record %s not found in database %s' % (record_name, db_name))
+  return d[record_name].flatten()[sig_offset: sig_offset + n]
+
+def read_table_record(db_name: str, record_name: str, channel: int, sig_offset: int, n: int = None):
   data = []
-  with open(input) as f:
+  input_path = os.path.join(input_dir, db_name, record_name)
+  with open(input_path) as f:
     lines = f.readlines()
-  if n and len(lines) <= n:
+  if n and len(lines) < n + sig_offset:
     raise ValueError('the length of the file (%d) is less than n (%d)' % (len(lines), n))
   for i in range(n):
-    if input_format == 'simple':
-      p = float(lines[i])
-    else:
-     p = float(lines[i].split()[1])
+    p = float(lines[sig_offset + i].split()[channel])
     data.append(p)
   return np.array(data)
 
@@ -116,3 +166,9 @@ def estimate_sampen2d_and_save_statistics(sig, r: float, m: int,
     print(f'[SWR] r_m_a [{r_m_a:.4e}] r_std_a [{r_std_a:.4e}] r_m_abs_err_a [{r_m_abs_err_a:.4e}]', file=f)    
     print(f'[SWR] m_b [{m_b:.4e}] std_b [{std_b:.4e}] m_abs_err_b [{m_abs_err_b:.4e}]', file=f)    
     print(f'[SWR] r_m_b [{r_m_b:.4e}] r_std_b [{r_std_b:.4e}] r_m_abs_err_b [{r_m_abs_err_b:.4e}]', file=f)    
+
+# Test
+if __name__ == '__main__':
+  for db, record, t in all_db_records:
+    d = read_record(db, record, t, 10)
+    print(db, record, d)
