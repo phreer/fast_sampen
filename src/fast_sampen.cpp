@@ -137,8 +137,8 @@ void Argument::PrintArguments() const {
   std::cout << "\tinput type: " << arg.input_type << std::endl;
   std::cout << "\tline offset: " << arg.line_offset << std::endl;
   std::cout << "\tdata length: " << arg.data_length << std::endl;
-  std::cout << "\ttemplate length: " << arg.template_length << std::endl;
-  std::cout << "\tthreshold: " << arg.r << std::endl;
+  std::cout << "\tm (template length): " << arg.template_length << std::endl;
+  std::cout << "\tr (threshold): " << arg.r << std::endl;
   std::cout << "\tsample num (N1): " << arg.sample_num << std::endl;
   std::cout << "\tsample size (N0): " << arg.sample_size << std::endl;
   std::cout << "\tuse kd tree based sampling: " << arg.kdtree_sample << std::endl;
@@ -151,6 +151,10 @@ void Argument::PrintArguments() const {
   case OutputLevel::Debug: std::cout << "Debug" << std::endl; break;
   case OutputLevel::Silent: std::cout << "Silent" << std::endl; break;
   default: std::cout << "Unknown" << std::endl;
+  }
+  std::cout << "\trepeat: " << (arg.variance ? "true" : "false") << std::endl;
+  if (arg.variance) {
+    std::cout << "\trepeat count: " << arg.n_computation << std::endl;
   }
 }
 
@@ -300,9 +304,9 @@ template <typename T> void SampleEntropyN0N1() {
   std::cout << "\tstd: " << sqrt(var) << std::endl;
   std::cout << "\tr (scaled): " << r_scaled << std::endl;
 
-  double precise_entropy = -1.;
-  double precise_a_norm = -1.;
-  double precise_b_norm = -1.;
+  double precise_entropy = 0;
+  double precise_a_norm = 0;
+  double precise_b_norm = 0.;
   // Compute sample entropy.
   if (arg.skd) {
     SampleEntropyCalculatorMao<T> sec(data, r_scaled, K, arg.output_level);

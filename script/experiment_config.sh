@@ -1,3 +1,5 @@
+m=4
+r=0.15
 output_level=1
 line_offset=100000
 INPUT_DIR=./data.PhysioNet
