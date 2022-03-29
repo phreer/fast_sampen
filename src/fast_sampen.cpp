@@ -275,8 +275,9 @@ void ParseArgument(int argc, char *argv[]) {
 
 template <typename T> void SampleEntropyN0N1() {
   const unsigned K = arg.template_length;
-  vector<T> data = ReadData<T>(arg.filename, arg.input_format, arg.data_length,
-                               arg.line_offset);
+  vector<T> data;
+  ReadData<T>(data, arg.filename, arg.input_format, arg.data_length,
+              arg.line_offset);
   unsigned n = data.size();
   if (n <= K) {
     std::cerr << "Data length n " << n << " is too short (K = " << K;

@@ -87,8 +87,8 @@ double ComputeSampen(double A, double B, unsigned N, unsigned m);
  * @return Read data.
  */
 template <typename T>
-vector<T> ReadData(std::string filename, std::string input_type = "simple",
-                   unsigned n = 0);
+void ReadData(std::vector<T> &result, std::string filename,
+              std::string input_type = "simple", unsigned n = 0);
 
 template <typename T> double ComputeVariance(const vector<T> &data);
 
@@ -309,10 +309,9 @@ inline long long CountRangeLastAxis(T lower, T upper,
 // Implementation
 //////////////////////////////////////////////////////////////////////////
 template <typename T>
-vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
-                   unsigned line_offset) {
+void ReadData(std::vector<T> &result, std::string filename,
+              std::string input_type, unsigned n, unsigned line_offset) {
   ifstream ifs(filename);
-  vector<T> result;
   if (!ifs.is_open()) {
     std::cerr << "Cannot open file! (filename: " << filename << ")\n";
     exit(-1);
@@ -348,7 +347,6 @@ vector<T> ReadData(std::string filename, std::string input_type, unsigned n,
               org_n, filename.c_str(), result.size());
   }
   ifs.close();
-  return result;
 }
 
 template <typename T>
