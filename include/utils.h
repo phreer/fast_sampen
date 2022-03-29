@@ -36,6 +36,10 @@
   MSG(stderr, "ERROR", "File: %s, line: %d\n", __FILE__, __LINE__);            \
   exit((error_code));
 
+#define MSG_WARNING(error_code, fmt, ...)                                      \
+  MSG(stderr, "WARNING", (fmt), ##__VA_ARGS__);                                \
+  MSG(stderr, "WARNING", "File: %s, line: %d\n", __FILE__, __LINE__);
+
 #ifdef DEBUG
 #define MSG_DEBUG(fmt, ...) MSG(stdout, "DEBUG", (fmt), ##__VA_ARGS__);
 #else
@@ -83,8 +87,8 @@ double ComputeSampen(double A, double B, unsigned N, unsigned m);
 /**
  * @brief Read data from file.
  *
- * @param filename: The name of the file to read.
- * @return Read data.
+ * @param[out] result where to store the read result
+ * @param filename the name of the file to read
  */
 template <typename T>
 void ReadData(std::vector<T> &result, std::string filename,
@@ -317,14 +321,21 @@ void ReadData(std::vector<T> &result, std::string filename,
     exit(-1);
   }
   unsigned org_n = n;
-  if (n == 0)
-    n = std::numeric_limits<unsigned>::max();
+  if (n == 0) {
+    n = 1024 * 1024;
+  } else {
+    result.reserve(n);
+    result.resize(n);
+  }
   unsigned count = 0;
+  unsigned result_i = 0;
   T x = 0;
   if (input_type == "simple") {
     while (count < n + line_offset && ifs >> x) {
-      if (count >= line_offset)
-        result.push_back(x);
+      if (count >= line_offset) {
+        result[result_i] = x;
+        ++result_i;
+      }
       ++count;
     }
   } else if (input_type == "multirecord") {
@@ -332,19 +343,20 @@ void ReadData(std::vector<T> &result, std::string filename,
     while (count < n + line_offset && std::getline(ifs, line)) {
       std::istringstream iss(line);
       if (!(iss >> x >> x)) {
-        std::cerr << "Input file foramt error. \n";
-        exit(-1);
+        MSG_ERROR(-1, "Input file foramt error.\n");
       }
-      if (count >= line_offset)
-        result.push_back(x);
+      if (count >= line_offset) {
+        result[result_i] = x;
+        ++result_i;
+      }
       ++count;
     }
   } else {
     MSG_ERROR(-1, "Invalid input-type: %s\n", input_type.c_str());
   }
   if (org_n && org_n != result.size()) {
-    MSG_ERROR(-1, "Cannot read %u element from file %s. Only %zu read.\n",
-              org_n, filename.c_str(), result.size());
+    MSG_WARNING(-1, "Cannot read %u element from file %s. Only %zu read.\n",
+                org_n, filename.c_str(), result.size());
   }
   ifs.close();
 }

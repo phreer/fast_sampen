@@ -87,7 +87,7 @@ public:
 protected:
   virtual void _ComputeSampleEntropy() = 0;
   virtual std::string _Method() const = 0;
-  const vector<T> _data;
+  const vector<T> &_data;
   const T _r;
   unsigned K;
   const unsigned _n;

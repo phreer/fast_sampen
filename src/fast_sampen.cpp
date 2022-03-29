@@ -284,9 +284,7 @@ template <typename T> void SampleEntropyN0N1() {
               arg.line_offset);
   unsigned n = data.size();
   if (n <= K) {
-    std::cerr << "Data length n " << n << " is too short (K = " << K;
-    std::cerr << "). \n";
-    exit(-1);
+    MSG_ERROR(-1, "Data length n %d is to short (K = %d).\n", n, K);
   }
 
   double var = ComputeVariance(data);
