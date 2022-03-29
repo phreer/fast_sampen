@@ -417,32 +417,45 @@ GetKDPointsSample(typename vector<T>::const_iterator first,
 }
 
 template <typename T> T ComputeSum(const vector<T> &data) {
-  unsigned n0 = 1 << 4;
-  unsigned p = data.size() / n0;
-  T sum = std::accumulate(data.cbegin() + p * n0, data.cend(), (T)0);
-  if (p == 0)
-    return sum;
-  else {
-    vector<T> temp_sum(p, 0);
-    for (unsigned i = 0; i < p; i++) {
-      temp_sum[i] = std::accumulate(data.cbegin() + i * n0,
-                                    data.cbegin() + (i + 1) * n0, (T)0);
-    }
-    temp_sum.push_back(sum);
-    return ComputeSum(temp_sum);
+  long double sum = 0;
+  for (T x: data) {
+    sum += x;
   }
+  return static_cast<T>(sum);
+
+  // unsigned n0 = 1 << 4;
+  // unsigned p = data.size() / n0;
+  // T sum = std::accumulate(data.cbegin() + p * n0, data.cend(), (T)0);
+  // if (p == 0)
+  //   return sum;
+  // else {
+  //   vector<T> temp_sum(p, 0);
+  //   for (unsigned i = 0; i < p; i++) {
+  //     temp_sum[i] = std::accumulate(data.cbegin() + i * n0,
+  //                                   data.cbegin() + (i + 1) * n0, (T)0);
+  //   }
+  //   temp_sum.push_back(sum);
+  //   return ComputeSum(temp_sum);
+  // }
 }
 
 template <typename T> double ComputeVariance(const vector<T> &data) {
-  vector<long double> data_(data.cbegin(), data.cend());
-  long double avg = ComputeSum(data_) / data.size();
-  std::for_each(data_.begin(), data_.end(), [avg](long double &x) {
-    x -= avg;
-    x *= x;
-  });
-  long double sum = ComputeSum(data_);
-  sum /= data.size();
-  return static_cast<double>(sum);
+  double avg = static_cast<double>(ComputeSum(data)) / data.size();
+  long double var = 0.;
+  for (T x: data) {
+    const T diff = x - avg;
+    var += diff * diff;
+  }
+  return static_cast<double>(var / data.size() - 1);
+  // vector<long double> data_(data.cbegin(), data.cend());
+  // long double avg = ComputeSum(data_) / data.size();
+  // std::for_each(data_.begin(), data_.end(), [avg](long double &x) {
+  //   x -= avg;
+  //   x *= x;
+  // });
+  // long double sum = ComputeSum(data_);
+  // sum /= data.size();
+  // return static_cast<double>(sum);
 }
 
 template <typename T>
