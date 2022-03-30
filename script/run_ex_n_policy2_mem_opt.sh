@@ -43,7 +43,7 @@ input_files=(ltafdb/00.txt\
              chbmit/chb07_01.txt\
              mit-bih-long-term-ecg-database-1.0.0/14046.txt\
              pink/pink-1m.txt)
-subdir=n_policy2_mem_opt_m${m}_r${r}_220328_2
+subdir=n_policy2_mem_opt_m${m}_r${r}_220329
 if [ ! -e result/$subdir ]; then
     mkdir -p result/$subdir
 fi
